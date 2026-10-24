@@ -1,0 +1,32 @@
+{
+  "evaluation": "synthetic document-to-negotiation smoke check",
+  "ocr_enabled": true,
+  "passed": 4,
+  "cases": 4,
+  "results": [
+    {
+      "input": "lease.txt",
+      "passed": true,
+      "decision": "accept"
+    },
+    {
+      "input": "lease.pdf",
+      "passed": true,
+      "decision": "accept"
+    },
+    {
+      "input": "lease.png",
+      "passed": true,
+      "decision": "accept"
+    },
+    {
+      "input": "scanned.pdf",
+      "passed": true,
+      "decision": "accept"
+    }
+  ],
+  "limitations": [
+    "Synthetic English documents only; not evidence of OCR accuracy on arbitrary agreements.",
+    "No API calls or real personal documents used."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "comparison": "scripted repeated-action control vs bounded controller",
+  "model_baseline": false,
+  "scenario": "fixed repeated over-budget deposit offer",
+  "scripted_control": {
+    "actions": 6,
+    "duplicate_actions": 5,
+    "resolved": false
+  },
+  "bounded_controller": {
+    "actions": 2,
+    "duplicate_actions": 1,
+    "resolved": false,
+    "terminal_status": "duplicate_offer"
+  },
+  "limitations": [
+    "One scripted fixture; no model or API was used.",
+    "Demonstrates stopping repeated offers, not improved legal accuracy or successful agreement."
+  ]
+}

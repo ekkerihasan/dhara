@@ -1,0 +1,11 @@
+1. Rent
+Monthly rent is INR 20,000 and a receipt is provided for each payment.
+
+2. Security deposit
+The refundable security deposit is 6 months of rent.
+
+3. Termination
+The tenant must give 90 days written termination notice.
+
+4. Repairs
+The landlord handles structural repairs; the tenant handles routine maintenance.

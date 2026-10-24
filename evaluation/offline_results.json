@@ -1,0 +1,86 @@
+{
+  "evaluation": "offline development fixtures",
+  "cases": 8,
+  "passed": 8,
+  "clause_precision": 1.0,
+  "clause_recall": 1.0,
+  "limitations": [
+    "Small synthetic development set, not held-out evidence of real-world accuracy.",
+    "Measures flagged clause IDs and jurisdiction status, not legal correctness.",
+    "No live baseline/new-agent comparison or claimed model improvement."
+  ],
+  "results": [
+    {
+      "case": "deposit_conflict",
+      "expected_clause_ids": [
+        "C1"
+      ],
+      "flagged_clause_ids": [
+        "C1"
+      ],
+      "status": "applicability_unresolved",
+      "passed": true
+    },
+    {
+      "case": "clean_deposit",
+      "expected_clause_ids": [],
+      "flagged_clause_ids": [],
+      "status": "applicability_unresolved",
+      "passed": true
+    },
+    {
+      "case": "notice_conflict",
+      "expected_clause_ids": [
+        "C1"
+      ],
+      "flagged_clause_ids": [
+        "C1"
+      ],
+      "status": "applicability_unresolved",
+      "passed": true
+    },
+    {
+      "case": "clean_notice",
+      "expected_clause_ids": [],
+      "flagged_clause_ids": [],
+      "status": "applicability_unresolved",
+      "passed": true
+    },
+    {
+      "case": "ambiguous_entry",
+      "expected_clause_ids": [
+        "C1"
+      ],
+      "flagged_clause_ids": [
+        "C1"
+      ],
+      "status": "applicability_unresolved",
+      "passed": true
+    },
+    {
+      "case": "missing_jurisdiction",
+      "expected_clause_ids": [],
+      "flagged_clause_ids": [],
+      "status": "needs_jurisdiction",
+      "passed": true
+    },
+    {
+      "case": "unsupported_jurisdiction",
+      "expected_clause_ids": [],
+      "flagged_clause_ids": [],
+      "status": "unsupported_jurisdiction",
+      "passed": true
+    },
+    {
+      "case": "unknown_deposit_number",
+      "expected_clause_ids": [
+        "C1"
+      ],
+      "flagged_clause_ids": [
+        "C1"
+      ],
+      "status": "applicability_unresolved",
+      "passed": true
+    }
+  ]
+}

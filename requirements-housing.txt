@@ -1,0 +1,4 @@
+# Local PDF/image extraction and OCR; no API credentials or runtime downloads.
+PyMuPDF>=1.24,<2
+Pillow>=10,<13
+rapidocr-onnxruntime>=1.4,<2
