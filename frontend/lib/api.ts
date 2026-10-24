@@ -3,6 +3,7 @@
 
 import blrFlat from "@/stubs/blr_flat.json";
 import moveout from "@/stubs/moveout.json";
+import { backendFacts, fromBackend, type BackendRun } from "./backend";
 import { inr, LOCAL_BODY_LABEL } from "./format";
 import type { ApprovalStep, Facts, Language, MoveoutRun, QuestionStep, Run, RunInput } from "./types";
 
@@ -22,6 +23,33 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 function postJson<T>(path: string, body: unknown): Promise<T> {
   return request<T>(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+}
+
+// The backend does not echo facts back, so the browser keeps what the tenant entered, per run.
+const EMPTY_FACTS: Facts = { rent_per_month: null, deposit_inr: null, built_year: null, substantial_renovation_year: null, local_body: null, premises_use: "residential", language: "en" };
+
+function saveFacts(id: string, facts: Facts): void {
+  try {
+    sessionStorage.setItem(`dhara:facts:${id}`, JSON.stringify(facts));
+  } catch {
+    // storage blocked: the report still renders, without the facts strip
+  }
+}
+
+function loadFacts(id: string): Facts {
+  try {
+    const raw = sessionStorage.getItem(`dhara:facts:${id}`);
+    return raw ? { ...EMPTY_FACTS, ...(JSON.parse(raw) as Partial<Facts>) } : EMPTY_FACTS;
+  } catch {
+    return EMPTY_FACTS;
+  }
+}
+
+async function toBase64(file: File): Promise<string> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
 }
 
 // ---------- stub state (per browser tab, so a refresh keeps the demo where it was) ----------
@@ -121,13 +149,14 @@ export async function createRun(input: RunInput): Promise<string> {
     writeState(STUB_RUN_ID, { ...DEFAULT_STATE, needsAnswer: input.facts.built_year === null, language: input.facts.language, entered: input.facts });
     return STUB_RUN_ID;
   }
-  const form = new FormData();
-  if (input.file) form.append("file", input.file);
-  if (input.text) form.append("text", input.text);
-  form.append("facts", JSON.stringify(input.facts));
-  form.append("language", input.facts.language);
-  const { id } = await request<{ id: string }>("/api/runs", { method: "POST", body: form });
-  return id;
+  const run = await postJson<BackendRun>("/api/runs", {
+    agreement_text: input.text,
+    pdf_base64: input.file ? await toBase64(input.file) : null,
+    facts: backendFacts(input.facts),
+    language: input.facts.language,
+  });
+  saveFacts(run.id, input.facts);
+  return run.id;
 }
 
 export async function getRun(id: string): Promise<Run> {
@@ -135,7 +164,8 @@ export async function getRun(id: string): Promise<Run> {
     await delay(250);
     return stubRun(id);
   }
-  return request<Run>(`/api/runs/${encodeURIComponent(id)}`);
+  const run = await request<BackendRun>(`/api/runs/${encodeURIComponent(id)}`);
+  return fromBackend(run, loadFacts(id), "Your rental agreement");
 }
 
 export async function answerQuestion(id: string, field: keyof Facts, value: string): Promise<void> {
@@ -146,7 +176,9 @@ export async function answerQuestion(id: string, field: keyof Facts, value: stri
     writeState(id, { ...state, answer: value, entered });
     return;
   }
-  await postJson(`/api/runs/${encodeURIComponent(id)}/answer`, { field, value });
+  const facts = { ...loadFacts(id), [field]: Number(value) || value };
+  saveFacts(id, facts);
+  await postJson(`/api/runs/${encodeURIComponent(id)}/answer`, { facts: { [field]: facts[field] } });
 }
 
 export async function approveDraft(id: string, draftId: string): Promise<void> {
@@ -155,7 +187,8 @@ export async function approveDraft(id: string, draftId: string): Promise<void> {
     writeState(id, { ...readState(id), approvedAt: new Date().toISOString() });
     return;
   }
-  await postJson(`/api/runs/${encodeURIComponent(id)}/approve`, { draft_id: draftId });
+  void draftId; // the backend approves the run's single draft
+  await postJson(`/api/runs/${encodeURIComponent(id)}/approve`, { approved: true });
 }
 
 export async function getMoveout(id: string): Promise<MoveoutRun> {

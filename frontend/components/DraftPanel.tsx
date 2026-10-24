@@ -21,7 +21,8 @@ export function DraftPanel({
   approval: ApprovalStep | null;
   onApprove: () => Promise<void>;
 }) {
-  const [language, setLanguage] = useState<Language>(initialLanguage);
+  const available = LANGUAGES.filter((l) => draft.text[l.code]);
+  const [language, setLanguage] = useState<Language>(draft.text[initialLanguage] ? initialLanguage : (available[0]?.code ?? "en"));
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -36,7 +37,7 @@ export function DraftPanel({
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(draft.text[language]);
+      await navigator.clipboard.writeText(draft.text[language] ?? "");
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -51,7 +52,7 @@ export function DraftPanel({
           To: {draft.to} · Tone: {draft.tone}
         </span>
         <div className="segmented" role="group" aria-label="Draft language">
-          {LANGUAGES.map((l) => (
+          {available.map((l) => (
             <button key={l.code} type="button" aria-pressed={language === l.code} onClick={() => setLanguage(l.code)} lang={l.code}>
               {l.label}
             </button>

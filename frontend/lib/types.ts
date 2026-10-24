@@ -102,7 +102,7 @@ export interface Draft {
   id: string;
   tone: DraftTone;
   to: string;
-  text: Record<Language, string>;
+  text: Partial<Record<Language, string>>; // the backend may return one language
   note: string | null; // draft_message's translation_note
 }
 

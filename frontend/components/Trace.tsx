@@ -139,7 +139,8 @@ export function Trace({ trace, sections }: { trace: TraceStep[]; sections: Recor
           </span>
           <div className="timeline-body">
             <div className="timeline-kind">
-              {String(step.index + 1).padStart(2, "0")} · {KIND[step.type]} · {time(step.at)}
+              {String(step.index + 1).padStart(2, "0")} · {KIND[step.type]}
+              {step.at && ` · ${time(step.at)}`}
             </div>
             <StepBody step={step} sections={sections} />
           </div>

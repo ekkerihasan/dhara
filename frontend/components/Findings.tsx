@@ -25,7 +25,7 @@ export function Findings({ findings, sections }: { findings: Finding[]; sections
             </h3>
             <span className="row-money">{inr(f.money_at_risk_inr)}</span>
           </div>
-          <blockquote className="row-quote">{f.clause_text}</blockquote>
+          {f.clause_text && <blockquote className="row-quote">{f.clause_text}</blockquote>}
           <p className="row-text">{f.issue}</p>
           <p className="row-text">
             <strong>Ask:</strong> {f.ask}

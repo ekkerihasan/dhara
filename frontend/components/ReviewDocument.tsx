@@ -4,7 +4,7 @@ import { Info, Scale, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { answerQuestion, approveDraft, getRun } from "@/lib/api";
-import { inr, date, LOCAL_BODY_LABEL, STATUS_LABEL } from "@/lib/format";
+import { inr, LOCAL_BODY_LABEL, STATUS_LABEL } from "@/lib/format";
 import type { ApprovalStep, QuestionStep, Run, VerifierStep } from "@/lib/types";
 import { AgentGlance } from "./AgentGlance";
 import { CitationCheck } from "./CitationCheck";
@@ -156,8 +156,8 @@ export function ReviewDocument({ id }: { id: string }) {
             </dd>
           </div>
           <div>
-            <dt>Started</dt>
-            <dd>{date(run.created_at)}</dd>
+            <dt>Model</dt>
+            <dd>{run.model}</dd>
           </div>
         </dl>
 
