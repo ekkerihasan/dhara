@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from env.public_chatbot_test import Answer, Review, blank_answers, load_answers, render_report
+from env.public_chatbot_test import Answer, Review, blank_answers, load_answers, record_answer, render_prompts, render_report
 
 
 def capture(**overrides: object) -> dict:
@@ -74,3 +74,36 @@ def test_unknown_or_duplicate_question_records_rejected(tmp_path: Path, bad_id: 
     path.write_text(json.dumps(payload))
     with pytest.raises(ValueError):
         load_answers(path)
+
+
+def test_prompt_export_does_not_contaminate_test_with_answer_key() -> None:
+    from env.public_chatbot_test import question_set
+
+    batch = render_prompts()
+    for question in question_set()["questions"]:
+        assert question["question"] in batch
+        assert question["answer_key"] not in batch
+        assert question["wrong_law_trap"] not in batch
+    single = render_prompts("Q01")
+    assert "Q01" in single
+    assert "Q02" not in single
+    with pytest.raises(ValueError, match="Unknown"):
+        render_prompts("Q99")
+
+
+def test_record_preserves_other_rows_and_refuses_overwrite(tmp_path: Path) -> None:
+    path = tmp_path / "answers.json"
+    path.write_text(json.dumps(blank_answers()), encoding="utf-8")
+    answer = Answer.model_validate(capture())
+    record_answer(path, answer)
+    rows = load_answers(path)
+    assert len(rows) == 20
+    assert rows[0].raw_answer == answer.raw_answer
+    assert sum(row.raw_answer is not None for row in rows) == 1
+    before = path.read_bytes()
+    with pytest.raises(ValueError, match="overwrite"):
+        record_answer(path, answer)
+    assert path.read_bytes() == before
+    with pytest.raises(ValueError, match="Unknown"):
+        record_answer(path, Answer.model_validate(capture(question_id="Q99")))
+    assert path.read_bytes() == before

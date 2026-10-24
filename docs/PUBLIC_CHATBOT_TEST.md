@@ -2,6 +2,8 @@
 
 Status: **test harness implemented; no public-chatbot responses collected yet**. This is separate from the Groq baseline-versus-agent evaluation. [Codex reference answers](CODEX_REFERENCE_ANSWERS.md) are available, explicitly excluded from the public comparison.
 
+Access checked on 25 October 2026: this coding session has no browser interaction tool, authenticated ChatGPT/Gemini connector, or browser debugging endpoint. A read-only page fetch reaches ChatGPT's landing page and Gemini's sign-in page; it cannot submit prompts or collect model replies. Task 8.3 therefore requires a public-product session before it can be completed. API model output must not be relabelled as a ChatGPT or Gemini public-product observation.
+
 ## Run protocol
 
 Use the same questions in ChatGPT and Gemini, preferably in a fresh conversation for each. Do not supply the answer key, Dhara's law pack or previous chatbot answers. Keep settings the same across questions and record whether browsing is enabled. One batch per product is acceptable only if recorded as a batch, not ten independent conversations.
@@ -72,6 +74,24 @@ python -m env.public_chatbot_test report
 ```
 
 An actual capture requires the displayed model (or `not displayed`), a timestamp with a time-zone offset, verbatim answer and evidence reference. A review additionally needs a reviewer, reason and HTTPS source links. A Codex answer must use `service: Codex` and `access_method: self_reference`; it cannot be graded as an independent public observation. The reporter only marks the comparison complete after all 20 public responses are captured and reviewed. The template is never overwritten by `init`.
+
+### Capture without exposing the answer key
+
+Export a single prompt and paste it into a fresh public-product conversation. `prompts` exports only the common instruction and question text; it omits expected answers, trap labels and source keys:
+
+```powershell
+python -m env.public_chatbot_test prompts --question Q01
+# Alternatively export all ten questions for one batch; record --batch below:
+python -m env.public_chatbot_test prompts
+```
+
+Save the actual response as a UTF-8 text file, preserve a share link or transcript, and record the observed metadata. Use the actual capture time rather than copying this example:
+
+```powershell
+python -m env.public_chatbot_test record --service ChatGPT --question Q01 --raw-answer docs/chatbot-evidence/chatgpt-q01.txt --model "not displayed" --captured-at "2026-10-25T07:30:00+05:30" --evidence docs/chatbot-evidence/chatgpt-q01.txt --browsing unknown
+```
+
+Repeat for Q01–Q10 in each product. For a batch, save each question's verbatim answer separately, point the evidence field to the full batch transcript/share link, and add `--batch` to every recorded row. Recording refuses to overwrite an existing response. Add each source-backed `review` in the capture JSON, then run `report`; recorded answers alone never earn a correctness verdict. Do not commit account details, browser cookies, unrelated conversations or personal data with the synthetic transcripts.
 
 | Question | ChatGPT | Gemini |
 | --- | --- | --- |

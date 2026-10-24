@@ -83,6 +83,40 @@ def blank_answers() -> dict:
                         for service in SERVICES for q in questions["questions"]]}
 
 
+def render_prompts(question_id: str | None = None) -> str:
+    """Export only test inputs; never leak the answer key to the chatbot."""
+    questions = question_set()
+    selected = [q for q in questions["questions"] if question_id is None or q["id"] == question_id]
+    if not selected:
+        raise ValueError("Unknown question id")
+    lines = [questions["common_instruction"], ""]
+    if question_id is None:
+        lines += ["Answer each question separately under its Q identifier, at most 150 words per answer.", ""]
+    for question in selected:
+        lines += [question["id"], question["question"], ""]
+    return "\n".join(lines)
+
+
+def record_answer(path: Path, answer: Answer) -> None:
+    """Validate before writing and refuse to replace an existing observation."""
+    if answer.service not in SERVICES or answer.raw_answer is None:
+        raise ValueError("Record requires an actual public response")
+    answers = load_answers(path)
+    for index, previous in enumerate(answers):
+        if (previous.service, previous.question_id) == (answer.service, answer.question_id):
+            if previous.raw_answer is not None:
+                raise ValueError("Response already captured; refusing to overwrite")
+            answers[index] = answer
+            break
+    else:
+        answers.append(answer)
+    _validate_records(answers)
+    questions = question_set()
+    payload = {"question_set": questions["id"], "question_set_version": questions["version"],
+               "answers": [row.model_dump(mode="json") for row in answers]}
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+
+
 def load_answers(path: Path) -> list[Answer]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     questions = question_set()
@@ -151,11 +185,30 @@ def render_report(answers: list[Answer]) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("init", "report"))
+    parser.add_argument("command", choices=("init", "report", "prompts", "record"))
     parser.add_argument("--answers", type=Path, default=ANSWERS)
     parser.add_argument("--output", type=Path, default=REPORT)
+    parser.add_argument("--question", help="Q01–Q10; omit for a batch prompt")
+    parser.add_argument("--service", choices=SERVICES)
+    parser.add_argument("--raw-answer", type=Path, help="UTF-8 file containing the verbatim public answer")
+    parser.add_argument("--model", help="Displayed model, or 'not displayed'")
+    parser.add_argument("--captured-at", help="Actual capture timestamp including time-zone offset")
+    parser.add_argument("--evidence", help="Share URL or saved transcript path")
+    parser.add_argument("--browsing", choices=("on", "off", "unknown"), default="unknown")
+    parser.add_argument("--batch", action="store_true")
     args = parser.parse_args()
-    if args.command == "init":
+    if args.command == "prompts":
+        print(render_prompts(args.question))
+    elif args.command == "record":
+        if not all((args.service, args.question, args.raw_answer, args.model, args.captured_at, args.evidence)):
+            parser.error("record requires --service, --question, --raw-answer, --model, --captured-at and --evidence")
+        answer = Answer(service=args.service, question_id=args.question, access_method="public_web",
+                        model=args.model, captured_at=args.captured_at, evidence=args.evidence,
+                        browsing=args.browsing, batch=args.batch,
+                        raw_answer=args.raw_answer.read_text(encoding="utf-8-sig"))
+        record_answer(args.answers, answer)
+        print(f"Recorded {answer.service} / {answer.question_id}; source-backed review still required")
+    elif args.command == "init":
         args.answers.parent.mkdir(parents=True, exist_ok=True)
         # Never overwrite answers someone has already collected.
         with args.answers.open("x", encoding="utf-8", newline="\n") as stream:
