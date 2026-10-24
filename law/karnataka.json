@@ -1,0 +1,252 @@
+[
+  {
+    "id": "KRA-2(1)",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "2(1)",
+    "title": "Scheduled coverage",
+    "paraphrase": "Specified chapters cover First Schedule areas.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "KRA-2(3)(a)",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "2(3)(a)",
+    "title": "Ownership exclusions",
+    "paraphrase": "Government, local-authority, religious, charitable and Wakf premises are excluded.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "KRA-2(3)(b)",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "2(3)(b)",
+    "title": "Cooperative buildings",
+    "paraphrase": "Cooperative-society buildings are excluded.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "KRA-2(3)(e)",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "2(3)(e)",
+    "title": "Statutory rent exclusion",
+    "paraphrase": "Statutory rent thresholds: Part A INR 3500; elsewhere INR 2000.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Use deemed rent at commencement or standard rent, not current market rent. Equality at the threshold is not an exclusion."
+  },
+  {
+    "id": "KRA-2(3)(f)",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "2(3)(f)",
+    "title": "Construction exclusion",
+    "paraphrase": "Construction or substantial renovation triggers fifteen years of exclusion.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "KRA-2(3)(g)",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "2(3)(g)",
+    "title": "Non-residential exclusion",
+    "paraphrase": "Non-residential exclusion has a commercial-premises exception up to fourteen square metres.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "KRA-SCHEDULE-1-A",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "First Schedule, Part A",
+    "title": "Corporation areas",
+    "paraphrase": "Corporation cities and their three-kilometre surroundings.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "KRA-SCHEDULE-1-B",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "First Schedule, Part B",
+    "title": "Council areas",
+    "paraphrase": "City Municipal Council areas.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "KRA-3(c)",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "3(c)",
+    "title": "Court definition",
+    "paraphrase": "Bangalore's defined Court is the Court of Small Causes.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "This defines Court under this Act; it does not establish a civil money-recovery pecuniary limit."
+  },
+  {
+    "id": "KRA-4",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "4",
+    "title": "Written tenancy",
+    "paraphrase": "Covered tenancies require written agreements.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "KRA-15",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "15",
+    "title": "Refund",
+    "paraphrase": "Contravening payments: Controller refund application within one year.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "KRA-16",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "16",
+    "title": "Rent receipts",
+    "paraphrase": "Receipts required; refusal can attract damages up to double payment.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "KRA-48(3)",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "48(3)",
+    "title": "Inspection notice",
+    "paraphrase": "Inspection follows prescribed notice.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "KRA-48(5)",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "48(5)",
+    "title": "Handover condition",
+    "paraphrase": "Normal wear and tear excepted at handover.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "KRA-49",
+    "act": "Karnataka Rent Act, 1999",
+    "section": "49",
+    "title": "Essential services",
+    "paraphrase": "Essential-service withdrawal requires just and sufficient cause.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Conditional on section 2 coverage; presence in this library does not establish applicability."
+  },
+  {
+    "id": "TPA-106",
+    "act": "Transfer of Property Act, 1882",
+    "section": "106",
+    "title": "Default notice",
+    "paraphrase": "Absent contrary contract, law or usage, ordinary leases default to monthly duration and fifteen days' notice.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Read with the agreement and applicable local law; this entry does not adjudicate a particular tenancy."
+  },
+  {
+    "id": "TPA-107",
+    "act": "Transfer of Property Act, 1882",
+    "section": "107",
+    "title": "Registered leases",
+    "paraphrase": "Yearly leases, terms exceeding one year and yearly-rent leases require registration.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Read with the agreement and applicable local law; this entry does not adjudicate a particular tenancy."
+  },
+  {
+    "id": "TPA-108",
+    "act": "Transfer of Property Act, 1882",
+    "section": "108",
+    "title": "Lease duties",
+    "paraphrase": "Default rights and duties yield to contrary contract or local usage.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Read with the agreement and applicable local law; this entry does not adjudicate a particular tenancy."
+  },
+  {
+    "id": "TPA-108(a)",
+    "act": "Transfer of Property Act, 1882",
+    "section": "108(a)",
+    "title": "Material defects",
+    "paraphrase": "Lessor discloses known latent material defects.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Read with the agreement and applicable local law; this entry does not adjudicate a particular tenancy."
+  },
+  {
+    "id": "TPA-108(c)",
+    "act": "Transfer of Property Act, 1882",
+    "section": "108(c)",
+    "title": "Quiet enjoyment",
+    "paraphrase": "Performing tenants receive contractual quiet enjoyment.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Read with the agreement and applicable local law; this entry does not adjudicate a particular tenancy."
+  },
+  {
+    "id": "TPA-108(m)",
+    "act": "Transfer of Property Act, 1882",
+    "section": "108(m)",
+    "title": "Wear and tear",
+    "paraphrase": "Restoration duty excepts reasonable wear and tear and irresistible force.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
+    "applies_in_karnataka": true,
+    "notes": "Read with the agreement and applicable local law; this entry does not adjudicate a particular tenancy."
+  },
+  {
+    "id": "ICA-74",
+    "act": "Indian Contract Act, 1872",
+    "section": "74",
+    "title": "Penalty and compensation",
+    "paraphrase": "A stipulated penalty supports only reasonable compensation, no greater than the stipulated amount.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/2187/2/A187209.pdf",
+    "applies_in_karnataka": true,
+    "notes": "A risk flag is not a conclusion that every forfeiture is invalid; facts and judicial assessment matter."
+  },
+  {
+    "id": "RA-17",
+    "act": "Registration Act, 1908",
+    "section": "17(1)(d)",
+    "title": "Compulsory registration of leases",
+    "paraphrase": "Yearly leases, terms exceeding one year and leases reserving yearly rent require registration.",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/13236/1/the_registration_act%2C_1908.pdf",
+    "applies_in_karnataka": true,
+    "notes": "An eleven-month term alone does not resolve all registration or stamp-duty requirements."
+  },
+  {
+    "id": "MTA-11(1)",
+    "act": "Model Tenancy Act, 2021",
+    "section": "11(1)",
+    "title": "Model residential deposit cap",
+    "paraphrase": "The model proposes a two-month residential security deposit cap.",
+    "source_url": "https://prsindia.org/billtrack/the-model-tenancy-act-2021",
+    "applies_in_karnataka": false,
+    "notes": "Model provision only; not binding Karnataka law. Never cite as an applicable cap or available Karnataka authority."
+  },
+  {
+    "id": "MTA-30",
+    "act": "Model Tenancy Act, 2021",
+    "section": "30",
+    "title": "Model Rent Authority",
+    "paraphrase": "The model proposes appointment of a Rent Authority.",
+    "source_url": "https://prsindia.org/billtrack/the-model-tenancy-act-2021",
+    "applies_in_karnataka": false,
+    "notes": "Model provision only; not binding Karnataka law. Never cite as an applicable cap or available Karnataka authority."
+  }
+]
