@@ -6,7 +6,13 @@ Built for ChronoForge 2026, NITK Surathkal. **Track:** Agentic AI. **Theme:** Ci
 
 ## Status
 
-Phase 0: the earlier prototype has been imported without its Git history, local environment, credentials, or caches. The ChronoForge agent and frontend are still to be built.
+Phase 0: the earlier prototype has been imported without its Git history, local environment, credentials, or caches.
+
+Checkpoint 1 (24 Oct, 16:00):
+
+- [x] Next.js frontend on stubbed data: intake form, review report (governing law, money at risk, counter-proposal with EN/KN and approve, citation check, decision trace), question card for `needs_input`, and a move-out preview. `npm run build` and `npm run lint` pass; the layout works at 390 px. See [frontend/README.md](frontend/README.md).
+- [x] Frontend/backend contract drafted in [docs/api-contract.md](docs/api-contract.md), mirrored by `frontend/lib/types.ts`.
+- [ ] Law library, jurisdiction tools, verifier, three tasks and scorer (backend, in progress).
 
 Baseline test result: **51 passed, 6 subtests passed** (`python -m pytest -q`). A root package import guard was added so pytest can collect tests from this checkout; `housing/` and `server/` are unchanged. Validation currently uses the earlier project's Python 3.10.11 environment; the event backend targets Python 3.11.
 
@@ -14,9 +20,9 @@ Baseline test result: **51 passed, 6 subtests passed** (`python -m pytest -q`). 
 
 | Existed before ChronoForge | Built at ChronoForge |
 | --- | --- |
-| Offline rules-based Karnataka applicability screening and clause extraction | No event features completed yet; see the checklist below |
-| English, Kannada and Hindi message templates | |
-| Scripted counterparty negotiation | |
+| Offline rules-based Karnataka applicability screening and clause extraction | Next.js review report with decision trace, verifier verdicts and money at risk (stubbed data) |
+| English, Kannada and Hindi message templates | Approve-to-send draft panel with an English/Kannada toggle (stubbed data) |
+| Scripted counterparty negotiation | Question card that pauses the run for a missing jurisdiction fact |
 | Local PDF extraction and OCR | |
 | OpenEnv tasks, deterministic grading and tests | |
 | Offline housing review without a model; a separate legacy model inference script | |
@@ -29,11 +35,21 @@ Baseline test result: **51 passed, 6 subtests passed** (`python -m pytest -q`). 
 - [ ] Agreement redaction, money calculations and approval-gated messages
 - [ ] Model provider, planning agent and decision trace
 - [ ] FastAPI run, answer and approval endpoints
-- [ ] Next.js review and move-out screens with English and Kannada drafts
+- [ ] Next.js review and move-out screens with English and Kannada drafts (screens built on stubs; live API pending)
 - [ ] Baseline versus agent evaluation results
 - [ ] Move-out deduction challenges and next formal step
 
 Implementation order and acceptance checks: [TASKS.md](TASKS.md) and [BUILD.md](BUILD.md). Project rules: [CLAUDE.md](CLAUDE.md).
+
+## Run the frontend
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:3000. Stubs are on by default (`NEXT_PUBLIC_USE_STUBS`), so `/review/blr_flat` and `/moveout/moveout` work without the backend.
 
 ## Run the imported prototype
 
@@ -53,6 +69,7 @@ Open http://127.0.0.1:7861. The offline housing interface needs no model key. `.
 - Python dependencies: OpenAI Python SDK, python-dotenv, pytest, pytest-cov, httpx, setuptools and wheel.
 - Local document tools: PyMuPDF, Pillow, RapidOCR, ONNX Runtime and NumPy.
 - [India Code](https://www.indiacode.nic.in/) and [PRS Legislative Research](https://prsindia.org/billtrack/the-model-tenancy-act-2021): planned statute and legislative references.
+- Frontend: [Next.js](https://nextjs.org/), React and [Tailwind CSS](https://tailwindcss.com/) (MIT); [Lucide](https://lucide.dev/) icons (ISC); Geist and Geist Mono (Vercel, OFL-1.1) and Noto Sans Kannada (Google, OFL-1.1) via `next/font`.
 - [Groq](https://groq.com/) and [Sarvam](https://www.sarvam.ai/): planned model providers; event integration and provider selection remain pending.
 
 The imported README refers to a BSD-style LICENSE file, but the source checkout does not include that file. Upstream licensing information needs verification before distribution.

@@ -23,3 +23,13 @@ npm run dev        # http://localhost:3000
 ## Credits
 
 Geist and Geist Mono (Vercel, OFL-1.1), Noto Sans Kannada (Google, OFL-1.1), Lucide icons (ISC).
+
+## Checkpoint 1 browser demo (TASKS.md 4.3)
+
+1. Open a fresh tab at `/`. Paste any clause text, leave **Year built** blank, and press **Review the agreement**. The run pauses with the question card (`needs_input`).
+2. Answer `2019`. The full report appears.
+3. In **Citation check**, the two red rows are the blocked claims: the Model Tenancy Act two-month cap (wrong law) and an uncited 30-day refund claim.
+4. In **Decision trace**, walk through the plan, the question, the tool calls (expand **Input and output**), the verifier steps and the draft.
+5. Optional: switch the counter-proposal to ಕನ್ನಡ and press **Approve and send** to show the follow-up date.
+
+Stub state lives in `sessionStorage`, so a new tab starts the demo fresh. Opening `/review/blr_flat` directly shows the completed run.

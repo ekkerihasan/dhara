@@ -41,7 +41,7 @@ Owner key: H = Hasan (backend, Python), W = Wasih (frontend, TypeScript), B = bo
 
 - [ ] 4.1 [B] Stop coding 15:40. README Status ticks. Commit: `docs: README progress for checkpoint 1`
 - [ ] 4.2 [H] Terminal ready: `pytest -q`; `python -m env.scorer env/tasks/blr_flat.json env/tasks/sample_run_wronglaw.json` showing the penalty; `check_jurisdiction` one-liner.
-- [ ] 4.3 [W] Browser ready: `/review/blr_flat` stubbed, blocked claim in red.
+- [x] 4.3 [W] Browser ready: `/review/blr_flat` stubbed, blocked claim in red.
 
 **REPORT 50 percent** (before 16:00).
 
@@ -118,4 +118,6 @@ Phase 0 complete (Hasan): baseline import `7132cfa` (`chore: initialize Dhara AI
 
 Phase 1 not started: no `law/`, `backend/`, `env/` or `frontend/` yet. Next for H: 1.1, 1.2.
 
-Frontend (Wasih): 1.3, 1.4 and 3.3 done on stubs in `frontend/` (`npm run build` and `npm run lint` pass; no horizontal scroll at 390 px). `/review/blr_flat` shows the blocked 2-month-cap claim in red (ready for 4.3). Submitting the form with the built year blank shows the `needs_input` question card. `lib/types.ts` is a first draft of the shapes `backend/models.py` should return; section ids used in the stub (`KRA-2(3)(e)`, `KRA-2(3)(f)`, `ICA-74`, `TPA-106`, `TPA-108`, `MTA-11`) need to match `law/karnataka.json` (3.4).
+Frontend (Wasih): 1.3, 1.4 and 3.3 done on stubs in `frontend/` (`npm run build` and `npm run lint` pass; no horizontal scroll at 390 px). `/review/blr_flat` shows the blocked 2-month-cap claim in red (4.3 ready; steps in `frontend/README.md`). Submitting the form with the built year blank shows the `needs_input` question card. `lib/types.ts` is a first draft of the shapes `backend/models.py` should return; section ids used in the stub (`KRA-2(3)(e)`, `KRA-2(3)(f)`, `ICA-74`, `TPA-106`, `TPA-108`, `MTA-11`) need to match `law/karnataka.json` (3.4).
+
+Checkpoint 1 shared items (Wasih): README Status, Before and after, Run the frontend and Credits updated for the frontend (4.1; Hasan to add backend ticks). 3.4 in progress: contract drafted in `docs/api-contract.md` for `backend/models.py` to follow.
