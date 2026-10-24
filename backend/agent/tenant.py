@@ -195,6 +195,7 @@ def _record_finding(state: AgentState, arguments: dict[str, Any]) -> dict[str, A
     for section_id in arguments.get("section_ids", []):
         (kept if _citable(state, section_id) and category != "rent_escalation_excess" else dropped).append(section_id)
     state.findings.append(Finding(clause_ref=clause_ref, category=category, issue=str(arguments["issue"]),
+                                  clause_text=_clause(state, clause_ref)["text"],
                                   ask=str(arguments.get("ask", "")), money_at_risk_inr=amount, section_ids=kept))
     return {"money_at_risk_inr": amount, "section_ids": kept, "dropped_section_ids": dropped}
 
@@ -248,7 +249,7 @@ def _deterministic_findings(state: AgentState) -> list[dict[str, Any]]:
         if category:
             result = _dispatch(state, "compute_money", {"finding_type": category, "inputs": inputs}, counted=False)
             amount = int(result.get("money_at_risk_inr", 0))
-            results.append({"clause_ref": clause["id"], "category": category, "issue": issue,
+            results.append({"clause_ref": clause["id"], "clause_text": text, "category": category, "issue": issue,
                             "money_at_risk_inr": amount, "section_ids": sections})
     return results
 
@@ -321,10 +322,13 @@ def _finish_analysis(state: AgentState) -> None:
     for verdict in state.verdicts:
         state.add_trace("verifier", "Claim checked", claim=verdict)
     draft_input = [finding.model_dump() for finding in state.findings]
-    draft_result = _dispatch(state, "draft_message", {"findings": draft_input, "tone": "request", "language": state.language})
-    if "error" not in draft_result:
-        state.drafts = [Draft(**draft_result)]
-        state.add_trace("draft", "Tenant draft prepared", draft=draft_result)
+    # Both languages, the tenant's choice first, so the screen can switch between them.
+    state.drafts = []
+    for language in dict.fromkeys([state.language, "en", "kn"]):
+        draft_result = _dispatch(state, "draft_message", {"findings": draft_input, "tone": "request", "language": language}, counted=False)
+        if "error" not in draft_result:
+            state.drafts.append(Draft(**draft_result))
+            state.add_trace("draft", "Tenant draft prepared", draft=draft_result)
     state.status = "ready"
     state.question = None
 

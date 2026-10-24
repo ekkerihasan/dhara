@@ -55,7 +55,8 @@ def test_model_drives_findings_and_sees_each_tool_result() -> None:
     tool_results = [m for m in second_turn if m["role"] == "tool"]
     assert len(tool_results) == 5 and '"money_at_risk_inr": 150000' in tool_results[0]["content"]
     assert any(v["verdict"] == "blocked" and v["section_id"] == "MTA-11(1)" for v in result.verdicts)
-    assert result.drafts[0].language == "en"
+    assert [d.language for d in result.drafts] == ["en", "kn"]
+    assert result.findings[0].clause_text.startswith("C2.")
 
 
 def test_model_cannot_cite_inapplicable_sections_on_a_finding() -> None:
