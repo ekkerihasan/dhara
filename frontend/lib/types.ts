@@ -105,10 +105,22 @@ export interface Draft {
   text: Record<Language, string>;
 }
 
+// One reason from backend.tools.law.check_jurisdiction (docs/BACKEND_CONTRACT.md).
+export type JurisdictionStatus = "excluded" | "needs_input" | "conditional";
+
+export interface JurisdictionReason {
+  section_id: string;
+  status: JurisdictionStatus;
+  text: string;
+}
+
 export interface GoverningLaw {
-  rent_act_applies: boolean;
+  rent_act_applies: boolean | null; // null: unresolved, never shown as excluded
   summary: string;
   section_ids: string[];
+  reasons: JurisdictionReason[];
+  missing: string[];
+  note: string;
   governs: string[];
 }
 

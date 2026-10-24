@@ -35,7 +35,7 @@ The frontend polls `GET /api/runs/{id}` every 1.5 s while `status` is `running`.
 | `created_at` | ISO datetime | |
 | `model` | str | provider and model name |
 | `facts` | `Facts` | |
-| `governing_law` | `{ rent_act_applies: bool, summary: str, section_ids: [str], governs: [str] }` or null | null until `check_jurisdiction` has run |
+| `governing_law` | `{ rent_act_applies: bool or null, summary: str, section_ids: [str], reasons: [{section_id, status, text}], missing: [str], note: str, governs: [str] }` or null | null until `check_jurisdiction` has run. `rent_act_applies`, `reasons`, `missing` and `note` are copied from its output (`applies`, `reasons`, `missing`, `note`; see docs/BACKEND_CONTRACT.md). `status` is `excluded`, `needs_input` or `conditional`; a null `rent_act_applies` is shown as Unresolved, never as excluded |
 | `trace` | `[TraceStep]` | in order; `index` starts at 0 |
 | `findings` | `[Finding]` | |
 | `drafts` | `[Draft]` | |
@@ -65,4 +65,4 @@ Each step has `index` (int), `at` (ISO datetime) and `type`. The `type` decides 
 
 ## Section ids used by the stubs
 
-`KRA-2(3)(e)`, `KRA-2(3)(f)`, `ICA-74`, `TPA-106`, `TPA-108`, `MTA-11` (the Model Tenancy Act deposit cap, `applies_in_karnataka: false`). If `law/karnataka.json` uses a different scheme, the stubs will be renamed to match.
+`KRA-2(3)(e)`, `KRA-2(3)(f)`, `ICA-74`, `TPA-106`, `TPA-108(m)`, `MTA-11(1)` (the Model Tenancy Act deposit cap, `applies_in_karnataka: false`). Every one exists in `law/karnataka.json`. The stubs' `sections` maps are copied from it, and the `check_jurisdiction` output in `blr_flat.json` is the real result for the stub facts.
