@@ -143,6 +143,7 @@ export interface Run {
   max_tool_calls: number;
   not_a_lawyer: true;
   notice: string;
+  sample_note?: string | null; // stub mode only: facts the tenant entered that differ from the sample flat
 }
 
 export interface RunInput {

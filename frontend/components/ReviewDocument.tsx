@@ -120,6 +120,18 @@ export function ReviewDocument({ id }: { id: string }) {
           What governs this rental, which clauses cost the tenant money, and the message the agent drafted to fix them, with every step it took.
         </p>
 
+        {run.sample_note && (
+          <div className="callout callout-warning">
+            <TriangleAlert size={16} aria-hidden />
+            <div>
+              <p>
+                <strong>Sample mode.</strong> This report was computed by our tools for the sample flat. {run.sample_note}
+              </p>
+              <p>The live agent, coming next, recomputes the report from your own answers.</p>
+            </div>
+          </div>
+        )}
+
         <dl className="meta">
           <div>
             <dt>Rent</dt>

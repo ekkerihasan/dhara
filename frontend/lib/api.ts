@@ -3,6 +3,7 @@
 
 import blrFlat from "@/stubs/blr_flat.json";
 import moveout from "@/stubs/moveout.json";
+import { inr, LOCAL_BODY_LABEL } from "./format";
 import type { ApprovalStep, Facts, Language, MoveoutRun, QuestionStep, Run, RunInput } from "./types";
 
 export const USE_STUBS = process.env.NEXT_PUBLIC_USE_STUBS !== "false";
@@ -30,9 +31,10 @@ interface StubState {
   needsAnswer: boolean;
   approvedAt: string | null;
   language: Language;
+  entered: Facts | null; // what the tenant typed, compared with the sample flat
 }
 
-const DEFAULT_STATE: StubState = { answer: null, needsAnswer: false, approvedAt: null, language: "en" };
+const DEFAULT_STATE: StubState = { answer: null, needsAnswer: false, approvedAt: null, language: "en", entered: null };
 
 function readState(id: string): StubState {
   try {
@@ -59,6 +61,26 @@ function addDays(iso: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** The stub is precomputed for one sample flat. Name every fact the tenant entered that differs from it. */
+function sampleNote(entered: Facts | null, sample: Facts): string | null {
+  if (!entered) return null;
+  const show = {
+    rent_per_month: (v: number | null) => (v === null ? "blank" : `${inr(v)}/month`),
+    deposit_inr: (v: number | null) => (v === null ? "blank" : inr(v)),
+    built_year: (v: number | null) => (v === null ? "blank" : String(v)),
+    substantial_renovation_year: (v: number | null) => (v === null ? "none" : String(v)),
+  };
+  const LABEL = { rent_per_month: "rent", deposit_inr: "deposit", built_year: "built year", substantial_renovation_year: "renovation year" };
+  const diffs: string[] = [];
+  for (const key of Object.keys(show) as (keyof typeof show)[]) {
+    if (entered[key] !== null && entered[key] !== sample[key]) diffs.push(`${LABEL[key]} ${show[key](entered[key])} (sample: ${show[key](sample[key])})`);
+  }
+  if (entered.local_body && entered.local_body !== sample.local_body)
+    diffs.push(`local body ${LOCAL_BODY_LABEL[entered.local_body]} (sample: ${sample.local_body ? LOCAL_BODY_LABEL[sample.local_body] : "blank"})`);
+  if (entered.premises_use !== sample.premises_use) diffs.push(`use ${entered.premises_use.replace("_", "-")} (sample: ${sample.premises_use})`);
+  return diffs.length ? `You entered ${diffs.join(", ")}.` : null;
+}
+
 function stubRun(id: string): Run {
   if (id !== STUB_RUN_ID) throw new Error(`No stubbed run "${id}". Try /review/${STUB_RUN_ID}.`);
   const run = structuredClone(blrFlat) as unknown as Run;
@@ -73,7 +95,8 @@ function stubRun(id: string): Run {
     question.answer = null;
     return { ...run, facts: { ...run.facts, built_year: null }, status: "needs_input", trace: run.trace.slice(0, qIndex + 1), governing_law: null, findings: [], drafts: [] };
   }
-  if (state.answer) question.answer = state.answer;
+  // The trace keeps the sample's own answer so it matches the tool calls below it; sample_note names the difference.
+  run.sample_note = sampleNote(state.entered, run.facts);
 
   if (state.approvedAt) {
     const approval: ApprovalStep = {
@@ -95,7 +118,7 @@ function stubRun(id: string): Run {
 export async function createRun(input: RunInput): Promise<string> {
   if (USE_STUBS) {
     await delay(400);
-    writeState(STUB_RUN_ID, { ...DEFAULT_STATE, needsAnswer: input.facts.built_year === null, language: input.facts.language });
+    writeState(STUB_RUN_ID, { ...DEFAULT_STATE, needsAnswer: input.facts.built_year === null, language: input.facts.language, entered: input.facts });
     return STUB_RUN_ID;
   }
   const form = new FormData();
@@ -118,7 +141,9 @@ export async function getRun(id: string): Promise<Run> {
 export async function answerQuestion(id: string, field: keyof Facts, value: string): Promise<void> {
   if (USE_STUBS) {
     await delay(600);
-    writeState(id, { ...readState(id), answer: value });
+    const state = readState(id);
+    const entered = state.entered ? { ...state.entered, [field]: Number(value) || null } : null;
+    writeState(id, { ...state, answer: value, entered });
     return;
   }
   await postJson(`/api/runs/${encodeURIComponent(id)}/answer`, { field, value });
