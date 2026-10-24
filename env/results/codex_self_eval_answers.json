@@ -1,0 +1,82 @@
+{
+  "question_set": "public_chatbot_side_test",
+  "question_set_version": 1,
+  "evaluation_type": "self_authored_reference_review",
+  "author": "Codex",
+  "reviewer": "Codex (same assistant)",
+  "context_access": "Author and reviewer had access to Dhara's law pack, question answer key, and earlier reference answers. This is an open-book self-review, not a blind or independent benchmark.",
+  "captured_at": "2026-10-25T00:53:51+05:30",
+  "source_check_notes": "Primary government materials were consulted where reachable. The India Code PDF refresh timed out in this session; Karnataka provisions are checked against the existing sourced project law pack. The 2022 government MTA adoption statement is historical and does not itself verify the legal position in October 2026. No exhaustive current-law audit is claimed.",
+  "answers": [
+    {
+      "question_id": "Q01",
+      "answer": "The Model Tenancy Act's two-month residential deposit provision is a model rule, not automatically binding state law. Dhara's Karnataka law pack does not establish its adoption in Karnataka, so I would not apply that cap to this tenancy. A six-month deposit alone does not establish that the agreement is unlawful. Check the governing state law and the agreement's refund and deduction terms. The government adoption statement cited here dates to 2022; it is not proof that no later Karnataka enactment exists.",
+      "section_ids": ["MTA-11(1)"],
+      "sources": ["https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=1844644", "https://prsindia.org/billtrack/the-model-tenancy-act-2021"],
+      "review": {"verdict": "consistent", "reason": "Does not turn the model cap into Karnataka law or infer illegality from deposit size; explicitly qualifies the historical adoption evidence."}
+    },
+    {
+      "question_id": "Q02",
+      "answer": "Under Karnataka Rent Act section 2(3)(f), the construction-based exclusion lasts fifteen years. A building completed in 2019 is still within that period in October 2026, assuming the completion fact and the law-pack provision apply as stated. Section 2(3)(e) separately uses statutory deemed or standard rent. The current INR 25,000 market rent does not by itself establish that statutory figure, so it is not a sound independent basis for that exclusion. The building-age fact supplies the stated basis for exclusion here.",
+      "section_ids": ["KRA-2(3)(e)", "KRA-2(3)(f)"],
+      "sources": ["https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf"],
+      "review": {"verdict": "consistent", "reason": "Separates the fifteen-year construction exclusion from the statutory-rent test and does not substitute market rent."}
+    },
+    {
+      "question_id": "Q03",
+      "answer": "No. On the stated First Schedule Part B classification, section 2(3)(e) uses INR 2,000, not Part A's INR 3,500 threshold. The confirmed statutory rent of INR 3,000 exceeds INR 2,000, so this exclusion applies on the supplied facts. The old construction date does not cancel the separate rent exclusion. This conclusion relies on the question's confirmation of the scheduled area and statutory rent, rather than assuming that current market rent establishes either fact.",
+      "section_ids": ["KRA-2(3)(e)", "KRA-SCHEDULE-1-B"],
+      "sources": ["https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf"],
+      "review": {"verdict": "consistent", "reason": "Uses the Part B threshold and the expressly confirmed statutory figure, with other exclusions already checked in the question."}
+    },
+    {
+      "question_id": "Q04",
+      "answer": "Coverage remains unresolved from these facts. Current monthly market rent alone does not establish the deemed or standard rent used in section 2(3)(e). Check the scheduled/local-authority area, construction and substantial-renovation dates under section 2(3)(f), the statutory rent, ownership and exclusions under section 2(3)(a), and other relevant exemptions. Obtain the agreement and supporting records where possible. If an important fact remains unknown, retain an unresolved jurisdiction result rather than promising Rent Act remedies or confidently excluding the tenancy.",
+      "section_ids": ["KRA-2(3)(a)", "KRA-2(3)(e)", "KRA-2(3)(f)"],
+      "sources": ["https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf"],
+      "review": {"verdict": "consistent", "reason": "Explicitly leaves jurisdiction unresolved and identifies the missing facts instead of deciding from market rent."}
+    },
+    {
+      "question_id": "Q05",
+      "answer": "I cannot establish a universal ten-percent statutory ceiling from the project's sources. Dhara's ten-percent figure is a product-review and negotiation threshold, not a binding legal maximum. A proposed twelve-percent annual increase can be flagged for discussion without calling it unlawful solely because it exceeds ten percent. The agreement and any law actually governing the tenancy need separate review, including whether the Karnataka Rent Act applies. Do not turn a commercial fairness target into a legal cap.",
+      "section_ids": [],
+      "sources": ["https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf", "https://prsindia.org/billtrack/the-model-tenancy-act-2021"],
+      "review": {"verdict": "consistent", "reason": "Labels ten percent as a product threshold and makes no unsupported universal legal-cap claim."}
+    },
+    {
+      "question_id": "Q06",
+      "answer": "The clause does not automatically establish entitlement to the entire INR 150,000 in every case. Indian Contract Act section 74 concerns reasonable compensation for a breach where a sum or penalty is stipulated, with the stipulated amount as a ceiling. The breach, the loss and the applicable principles still need assessment; neither automatic full forfeiture nor automatic invalidity follows merely from this wording. Supreme Court authority explains that the provision is compensatory, and proof of loss is not dispensed with where such proof is possible. The cited judgment concerns a sale transaction, so its application to these rental facts requires care.",
+      "section_ids": ["ICA-74"],
+      "sources": ["https://www.indiacode.nic.in/bitstream/123456789/2187/2/A187209.pdf", "https://api.sci.gov.in/supremecourt/2023/6113/6113_2023_13_1502_61408_Judgement_02-May-2025.pdf"],
+      "review": {"verdict": "consistent", "reason": "Uses reasonable-compensation analysis, preserves the stipulated ceiling and proof-of-loss qualification, and identifies the judgment's different factual setting."}
+    },
+    {
+      "question_id": "Q07",
+      "answer": "Challenge the INR 15,000 deduction using the dated move-in checklist, photographs and the agreement's express wear-and-tear exclusion. Ask the landlord to identify new damage and explain the claimed amount rather than charging again for recorded scuffs or faded paint. Transfer of Property Act section 108(m) addresses restoration subject to reasonable wear and tear, but section 108's default framework is subject to contrary contract or local usage. Here the agreement itself also excludes reasonable wear. These facts support disputing this deduction; they do not establish that every painting charge in every tenancy is unlawful.",
+      "section_ids": ["TPA-108", "TPA-108(m)"],
+      "sources": ["https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf", "https://session.delhi.gov.in/session/transfer-property-act"],
+      "review": {"verdict": "consistent", "reason": "Connects evidence and contract to the deduction, includes section 108's contractual qualification, and avoids a blanket ban on painting charges."}
+    },
+    {
+      "question_id": "Q08",
+      "answer": "An eighteen-month lease ordinarily falls within compulsory registration under Registration Act section 17(1)(d), and Transfer of Property Act section 107 provides for a registered instrument for a lease exceeding one year. Notarisation authenticates execution in a different way; it does not substitute for registration where registration is required. Check the instrument and any applicable local modifications before executing it. Choosing an eleven-month term solely to avoid registration also does not resolve every other tenancy-law or stamping requirement.",
+      "section_ids": ["RA-17", "TPA-107"],
+      "sources": ["https://www.indiacode.nic.in/bitstream/123456789/14646/1/ra1908-16.pdf", "https://session.delhi.gov.in/session/transfer-property-act"],
+      "review": {"verdict": "consistent", "reason": "Identifies both registration provisions and does not equate notarisation with compulsory registration."}
+    },
+    {
+      "question_id": "Q09",
+      "answer": "Given the question's confirmed Rent Act coverage, section 49 is the relevant provision. It restricts cutting off or withholding an essential supply or service without just and sufficient cause. That qualification matters: the assessment should examine the actual justification and evidence, rather than treating all disconnections alike. Merely using water disconnection to pressure payment of a disputed charge is a basis to challenge the action under this protection. Preserve evidence and obtain advice about the statutory restoration remedy. This answer relies on the express coverage assumption; it should not be applied automatically to an excluded flat.",
+      "section_ids": ["KRA-49"],
+      "sources": ["https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf"],
+      "review": {"verdict": "consistent", "reason": "Preserves both confirmed coverage and the just-and-sufficient-cause qualification, without invoking the Model Tenancy Act."}
+    },
+    {
+      "question_id": "Q10",
+      "answer": "Keep the agreement, payment records, move-in evidence and refund correspondence. A practical sequence is an itemised written demand, a lawyer's notice if unresolved, then advice about an appropriate civil money-recovery claim. The stated 2019 completion engages the law pack's fifteen-year Rent Act exclusion. Do not assume a Model Tenancy Act Rent Authority is available in Karnataka or invent a universal thirty-day refund deadline. Check contractual deadlines and the correct court, jurisdiction and monetary limits. The Rent Act's definition of Court does not itself establish the right civil forum for an excluded tenancy. Ordinary nonpayment alone does not establish a basis for a police complaint.",
+      "section_ids": ["KRA-2(3)(f)", "KRA-3(c)", "MTA-30"],
+      "sources": ["https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf", "https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=1844644"],
+      "review": {"verdict": "consistent", "reason": "Separates suggested civil recovery steps from binding forum rules, avoids an assumed MTA authority or refund deadline, and leaves court limits for verification."}
+    }
+  ]
+}

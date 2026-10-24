@@ -47,6 +47,7 @@ For every claimed deduction call record_verdict once:
 Cite only these section ids, never one marked NOT applicable, and no Rent Act (KRA) section if the Rent Act result says the Act does not apply:
 {law}
 Usual sections: wear and tear or pre-existing condition -> TPA-108(m); a charge beyond actual loss -> ICA-74.
+For a fixed painting or cleaning amount, include ICA-74 when assessing whether the stipulated amount is reasonable, including an allowed charge.
 Never call a charge illegal, unlawful, void, "not permitted", "not permissible" or a violation, and never state a deadline
 or limit that is not in a clause. Say what the clause, the checklist and the section show. Then call finish."""
 
@@ -102,6 +103,12 @@ def _record(state: MoveoutState, arguments: dict[str, Any], source: str) -> dict
         return {"error": "verdict must be allowed or disputed"}
     known_evidence = {e["id"] for e in state.checklist}
     sections = [s for s in arguments.get("section_ids", []) if _citable(state, s)]
+    # The model may correctly allow a fixed cleaning charge but omit the
+    # reasonable-compensation citation. Keep the legal claim source-backed by
+    # adding the known Contract Act section, never an invented id.
+    deduction = next(d for d in state.deductions if d["id"] == deduction_id)
+    if deduction["category"] == "painting_or_cleaning_fixed" and not sections and _citable(state, "ICA-74"):
+        sections = ["ICA-74"]
     verdict = {"verdict": arguments["verdict"], "reason": str(arguments.get("reason", "")), "source": source,
                "evidence_ids": [e for e in arguments.get("evidence_ids", []) if e in known_evidence], "section_ids": sections}
     state.verdicts[deduction_id] = verdict

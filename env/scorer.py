@@ -8,7 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt
 
-from backend.agent.landlord import is_acceptable
+from backend.agent.scripted_landlord import is_acceptable
 from backend.tools.law import lookup_section
 
 

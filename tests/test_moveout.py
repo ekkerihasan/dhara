@@ -54,6 +54,17 @@ def test_model_verdicts_drafts_and_next_steps() -> None:
     assert any(m["role"] == "tool" for m in model.turns[1])
 
 
+def test_allowed_fixed_cleaning_gets_reasonable_compensation_citation() -> None:
+    verdicts = [
+        ("D1", "disputed", ["E1"], ["TPA-108(m)"]),
+        ("D2", "allowed", [], []),
+        ("D3", "disputed", ["E2"], ["TPA-108(m)"]),
+    ]
+    result = start_moveout(state(scripted_model(verdicts)))
+
+    assert result["deductions"][1]["section_ids"] == ["ICA-74"]
+
+
 def test_rule_fallback_when_model_unavailable() -> None:
     def down(messages, tools):
         raise ProviderError("offline")
@@ -61,6 +72,7 @@ def test_rule_fallback_when_model_unavailable() -> None:
     result = start_moveout(state(down))
 
     assert [d["verdict"] for d in result["deductions"]] == [t["expected_verdict"] for t in TASK["claimed_deductions"]]
+    assert result["deductions"][1]["section_ids"] == ["ICA-74"]
     assert any(s["label"] == "Model unavailable: rule-based fallback" for s in result["trace"])
 
 

@@ -57,6 +57,9 @@ export default function Home() {
 
           <IntakeForm />
 
+          <p><Link href="/scan">Scan an agreement photo</Link> and check the extracted text before review.</p>
+          <p><Link href="/negotiate">Practice a negotiation</Link> with a simulated PG landlord.</p>
+
           <section className="section" id="how">
             <h2>What the agent does</h2>
             <p>Each step below appears in the decision trace of your report. If it is not in the trace, it did not happen.</p>

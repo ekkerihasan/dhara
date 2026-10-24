@@ -13,7 +13,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any
 
-from backend.agent import landlord
+from backend.agent import scripted_landlord as landlord
 from backend.agent.verifier import verify_claims
 from backend.llm.provider import ProviderError
 from backend.models import Decision, Negotiation, NegotiationRound, Offer, TenantLimits

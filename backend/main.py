@@ -12,21 +12,26 @@ import base64
 import binascii
 import logging
 import uuid
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.agent.moveout import MoveoutState, approve_moveout, request_itemisation, start_moveout
+from backend.agent.baseline import start_baseline
+from backend.agent.landlord import (NegotiationMessage, NegotiationRequest, NegotiationResponse,
+    NegotiationState, advance_landlord, new_negotiation, prepare_message)
 from backend.agent.tenant import AgentState, approve_agent, start_agent
 from backend.llm.provider import ProviderError, chat, transcribe
 from backend.models import AnswerRequest, ApprovalRequest, MoveoutRequest, RunRequest, RunResponse
 from backend.tools.agreement import read_agreement
+from backend.ocr_api import router as ocr_router
 from backend.tools.voice import facts_from_speech
 
 LOGGER = logging.getLogger(__name__)
 
 app = FastAPI(title="Dhara AI", description="Agentic tenancy copilot for Karnataka")
+app.include_router(ocr_router)
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allow_methods=["GET", "POST"], allow_headers=["*"])
 
 RUNS: dict[str, AgentState] = {}
@@ -61,15 +66,20 @@ def _run(run_id: str) -> AgentState:
 
 def _advance(state: AgentState) -> None:
     """Run the agent until it needs the tenant again (background task)."""
-    start_agent(state)
+    if state.mode == "baseline":
+        start_baseline(state)
+    else:
+        start_agent(state)
     LOGGER.info("run %s status=%s tool_calls=%s", state.id, state.status, state.tool_calls)
 
 
 @app.post("/api/runs", response_model=RunResponse)
-def create_run(request: RunRequest, background: BackgroundTasks) -> RunResponse:
+def create_run(request: RunRequest, background: BackgroundTasks,
+               mode: Literal["agent", "baseline"] = "agent") -> RunResponse:
     agreement = _agreement(request)
     state = AgentState(str(uuid.uuid4()), agreement["clauses"], request.facts.model_dump(), request.language, provider_chat,
                        limits=request.limits, persona=request.persona)
+    state.mode = mode
     state.add_trace("tool_call", "read_agreement", tool="read_agreement",
                     inputs={"source": "pdf" if request.pdf_base64 else "text"},
                     output={"clauses": len(agreement["clauses"]), "redactions": agreement["redactions"]})
@@ -164,3 +174,44 @@ async def voice(audio: UploadFile = File(...), language: str = Form("")) -> dict
         raise HTTPException(400, str(exc)) from exc
     except ProviderError as exc:
         raise HTTPException(502, "Speech service unavailable; type the facts instead") from exc
+
+
+# ---------- Stretch: simulated landlord negotiation ----------
+NEGOTIATIONS: dict[str, NegotiationState] = {}
+
+
+def _negotiation(negotiation_id: str) -> NegotiationState:
+    state = NEGOTIATIONS.get(negotiation_id)
+    if state is None:
+        raise HTTPException(404, "No negotiation with this id")
+    return state
+
+
+@app.post("/api/negotiations", response_model=NegotiationResponse)
+def create_negotiation(request: NegotiationRequest, background: BackgroundTasks) -> NegotiationResponse:
+    try:
+        state = new_negotiation(str(uuid.uuid4()), request, provider_chat)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    NEGOTIATIONS[state.id] = state
+    background.add_task(advance_landlord, state)
+    return state.response()
+
+
+@app.get("/api/negotiations/{negotiation_id}", response_model=NegotiationResponse)
+def get_negotiation(negotiation_id: str) -> NegotiationResponse:
+    return _negotiation(negotiation_id).response()
+
+
+@app.post("/api/negotiations/{negotiation_id}/message", response_model=NegotiationResponse)
+def negotiation_message(negotiation_id: str, request: NegotiationMessage,
+                        background: BackgroundTasks) -> NegotiationResponse:
+    state = _negotiation(negotiation_id)
+    if not request.approved:
+        raise HTTPException(400, "Explicit approval is required for each tenant proposal")
+    try:
+        prepare_message(state, request)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    background.add_task(advance_landlord, state)
+    return state.response()

@@ -14,7 +14,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from backend.agent import landlord
+from backend.agent import scripted_landlord as landlord
 from backend.agent.negotiation import letter_items
 from backend.agent.verifier import verify_claims
 from backend.models import Decision, Negotiation, NegotiationRound, TenantLimits

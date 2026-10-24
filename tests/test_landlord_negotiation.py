@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from test_agent import BLR_FINDINGS, scripted_model  # noqa: E402
 
 import backend.main as main  # noqa: E402
-from backend.agent import landlord  # noqa: E402
+from backend.agent import scripted_landlord as landlord  # noqa: E402
 from backend.agent.negotiation import FALLBACK_REASON, negotiate  # noqa: E402
 from backend.agent.tenant import AgentState  # noqa: E402
 from backend.llm.provider import ProviderError, ToolCall, ToolCallOrText  # noqa: E402

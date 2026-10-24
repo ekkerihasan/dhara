@@ -12,11 +12,11 @@ import json
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 from backend.agent.verifier import verify_claims
 from backend.llm.provider import ProviderError, ToolCallOrText
-from backend.agent import landlord
+from backend.agent import scripted_landlord as landlord
 from backend.agent.negotiation import letter_items, run_negotiation
 from backend.models import Draft, Finding, Negotiation, RunResponse, TenantLimits, TraceStep
 from backend.tools.agreement import redact_pii
@@ -115,6 +115,8 @@ class AgentState:
     limits: TenantLimits = field(default_factory=TenantLimits)
     persona: str = "strict_owner"
     negotiation: Negotiation | None = None
+    mode: Literal["agent", "baseline"] = "agent"
+    baseline_output: dict[str, Any] | None = None
 
     def add_trace(self, trace_type: str, label: str, **data: Any) -> None:
         self.trace.append(TraceStep(type=trace_type, label=label, data=data))
@@ -123,6 +125,7 @@ class AgentState:
         return RunResponse(id=self.id, status=self.status, trace=self.trace, findings=self.findings,
                            drafts=self.drafts, question=self.question, claims=self.claims,
                            verdicts=self.verdicts, approval=self.approval, error=self.error,
+                           mode=self.mode, baseline_output=self.baseline_output,
                            not_a_lawyer=True, notice=NOT_A_LAWYER_NOTICE, negotiation=self.negotiation)
 
 
@@ -213,7 +216,10 @@ def _number(text: str, pattern: str, default: float | None = None) -> float | No
     token = match.group(1).replace(",", "").casefold()
     words = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
              "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
-    return float(words[token]) if token in words else float(token)
+    try:
+        return float(words[token]) if token in words else float(token)
+    except ValueError:
+        return default
 
 
 def _clause(state: AgentState, clause_id: str) -> dict[str, Any] | None:
@@ -221,7 +227,7 @@ def _clause(state: AgentState, clause_id: str) -> dict[str, Any] | None:
 
 
 def _deterministic_findings(state: AgentState) -> list[dict[str, Any]]:
-    """Extract the bounded money categories used by the event scorer."""
+    """Extract only explicit priced obligations; ambiguous clauses stay with the model."""
     all_text = " ".join(clause["text"] for clause in state.clauses)
     monthly_rent = _number(all_text, r"monthly rent is INR\s*([\d,]+)")
     deposit = _number(all_text, r"deposit is INR\s*([\d,]+)")
@@ -233,7 +239,11 @@ def _deterministic_findings(state: AgentState) -> list[dict[str, Any]]:
         inputs: dict[str, Any] = {}
         sections: list[str] = []
         issue = ""
-        if "deposit" in lowered and ("forfeit" in lowered or "breach" in lowered or "early exit" in lowered) and deposit is not None:
+        negated = bool(re.search(r"\b(?:no|not|never|without)\b.{0,35}\b(?:forfeit\w*|lock[- ]in|painting|cleaning)\b", lowered))
+        if negated:
+            continue
+        full_forfeiture = re.search(r"\b(?:entire|full|whole)\s+(?:(?:security|refundable)\s+)?deposit\b", lowered)
+        if full_forfeiture and "forfeit" in lowered and ("breach" in lowered or "early exit" in lowered) and deposit is not None:
             category, inputs, sections = "deposit_forfeiture", {"deposit": deposit, "on_any_breach": "breach" in lowered, "on_early_exit": "early exit" in lowered}, ["ICA-74"]
             issue = "The clause allows the full deposit to be forfeited on breach or early exit; assess reasonable compensation rather than automatic forfeiture."
             ask = "Replace automatic forfeiture with deductions supported by documented loss and reasonable compensation."
@@ -243,23 +253,29 @@ def _deterministic_findings(state: AgentState) -> list[dict[str, Any]]:
                 category, inputs, sections = "lock_in", {"monthly_rent": monthly_rent, "remaining_months": months}, ["ICA-74"]
                 issue = "The remaining lock-in exposure is calculated as rent for the stated remaining months; the clause needs a reasonable-compensation review."
                 ask = "Limit any early-exit payment to reasonable, evidenced loss rather than the full remaining lock-in."
-        elif ("painting" in lowered or "cleaning" in lowered) and (amount := _number(text, r"INR\s*([\d,]+)")) is not None:
+        elif (re.search(r"\b(?:fixed|exit|departure|deduct\w*|vacat\w*)\b", lowered)
+              and (amount := _number(text, r"(?:painting|cleaning)\s+(?:charge|fee|cost)(?:\s+of|\s+is|\s*:)?\s+INR\s*([\d,]+)")) is not None):
             category, inputs, sections = "painting_or_cleaning_fixed", {"amount": amount}, ["TPA-108(m)", "ICA-74"]
             issue = "A fixed exit charge should be tied to evidenced damage or cleaning beyond reasonable wear and tear."
             ask = "Charge only for documented damage or cleaning beyond reasonable wear and tear."
-        elif "escalation" in lowered and (percent := _number(text, r"([\d.]+)\s*percent")) is not None and monthly_rent is not None and percent > 10:
+        elif ("escalation" in lowered and re.search(r"\b(?:annual|annually|yearly)\b|\bper year\b", lowered)
+              and (percent := _number(text, r"([\d.]+)\s*percent")) is not None and monthly_rent is not None and percent > 10):
             category, inputs, sections = "rent_escalation_excess", {"monthly_rent": monthly_rent, "escalation_percent": percent}, []
             issue = "The escalation exceeds Dhara's 10 percent product-review threshold; discuss whether the commercial term is acceptable."
             ask = "Ask to discuss a lower annual escalation; 10 percent is a product threshold, not a legal limit."
         elif "notice" in lowered and (required := _number(text, r"([\d.]+|one|two|three|four|five|six|seven|eight|nine|ten)\s+months?'? notice")) is not None:
             given = _number(text, r"([\d.]+|one|two|three|four|five|six|seven|eight|nine|ten)\s+month has been given")
-            if given is not None and monthly_rent is not None:
+            if given is not None and given < required and monthly_rent is not None:
                 category, inputs, sections = "notice_shortfall", {"monthly_rent": monthly_rent, "required_months": required, "given_months": given}, ["TPA-106"]
                 issue = "The stated notice is shorter than the agreement's required notice; check the contract and applicable default rules."
                 ask = "Confirm the notice obligation and any lawful shortfall against the written agreement."
         if category:
-            result = _dispatch(state, "compute_money", {"finding_type": category, "inputs": inputs}, counted=False)
-            amount = int(result.get("money_at_risk_inr", 0))
+            try:
+                amount = compute_money(category, inputs)
+            except ValueError:
+                # An ambiguous or out-of-range extraction must not discard a
+                # successful model review, or prevent checking the next clause.
+                continue
             results.append({"clause_ref": clause["id"], "clause_text": text, "category": category, "issue": issue, "ask": ask,
                             "money_at_risk_inr": amount, "section_ids": sections})
     return results
@@ -312,15 +328,25 @@ def _run_model_loop(state: AgentState, jurisdiction: dict[str, Any]) -> None:
 
 
 def _rule_based_findings(state: AgentState) -> None:
-    """Fallback when the model is unreachable: the regex pass over the clauses."""
+    """Fill omitted, explicitly priced clauses using the bounded rule-based pass.
+
+    This also runs after successful model reviews: a model calling finish early
+    must not hide a charge that the deterministic extractor can establish.
+    Existing model findings are preserved; no evaluation expectations are read.
+    """
     covered = {(f.clause_ref, f.category) for f in state.findings}
     raw_findings = [raw for raw in _deterministic_findings(state) if (raw["clause_ref"], raw["category"]) not in covered]
+    if not raw_findings:
+        return
+    state.add_trace("plan", "Rule-based coverage check", added=[
+        {"clause_ref": raw["clause_ref"], "category": raw["category"]} for raw in raw_findings])
     known: dict[str, bool] = {}  # look each section up once, so the trace has no repeated calls
     for raw in raw_findings:
         for section_id in raw["section_ids"]:
             if section_id not in known:
                 known[section_id] = _dispatch(state, "lookup_section", {"id": section_id}, counted=False) is not None
-        raw["section_ids"] = [section_id for section_id in raw["section_ids"] if known[section_id]]
+        raw["section_ids"] = [section_id for section_id in raw["section_ids"] if known[section_id] and _citable(state, section_id)]
+        raw["source"] = "rule_based_coverage"
     state.findings += [Finding(**finding) for finding in raw_findings]
 
 
@@ -360,7 +386,7 @@ def start_agent(state: AgentState) -> AgentResponse:
             _run_model_loop(state, jurisdiction)
         except ProviderError as exc:
             state.add_trace("tool_call", "Model unavailable: rule-based fallback", error=str(exc))
-            _rule_based_findings(state)
+        _rule_based_findings(state)  # also recovers priced clauses the model skipped
         # Demo agreements only: the scripted landlord knows their clauses. Marked running before the
         # review turns ready, so approval waits for the negotiation.
         task = landlord.task_for_clauses(state.clauses) if state.findings else None

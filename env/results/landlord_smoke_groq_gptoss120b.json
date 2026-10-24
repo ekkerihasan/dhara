@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-24T19:03:10.752597+00:00",
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "task_id": "pg_room",
+  "synthetic": true,
+  "simulated": true,
+  "delivery_status": "not_sent",
+  "status": "failed",
+  "turns": [],
+  "error": "The simulated landlord could not produce a verified response. Retry or ask a human.",
+  "provider_calls": [
+    {
+      "error": "Model request failed with HTTP 429"
+    }
+  ],
+  "verifier_events": []
+}
