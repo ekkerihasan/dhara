@@ -111,6 +111,8 @@ class RunResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     id: str
+    mode: Literal["agent", "baseline"] = "agent"
+    baseline_output: dict[str, Any] | None = None
     status: RunStatus
     trace: list[TraceStep] = Field(default_factory=list)
     findings: list[Finding] = Field(default_factory=list)

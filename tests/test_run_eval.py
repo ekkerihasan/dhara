@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from test_agent import BLR_FINDINGS, scripted_model  # noqa: E402
 
-from backend.llm.provider import ToolCallOrText  # noqa: E402
+from backend.llm.provider import ProviderError, ToolCallOrText  # noqa: E402
 from env.run_eval import agent_run, baseline_run, evaluate, governing_label, markdown  # noqa: E402
 
 TASK = json.loads((Path(__file__).parents[1] / "env/tasks/blr_flat.json").read_text())
@@ -38,6 +38,14 @@ def test_agent_run_scores_only_what_reaches_the_tenant() -> None:
     assert all(c["section_id"] != "MTA-11(1)" for c in run["claims"])
 
 
+def test_agent_coverage_scores_all_five_clauses_when_model_stops_after_three() -> None:
+    from env.scorer import score
+
+    run = agent_run(TASK, scripted_model(BLR_FINDINGS[:3], []))
+    assert len(run["findings"]) == 5
+    assert score(TASK, run)["total"] == 3
+
+
 def test_unknown_fact_lets_pg_room_finish_unresolved() -> None:
     pg = json.loads((Path(__file__).parents[1] / "env/tasks/pg_room.json").read_text())
     findings = [("C2", "deposit_forfeiture", {"deposit": 16000, "on_any_breach": True, "on_early_exit": True}, ["ICA-74"]),
@@ -57,6 +65,33 @@ def test_evaluate_and_markdown() -> None:
     assert {row["mode"] for row in results["rows"]} == {"baseline", "agent"}
     assert "| blr_flat | agent |" in markdown(results, "fake")
     assert governing_label(None) == "UNRESOLVED"
+
+
+def test_provider_fallback_is_not_reported_as_a_successful_live_evaluation() -> None:
+    def unavailable(messages, tools):
+        raise ProviderError("Model request failed with HTTP 429")
+
+    results = evaluate(unavailable, tasks=("blr_flat",))
+    assert results["provider_failures"] == results["model_requests"] == 2
+    assert all(row["error"] for row in results["rows"])
+    assert "fallback" in results["rows"][1]["error"]
+
+
+def test_failed_evaluation_preserves_previous_score_artifacts(monkeypatch, tmp_path) -> None:
+    import env.run_eval as runner
+
+    (tmp_path / "scores.json").write_text("previous JSON")
+    (tmp_path / "scores.md").write_text("previous table")
+    monkeypatch.setattr(runner, "RESULTS", tmp_path)
+    monkeypatch.setattr(runner, "evaluate", lambda: {
+        "date": "2026-10-25", "rows": [{"error": "HTTP 429"}],
+        "model_requests": 1, "provider_failures": 1})
+    import pytest
+    with pytest.raises(SystemExit, match="previous scores preserved"):
+        runner.main()
+    assert (tmp_path / "scores.json").read_text() == "previous JSON"
+    assert (tmp_path / "scores.md").read_text() == "previous table"
+    assert json.loads((tmp_path / "last_failed_attempt.json").read_text())["provider_failures"] == 1
 
 
 def test_moveout_agent_run_scores_claimed_deductions() -> None:

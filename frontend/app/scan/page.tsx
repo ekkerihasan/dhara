@@ -1,0 +1,86 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { Topbar } from "@/components/Topbar";
+import { DocFooter } from "@/components/DocFooter";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+export default function ScanPage() {
+  const [file, setFile] = useState<File | null>(null);
+  const [redacted, setRedacted] = useState(false);
+  const [consent, setConsent] = useState(false);
+  const [language, setLanguage] = useState("en-IN");
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  async function scan(event: React.FormEvent) {
+    event.preventDefault();
+    if (!file || !redacted || !consent) return;
+    setBusy(true); setError(""); setText(""); setCopied(false);
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let binary = "";
+      for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      const response = await fetch(`${API_URL}/api/ocr`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_base64: btoa(binary), image_already_redacted: redacted, consent_to_remote_ocr: consent, language }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(typeof result.detail === "string" ? result.detail : "Could not scan this photo.");
+      setText(result.text);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not reach the scan service.");
+    } finally { setBusy(false); }
+  }
+
+  return <>
+    <Topbar current="new" />
+    <main className="doc"><article className="doc-main">
+      <p className="kicker">Dhara AI · Sarvam Vision</p>
+      <h1 className="doc-title">Read an agreement photo</h1>
+      <p className="doc-subtitle">Scan one page, check the extracted wording and amounts, then paste the corrected text into your agreement review.</p>
+      <section className="section">
+        <h2>Prepare the photo</h2>
+        <p>Before uploading, cover Aadhaar, PAN and phone numbers in an image editor and save a flattened copy. Selecting a checkbox does not inspect or redact your image.</p>
+        <p>This sends the photo to Sarvam Vision for remote OCR. Dhara keeps it in memory for this request and strips image metadata; Sarvam may retain its processing job. Provider retention and deletion are not controlled by Dhara. Do not upload a photo you are unwilling to share with Sarvam.</p>
+        <form onSubmit={scan} className="facts-grid">
+          <label>Agreement photo (JPEG or PNG, up to 8 MB)
+            <input type="file" accept="image/jpeg,image/png" disabled={busy} onChange={(event) => {
+              const chosen = event.target.files?.[0] ?? null;
+              setText(""); setError(""); setRedacted(false); setConsent(false);
+              if (chosen && (!['image/jpeg', 'image/png'].includes(chosen.type) || chosen.size > 8 * 1024 * 1024)) {
+                setFile(null); setError("Choose a JPEG or PNG photo up to 8 MB.");
+              } else setFile(chosen);
+            }} />
+          </label>
+          <label>Document language
+            <select value={language} disabled={busy} onChange={(event) => setLanguage(event.target.value)}>
+              <option value="en-IN">English</option><option value="kn-IN">Kannada</option><option value="hi-IN">Hindi</option>
+            </select>
+          </label>
+          <label><input type="checkbox" checked={redacted} disabled={busy} onChange={(event) => setRedacted(event.target.checked)} /> I have already removed Aadhaar, PAN and phone numbers from this photo.</label>
+          <label><input type="checkbox" checked={consent} disabled={busy} onChange={(event) => setConsent(event.target.checked)} /> I agree to send this photo to Sarvam for OCR.</label>
+          <button className="btn btn-primary" disabled={busy || !file || !redacted || !consent}>{busy ? "Reading the photo…" : "Scan with Sarvam Vision"}</button>
+        </form>
+        {busy && <p role="status">This can take a minute. Keep this page open.</p>}
+        {error && <p role="alert">{error}</p>}
+      </section>
+      {text && <section className="section">
+        <h2>Check the extracted text</h2>
+        <p>OCR can misread clauses and amounts. Correct the text below before reviewing it. Detected identifiers in the OCR text have been redacted again.</p>
+        <label htmlFor="ocr-text">Agreement text</label>
+        <textarea id="ocr-text" rows={18} value={text} onChange={(event) => { setText(event.target.value); setCopied(false); }} style={{ width: "100%" }} />
+        <button className="btn" onClick={async () => {
+          try { await navigator.clipboard.writeText(text); setCopied(true); setError(""); }
+          catch { setError("Select and copy the text above manually."); }
+        }}>{copied ? "Copied" : "Copy corrected text"}</button>
+        <p><Link href="/">Open the agreement review</Link> and paste the corrected text. For more pages, repeat the scan and combine the checked text.</p>
+      </section>}
+      <DocFooter />
+    </article></main>
+  </>;
+}

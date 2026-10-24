@@ -1,0 +1,155 @@
+{
+  "id": "public_chatbot_side_test",
+  "version": 1,
+  "status": "prepared_not_run",
+  "date_prepared": "2026-10-24",
+  "services": [
+    "ChatGPT",
+    "Gemini"
+  ],
+  "common_instruction": "This is a synthetic residential-tenancy question about Karnataka, India, asked on 24 October 2026. Answer in no more than 150 words. Identify the relevant Act and section for legal claims. Distinguish a binding rule from a model law, a contractual term, or a suggestion. If information is missing or you cannot verify current law, say so.",
+  "protocol": "Prefer one fresh conversation per question, same prompts and default settings in both products. Record the actual displayed model or 'not displayed', timestamp, browsing status, verbatim answer and evidence. If submitted as one batch, record batch=true; do not present it as ten independent conversations.",
+  "questions": [
+    {
+      "id": "Q01",
+      "topic": "Model-law deposit cap",
+      "question": "My Bengaluru landlord wants a deposit equal to six months of rent. Is the Model Tenancy Act's two-month residential deposit cap binding on this Karnataka tenancy? Does the size of the deposit alone prove the agreement is unlawful?",
+      "section_ids": [
+        "MTA-11(1)"
+      ],
+      "answer_key": "Do not apply the model cap as binding Karnataka law or treat deposit size alone as dispositive.",
+      "source_urls": [
+        "https://prsindia.org/billtrack/the-model-tenancy-act-2021",
+        "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf"
+      ],
+      "wrong_law_trap": "Treating the Model Tenancy Act as enacted Karnataka law."
+    },
+    {
+      "id": "Q02",
+      "topic": "Modern-building exclusion",
+      "question": "I rent a Bengaluru residential flat completed in 2019 for INR 25,000 per month. Its statutory standard/deemed rent has not been established. Can the Karnataka Rent Act apply in October 2026? Explain which facts establish an exclusion and which do not.",
+      "section_ids": [
+        "KRA-2(3)(e)",
+        "KRA-2(3)(f)"
+      ],
+      "answer_key": "2019 completion establishes the fifteen-year exclusion. Current market rent does not establish statutory rent.",
+      "source_urls": [
+        "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf"
+      ],
+      "wrong_law_trap": "Using market rent as established deemed/standard rent."
+    },
+    {
+      "id": "Q03",
+      "topic": "City Municipal Council threshold",
+      "question": "The premises are in a confirmed First Schedule Part B City Municipal Council area in Karnataka, completed in 1980, with confirmed statutory standard rent of INR 3,000 per month. Other exclusions have been checked. A friend says the INR 3,500 threshold means the Rent Act applies. Is that correct?",
+      "section_ids": [
+        "KRA-2(3)(e)",
+        "KRA-SCHEDULE-1-B"
+      ],
+      "answer_key": "Part B uses INR 2,000, so confirmed statutory rent of INR 3,000 exceeds its threshold.",
+      "source_urls": [
+        "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf"
+      ],
+      "wrong_law_trap": "Applying Part A's INR 3,500 threshold to Part B."
+    },
+    {
+      "id": "Q04",
+      "topic": "Missing jurisdiction facts",
+      "question": "A Bengaluru residential tenancy has current monthly rent of INR 25,000. Construction/renovation dates, statutory standard/deemed rent and ownership details are unknown. Can you confidently say the Karnataka Rent Act applies or does not apply? What must be checked?",
+      "section_ids": [
+        "KRA-2(3)(a)",
+        "KRA-2(3)(e)",
+        "KRA-2(3)(f)"
+      ],
+      "answer_key": "Coverage remains unresolved; ask for construction/renovation, statutory rent, ownership and other exemptions.",
+      "source_urls": [
+        "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf"
+      ],
+      "wrong_law_trap": "Decisively excluding the tenancy from current market rent alone."
+    },
+    {
+      "id": "Q05",
+      "topic": "Rent-escalation threshold",
+      "question": "My Karnataka rental agreement proposes a 12 percent annual increase. Is a 10 percent annual increase a universal statutory maximum? Please separate any legal restriction from a suggested negotiation target.",
+      "section_ids": [],
+      "answer_key": "Do not invent a universal ten-percent legal cap. Dhara uses ten percent only as a product-review threshold.",
+      "source_urls": [
+        "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+        "https://prsindia.org/billtrack/the-model-tenancy-act-2021"
+      ],
+      "wrong_law_trap": "Presenting a negotiation/product threshold as a binding legal maximum."
+    },
+    {
+      "id": "Q06",
+      "topic": "Automatic forfeiture",
+      "question": "My agreement says the entire INR 150,000 deposit is forfeited for any breach or early exit. Does that clause automatically entitle the landlord to the full amount in every case? What principle in section 74 of the Indian Contract Act is relevant?",
+      "section_ids": [
+        "ICA-74"
+      ],
+      "answer_key": "Assess reasonable compensation under section 74; neither automatic full forfeiture nor blanket invalidity follows.",
+      "source_urls": [
+        "https://www.indiacode.nic.in/bitstream/123456789/2187/2/A187209.pdf",
+        "https://www.api.sci.gov.in/supremecourt/2023/6113/6113_2023_13_1502_61408_Judgement_02-May-2025.pdf"
+      ],
+      "wrong_law_trap": "Replacing reasonable-compensation analysis with an automatic deposit cap or automatic full recovery."
+    },
+    {
+      "id": "Q07",
+      "topic": "Pre-existing damage and wear",
+      "question": "At move-out from a private Bengaluru flat completed in 2019, the landlord claims INR 15,000 for faded paint and scuffs already recorded in our dated move-in checklist. The agreement excludes reasonable wear and tear. How should that deduction be assessed, and what is the relevance and limitation of TPA section 108(m)?",
+      "section_ids": [
+        "TPA-108",
+        "TPA-108(m)"
+      ],
+      "answer_key": "Compare evidence and contract; section 108(m) excepts reasonable wear, subject to contrary contract/local usage.",
+      "source_urls": [
+        "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf"
+      ],
+      "wrong_law_trap": "Treating every painting charge as automatically illegal, or applying Rent Act protections without coverage."
+    },
+    {
+      "id": "Q08",
+      "topic": "Lease registration",
+      "question": "For a Karnataka residential lease with an 18-month term, is notarising the agreement a substitute for registration? Identify the relevant Registration Act and Transfer of Property Act provisions.",
+      "section_ids": [
+        "RA-17",
+        "TPA-107"
+      ],
+      "answer_key": "An eighteen-month lease ordinarily requires registration; notarisation is not a substitute. Cite sections 17(1)(d) and 107.",
+      "source_urls": [
+        "https://www.indiacode.nic.in/bitstream/123456789/14646/1/ra1908-16.pdf",
+        "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf"
+      ],
+      "wrong_law_trap": "Saying notarisation alone satisfies compulsory registration for the stated term."
+    },
+    {
+      "id": "Q09",
+      "topic": "Essential services",
+      "question": "Assume the Karnataka Rent Act has been confirmed to cover my tenancy. Can the landlord disconnect water merely to pressure me to pay a disputed charge? What does section 49 say, including its qualification?",
+      "section_ids": [
+        "KRA-49"
+      ],
+      "answer_key": "Section 49 restricts withdrawal without just and sufficient cause; preserve both coverage and cause qualifications.",
+      "source_urls": [
+        "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf"
+      ],
+      "wrong_law_trap": "Using the Model Tenancy Act as Karnataka law or omitting section 49's qualification."
+    },
+    {
+      "id": "Q10",
+      "topic": "Deposit recovery route and deadline",
+      "question": "My private Bengaluru flat was completed in 2019. After I moved out, the landlord refused my written deposit-refund request; there is no allegation of fraud or violence. What formal steps should I consider? Is a Model Tenancy Act Rent Authority available, and is there automatically a statutory 30-day refund deadline?",
+      "section_ids": [
+        "KRA-2(3)(f)",
+        "KRA-3(c)",
+        "MTA-30"
+      ],
+      "answer_key": "Consider demand, legal notice and appropriate civil recovery. No assumed MTA forum, universal thirty-day deadline or police route; forum limits need verification.",
+      "source_urls": [
+        "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
+        "https://prsindia.org/billtrack/the-model-tenancy-act-2021"
+      ],
+      "wrong_law_trap": "Inventing an applicable MTA Rent Authority or a universal statutory refund deadline."
+    }
+  ]
+}

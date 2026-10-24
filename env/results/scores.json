@@ -7,9 +7,9 @@
       "score": {
         "governing_law_correct": 0,
         "money_within_500": 1.0,
-        "citations_exist": 0.7777777777777778,
+        "citations_exist": 0.8,
         "wrong_law_penalty": 0,
-        "total": 1.7777777777777777
+        "total": 1.8
       },
       "error": null,
       "findings": 5,
@@ -20,13 +20,13 @@
       "mode": "agent",
       "score": {
         "governing_law_correct": 1,
-        "money_within_500": 1.0,
-        "citations_exist": 1.0,
+        "money_within_500": 0.6,
+        "citations_exist": 0.9166666666666666,
         "wrong_law_penalty": 0,
-        "total": 3.0
+        "total": 2.5166666666666666
       },
       "error": null,
-      "findings": 5,
+      "findings": 3,
       "governing_law": "TPA_CONTRACT"
     },
     {
@@ -77,14 +77,18 @@
       "score": {
         "governing_law_correct": 1,
         "money_within_500": 1.0,
-        "citations_exist": 0.6666666666666666,
+        "citations_exist": 1.0,
         "wrong_law_penalty": 0,
-        "total": 2.6666666666666665
+        "total": 3.0
       },
       "error": null,
       "findings": 3,
       "governing_law": "TPA_CONTRACT"
     }
   ],
-  "model": "openai/gpt-oss-120b"
+  "model": "openai/gpt-oss-120b",
+  "provider": "groq",
+  "model_requests": 14,
+  "provider_failures": 0,
+  "revision": "3c22054"
 }

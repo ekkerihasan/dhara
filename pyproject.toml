@@ -20,6 +20,9 @@ dependencies = [
     # but we include it so `uv run inference.py` works without a separate install.
     "openai>=1.0.0",
     "python-dotenv>=1.0.0",
+    "pypdf>=5,<7",
+    "PyMuPDF>=1.24,<2",
+    "pytest>=8,<10",
 ]
 
 [project.optional-dependencies]

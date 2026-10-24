@@ -40,6 +40,8 @@ export interface BackendFinding {
 
 export interface BackendRun {
   id: string;
+  mode?: "agent" | "baseline";
+  baseline_output?: Record<string, unknown> | null;
   status: "running" | "needs_input" | "ready" | "approved" | "failed";
   trace: BackendStep[];
   findings: BackendFinding[];
