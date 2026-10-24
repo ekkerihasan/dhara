@@ -3,9 +3,9 @@
 
 import blrFlat from "@/stubs/blr_flat.json";
 import moveout from "@/stubs/moveout.json";
-import { backendFacts, fromBackend, type BackendRun } from "./backend";
+import { backendFacts, fromBackend, fromBackendMoveout, type BackendMoveout, type BackendRun } from "./backend";
 import { inr, LOCAL_BODY_LABEL } from "./format";
-import type { ApprovalStep, Facts, Language, MoveoutRun, QuestionStep, Run, RunInput } from "./types";
+import type { ApprovalStep, Facts, Language, MoveoutInput, MoveoutRun, QuestionStep, Run, RunInput } from "./types";
 
 export const USE_STUBS = process.env.NEXT_PUBLIC_USE_STUBS !== "false";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -191,11 +191,27 @@ export async function approveDraft(id: string, draftId: string): Promise<void> {
   await postJson(`/api/runs/${encodeURIComponent(id)}/approve`, { approved: true });
 }
 
+export async function createMoveout(input: MoveoutInput): Promise<string> {
+  if (USE_STUBS) {
+    await delay(400);
+    return "moveout";
+  }
+  const { deposit_inr, ...body } = input;
+  const review = await postJson<BackendMoveout>("/api/moveout", body);
+  saveFacts(review.id, { ...EMPTY_FACTS, ...(input.facts as Partial<Facts>), deposit_inr, language: input.language });
+  return review.id;
+}
+
 export async function getMoveout(id: string): Promise<MoveoutRun> {
   if (USE_STUBS) {
     await delay(250);
     if (id !== "moveout") throw new Error(`No stubbed move-out "${id}". Try /moveout/moveout.`);
     return structuredClone(moveout) as unknown as MoveoutRun;
   }
-  return request<MoveoutRun>(`/api/moveout/${encodeURIComponent(id)}`);
+  return fromBackendMoveout(await request<BackendMoveout>(`/api/moveout/${encodeURIComponent(id)}`), loadFacts(id));
+}
+
+export async function approveMoveout(id: string): Promise<void> {
+  if (USE_STUBS) return;
+  await postJson(`/api/moveout/${encodeURIComponent(id)}/approve`, { approved: true });
 }

@@ -13,7 +13,9 @@ npm run demo       # production build and start, for screen sharing
 |---|---|
 | `/` | Upload a PDF or paste the agreement text, plus the facts form (rent, deposit, built year, local body, use, EN/KN). |
 | `/review/[id]` | Governing law, unfair clauses with money at risk, counter-proposal (EN/KN) with approve, citation check, decision trace. Pauses with a question card when the run is `needs_input`. |
-| `/moveout/[id]` | Flow 2 preview: move-in evidence, claimed deductions with verdicts, next formal step. |
+| `/moveout` | Move-out intake: the sample move-out (agreement, dated checklist, claimed deductions), amounts editable. |
+| `/moveout/[id]` | Move-out report: verdict per deduction with checklist evidence, the challenge (EN/KN) with approve, next formal step. |
+| `/scores` | Plain model vs agent on the three tasks, then how the scorer treats wrong law. |
 
 ## Stubs
 

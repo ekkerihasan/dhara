@@ -30,7 +30,7 @@ Every section the agent can cite, with its source link and whether it applies in
 
 | Ref | Result | Source |
 | --- | --- | --- |
-| R13 | Plain model vs agent scores on `blr_flat` and `pg_room` | [`env/results/scores.md`](../env/results/scores.md), produced by [`env/run_eval.py`](../env/run_eval.py); one live run each with `openai/gpt-oss-120b` on Groq |
+| R13 | Plain model vs agent scores on `blr_flat`, `pg_room` and `moveout` | [`env/results/scores.md`](../env/results/scores.md), produced by [`env/run_eval.py`](../env/run_eval.py); one live run each with `openai/gpt-oss-120b` on Groq |
 
 ## Not used
 

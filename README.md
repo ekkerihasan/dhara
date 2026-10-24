@@ -34,6 +34,8 @@ Dhara (धारा) is what Indian law calls a section, as in "Dhara 302". Our 
 4. **Verify:** every legal claim must cite a section that exists, applies in Karnataka and covers this flat; anything else is blocked.
 5. **Draft and wait:** a counter-proposal in English and Kannada. Nothing goes out until the tenant approves, and approval records a follow-up; Dhara never sends anything itself.
 
+At move-out, the same pattern checks each deduction the landlord claims against the agreement and the dated move-in checklist: the AI records allowed or disputed with the evidence it relied on, code checks the sections, drafts the challenge and gives the next formal step (written demand, legal notice, then the Rent Controller only where the Act applies, otherwise a civil recovery suit; never a police complaint).
+
 ![Intake form](docs/screenshots/intake.jpg)
 
 ### Core Innovation: the AI reads, code decides
@@ -41,6 +43,8 @@ Dhara (धारा) is what Indian law calls a section, as in "Dhara 302". Our 
 | Part | Who does it | Where |
 | --- | --- | --- |
 | Read the clauses, decide what to check, extract amounts and conditions | AI (tool calls) | [`backend/agent/tenant.py`](backend/agent/tenant.py) |
+| Allowed or disputed for each move-out deduction, with checklist evidence | AI (tool calls) | [`backend/agent/moveout.py`](backend/agent/moveout.py) |
+| Next formal step after a refused refund | Code, fixed routes | [`backend/agent/moveout.py`](backend/agent/moveout.py) |
 | Does the Karnataka Rent Act apply to this flat? | Code | [`backend/tools/law.py`](backend/tools/law.py) |
 | Rupees at risk per clause | Code, fixed formulas | [`backend/tools/money.py`](backend/tools/money.py) |
 | Is a citation allowed? | Code | [`backend/agent/verifier.py`](backend/agent/verifier.py) |
@@ -63,10 +67,11 @@ The same model reviews each test agreement twice: once with no tools and no veri
 
 | Task | Plain model | Dhara agent |
 | --- | --- | --- |
-| `blr_flat`: Bengaluru flat, five unfair clauses | **1.86**, said the Rent Act applies | **3.00** |
+| `blr_flat`: Bengaluru flat, five unfair clauses | **1.78**, said the Rent Act applies | **3.00** |
 | `pg_room`: PG room, building age unknown | **2.00**, said the Rent Act applies | **3.00** |
+| `moveout`: three claimed deductions against the move-in checklist | **2.00**, said the Rent Act applies | **2.67**, gave no section for the cleaning charge it allowed |
 
-Both got the rupee amounts right. Without the rent-law test, the plain model assumed the Karnataka Rent Act protects the tenant. One live run each with `openai/gpt-oss-120b`; reproduce with `python -m env.run_eval`.
+Both got the rupee amounts right. Without the rent-law test, the plain model assumed the Karnataka Rent Act protects the tenant on every task. One live run each with `openai/gpt-oss-120b`, so the plain model's score varies a little between runs; reproduce with `python -m env.run_eval`.
 
 ![Evaluation page](docs/screenshots/evaluation.jpg)
 
@@ -152,8 +157,9 @@ dhara/
   ├── docs/REFERENCES.md        # Sources for every number in this README
   ├── law/karnataka.json        # 25 sourced sections: Karnataka Rent Act, Contract Act, TPA, Registration Act, Model Tenancy Act
   ├── backend/
-  │   ├── main.py               # FastAPI: runs, answer, approve
+  │   ├── main.py               # FastAPI: runs, answer, approve; move-out reviews
   │   ├── agent/tenant.py       # Agent loop: tool calls, question, fallback, trace
+  │   ├── agent/moveout.py      # Flow 2: deduction verdicts, challenge, next formal step
   │   ├── agent/verifier.py     # Citation check
   │   ├── llm/provider.py       # The one model entry point
   │   └── tools/                # law, agreement (redaction), money, messages
@@ -190,8 +196,8 @@ It scales because law is data: bringing Dhara to another state means sourcing it
 
 - [x] **Checkpoint 1 (24 Oct, 16:00):** law library and jurisdiction tools, verifier, three tasks and scorer, agreement, money and message tools, and the screens on sample data.
 - [x] **Live end to end:** the agent loop, the API and the screens tested with the real model: question, answer, five findings with the scorer's amounts, English and Kannada drafts, a blocked claim, approval.
-- [x] **Plain model vs agent scores** on `blr_flat` and `pg_room`.
-- [ ] Move-out: compare claimed deductions with the move-in checklist and draft the challenge (the screen exists on sample data).
+- [x] **Plain model vs agent scores** on all three tasks.
+- [x] **Move-out:** claimed deductions checked against the move-in checklist, the challenge drafted, next formal step; live screen at `/moveout`.
 - [ ] Stretch: a landlord agent that pushes back, Hindi drafts, a test of public chatbots.
 
 ## Before and after
@@ -213,9 +219,9 @@ It scales because law is data: bringing Dhara to another state means sourcing it
 - [x] Agreement redaction, money calculations and approval-gated messages
 - [x] Model provider, planning agent and decision trace
 - [x] FastAPI run, answer and approval endpoints
-- [x] Next.js review and move-out screens with English and Kannada drafts (move-out on sample data)
+- [x] Next.js review and move-out screens with English and Kannada drafts
 - [x] Baseline versus agent evaluation results
-- [ ] Move-out deduction challenges and next formal step
+- [x] Move-out deduction challenges and next formal step
 
 ## Run the imported prototype
 

@@ -29,7 +29,7 @@ export function Topbar({ current }: { current: Page }) {
         <nav className="topnav" aria-label="Main">
           {link("new", "/", "New review", <FilePlus2 {...ICON} />)}
           {link("review", "/review/blr_flat", "Sample report", <FileSearch {...ICON} />)}
-          {link("moveout", "/moveout/moveout", "Move-out", <MoveOut {...ICON} />)}
+          {link("moveout", "/moveout", "Move-out", <MoveOut {...ICON} />)}
           {link("scores", "/scores", "Evaluation", <Gauge {...ICON} />)}
           <span className="nav-divider" aria-hidden="true" />
           <ThemeToggle />

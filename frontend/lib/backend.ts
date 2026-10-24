@@ -3,6 +3,8 @@
 // language, no facts or section metadata. Everything the screens need is derived here, in one place.
 
 import type {
+  ChecklistEntry,
+  Deduction,
   Draft,
   DraftTone,
   Facts,
@@ -11,6 +13,7 @@ import type {
   GoverningLaw,
   JurisdictionReason,
   Language,
+  MoveoutRun,
   Run,
   RunStatus,
   Severity,
@@ -211,6 +214,48 @@ export function fromBackend(b: BackendRun, facts: Facts, title: string): Run {
     drafts,
     sections: {}, // the response carries ids only; chips link once the backend adds section metadata
     max_tool_calls: 12,
+    not_a_lawyer: true,
+    notice: b.notice,
+  };
+}
+
+export interface BackendMoveout {
+  id: string;
+  status: BackendRun["status"];
+  deductions: { id: string; label: string; amount_inr: number; verdict?: "allowed" | "disputed"; reason?: string; evidence_ids?: string[]; section_ids?: string[] }[];
+  checklist: (ChecklistEntry & { id: string })[];
+  drafts: BackendRun["drafts"];
+  next_steps: MoveoutRun["next_steps"];
+  approval: { follow_up_date?: string | null } | null;
+  notice: string;
+  error: string | null;
+}
+
+export function fromBackendMoveout(b: BackendMoveout, facts: Facts): MoveoutRun {
+  const deductions: Deduction[] = b.deductions.map((d) => ({
+    label: `${d.id} ${d.label.charAt(0).toUpperCase()}${d.label.slice(1)}`,
+    claimed_inr: d.amount_inr,
+    verdict: d.verdict ?? null,
+    reason: d.reason ?? "",
+    section_ids: d.section_ids ?? [],
+    evidence_ids: d.evidence_ids ?? [],
+  }));
+  const drafts: Draft[] = b.drafts.length
+    ? [{ id: "c1", tone: "challenge", to: "Landlord", text: Object.fromEntries(b.drafts.map((d) => [d.language, d.text])), note: b.drafts[0].translation_note }]
+    : [];
+  return {
+    id: b.id,
+    title: "Your move-out deductions",
+    status: STATUS[b.status],
+    facts,
+    deposit_inr: facts.deposit_inr ?? 0,
+    checklist: b.checklist,
+    deductions,
+    next_steps: b.next_steps,
+    sections: {},
+    drafts,
+    follow_up_date: b.approval?.follow_up_date ?? null,
+    live: true,
     not_a_lawyer: true,
     notice: b.notice,
   };

@@ -231,6 +231,10 @@ def build_moveout() -> dict[str, Any]:
             {"title": "Consumer forum (e-Daakhil)", "detail": "Whether a tenancy deposit dispute is a consumer complaint is contested. Shown for completeness only.", "certainty": "uncertain"},
         ],
         "sections": section_meta({s for d in deductions for s in d["section_ids"]}),
+        # The task as a POST /api/moveout body, for the intake page's sample button
+        "sample_request": {"agreement_text": task["agreement_text"], "checklist": task["move_in_checklist"],
+                           "deductions": [{k: v for k, v in d.items() if k != "expected_verdict"} for d in task["claimed_deductions"]],
+                           "facts": task["facts"]},
         "not_a_lawyer": True, "notice": NOTICE,
     }
 
