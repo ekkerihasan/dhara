@@ -2,6 +2,7 @@ import { DocFooter } from "@/components/DocFooter";
 import { IntakeForm } from "@/components/IntakeForm";
 import { Toc } from "@/components/Toc";
 import { Topbar } from "@/components/Topbar";
+import Link from "next/link";
 
 const TOC = [
   { id: "agreement", title: "The agreement" },
@@ -39,6 +40,9 @@ export default function Home() {
           </div>
 
           <IntakeForm />
+
+          <p><Link href="/scan">Scan an agreement photo</Link> and check the extracted text before review.</p>
+          <p><Link href="/negotiate">Practice a negotiation</Link> with a simulated PG landlord.</p>
 
           <section className="section" id="how">
             <h2>What the agent does</h2>

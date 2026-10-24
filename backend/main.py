@@ -25,10 +25,12 @@ from backend.agent.tenant import AgentState, approve_agent, start_agent
 from backend.llm.provider import chat
 from backend.models import AnswerRequest, ApprovalRequest, MoveoutRequest, RunRequest, RunResponse
 from backend.tools.agreement import read_agreement
+from backend.ocr_api import router as ocr_router
 
 LOGGER = logging.getLogger(__name__)
 
 app = FastAPI(title="Dhara AI", description="Agentic tenancy copilot for Karnataka")
+app.include_router(ocr_router)
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allow_methods=["GET", "POST"], allow_headers=["*"])
 
 RUNS: dict[str, AgentState] = {}
