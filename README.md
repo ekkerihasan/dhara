@@ -11,10 +11,17 @@ Phase 0: the earlier prototype has been imported without its Git history, local 
 Checkpoint 1 (24 Oct, 16:00):
 
 - [x] Next.js frontend on stubbed data: intake form, review report (governing law, money at risk, counter-proposal with EN/KN and approve, citation check, decision trace), question card for `needs_input`, and a move-out preview. `npm run build` and `npm run lint` pass; the layout works at 390 px. See [frontend/README.md](frontend/README.md).
-- [x] Frontend/backend contract drafted in [docs/api-contract.md](docs/api-contract.md), mirrored by `frontend/lib/types.ts`.
-- [ ] Law library, jurisdiction tools, verifier, three tasks and scorer (backend, in progress).
+- [x] Frontend/backend data shapes defined in `frontend/lib/types.ts`, with sample runs in `frontend/stubs/` checked against the law pack by `tests/test_frontend_stubs.py`.
+- [x] Law library (`law/karnataka.json`, 25 sourced sections) with `check_jurisdiction` and `lookup_section` (`backend/tools/law.py`).
+- [ ] Verifier, three tasks and scorer (in progress).
 
-Baseline test result: **51 passed, 6 subtests passed** (`python -m pytest -q`). A root package import guard was added so pytest can collect tests from this checkout; `housing/` and `server/` are unchanged. Validation currently uses the earlier project's Python 3.10.11 environment; the event backend targets Python 3.11.
+Baseline test result: **51 passed, 6 subtests passed** (`python -m pytest -q`). Current: **75 passed** after the law tools and frontend stub checks. A root package import guard was added so pytest can collect tests from this checkout; `housing/` and `server/` are unchanged. Validation currently uses the earlier project's Python 3.10.11 environment; the event backend targets Python 3.11.
+
+## Simple, scalable, secure
+
+- **Simple.** Rules do the work wherever rules are enough. The Rent Act test, money-at-risk formulas, citation check and scorer are plain Python over JSON, with no model involved; the model is used only to read clauses and draft messages. Runs live in memory, with no database or queue.
+- **Scalable.** Law is data. Each state is one JSON law pack (`law/karnataka.json` today) with a source link per section; the agent, verifier and screens stay the same for a new state.
+- **Secure.** Keys come only from environment variables (`.env` is ignored). Uploaded agreements are kept in memory for the request, and Aadhaar, PAN and phone numbers are redacted before any model call (redaction lands with `read_agreement`). Claims citing a section that is missing from the pack or does not apply in Karnataka are blocked. Team planning notes are kept out of the repository.
 
 ## Before and after
 
@@ -29,7 +36,7 @@ Baseline test result: **51 passed, 6 subtests passed** (`python -m pytest -q`). 
 
 ## Built at ChronoForge
 
-- [ ] Sourced law library and jurisdiction tools
+- [x] Sourced law library and jurisdiction tools
 - [ ] Citation verifier and wrong-law blocking
 - [ ] Three tenancy evaluation tasks and deterministic scorer
 - [ ] Agreement redaction, money calculations and approval-gated messages
@@ -39,7 +46,6 @@ Baseline test result: **51 passed, 6 subtests passed** (`python -m pytest -q`). 
 - [ ] Baseline versus agent evaluation results
 - [ ] Move-out deduction challenges and next formal step
 
-Implementation order and acceptance checks: [TASKS.md](TASKS.md) and [BUILD.md](BUILD.md). Project rules: [CLAUDE.md](CLAUDE.md).
 
 ## Run the frontend
 
@@ -121,7 +127,7 @@ The evaluations use synthetic development fixtures and a scripted repetition con
 
 The OpenEnv server also supports `task_name="residential_lease"`: a six-clause synthetic Bengaluru scenario with client-preference grading, two counteroffers, private grading fields, and bounded revisions. Existing NDA, SaaS, and JV tasks remain available.
 
-See [newplan.md](newplan.md) for scope and [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for delivered work and remaining milestones.
+Planning notes from the prototype are kept out of the repository.
 
 **Dhara** (Sanskrit: *clause* or *section of law*) is an OpenEnv-compliant reinforcement learning environment for training AI agents to review, flag, and negotiate legal contract clauses.
 

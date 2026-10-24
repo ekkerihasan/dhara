@@ -16,7 +16,7 @@ npm run dev        # http://localhost:3000
 
 ## Stubs
 
-`NEXT_PUBLIC_USE_STUBS` defaults to on, so every screen works before the backend does: `lib/api.ts` answers from `stubs/blr_flat.json` and `stubs/moveout.json`. Try `/review/blr_flat`, or submit the form with the built year blank to see the agent stop and ask. Set `NEXT_PUBLIC_USE_STUBS=false` and `NEXT_PUBLIC_API_URL` to use the live API (BUILD.md Phase 5 endpoints).
+`NEXT_PUBLIC_USE_STUBS` defaults to on, so every screen works before the backend does: `lib/api.ts` answers from `stubs/blr_flat.json` and `stubs/moveout.json`. Try `/review/blr_flat`, or submit the form with the built year blank to see the agent stop and ask. Set `NEXT_PUBLIC_USE_STUBS=false` and `NEXT_PUBLIC_API_URL` to use the live API (BUILD.md endpoints).
 
 `lib/types.ts` mirrors `backend/models.py`. Change both together.
 
@@ -24,7 +24,7 @@ npm run dev        # http://localhost:3000
 
 Geist and Geist Mono (Vercel, OFL-1.1), Noto Sans Kannada (Google, OFL-1.1), Lucide icons (ISC).
 
-## Checkpoint 1 browser demo (TASKS.md 4.3)
+## Browser demo
 
 1. Open a fresh tab at `/`. Paste any clause text, leave **Year built** blank, and press **Review the agreement**. The run pauses with the question card (`needs_input`).
 2. Answer `2019`. The full report appears.
