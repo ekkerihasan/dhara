@@ -83,7 +83,9 @@ def answer(run_id: str, request: AnswerRequest, background: BackgroundTasks) -> 
     state = _run(run_id)
     if state.status != "needs_input":
         raise HTTPException(409, "This run is not waiting for an answer")
-    state.facts.update(request.facts)
+    # A null value means the tenant does not know; the agent then proceeds with the law unresolved.
+    state.unknown_facts.update(key for key, value in request.facts.items() if value is None)
+    state.facts.update({key: value for key, value in request.facts.items() if value is not None})
     state.status = "running"
     background.add_task(_advance, state)
     return state.response()
