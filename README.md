@@ -75,6 +75,18 @@ The live rerun after the move-out citation fix used `openai/gpt-oss-120b` throug
 
 ![Evaluation page](docs/screenshots/evaluation.jpg)
 
+### Ten-question public chatbot side test
+
+The [test protocol and ten questions](docs/PUBLIC_CHATBOT_TEST.md) cover model-law confusion, jurisdiction, deposit forfeiture, wear and tear, registration and recovery routes. A capture-and-report tool records each answer's model, timestamp, evidence and source-backed review.
+
+| Response source | Current status |
+| --- | --- |
+| [Codex reference answers](docs/CODEX_REFERENCE_ANSWERS.md) | Ten self-authored answers with access to the project context; excluded from public-test scores |
+| ChatGPT public product | No answers captured |
+| Gemini public product | No answers captured |
+
+The [generated comparison](env/results/public_chatbot_report.md) keeps missing responses as **Not run**. Task 8.3's public-product comparison remains incomplete; these reference answers are not an independent ChatGPT/Gemini benchmark.
+
 ### Simple, scalable, secure
 
 | | How |
