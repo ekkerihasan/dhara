@@ -13,15 +13,17 @@ Checkpoint 1 (24 Oct, 16:00):
 - [x] Next.js frontend on stubbed data: intake form, review report (governing law, money at risk, counter-proposal with EN/KN and approve, citation check, decision trace), question card for `needs_input`, and a move-out preview. `npm run build` and `npm run lint` pass; the layout works at 390 px. See [frontend/README.md](frontend/README.md).
 - [x] Frontend/backend data shapes defined in `frontend/lib/types.ts`, with sample runs in `frontend/stubs/` checked against the law pack by `tests/test_frontend_stubs.py`.
 - [x] Law library (`law/karnataka.json`, 25 sourced sections) with `check_jurisdiction` and `lookup_section` (`backend/tools/law.py`).
-- [ ] Verifier, three tasks and scorer (in progress).
+- [x] Citation verifier, three synthetic tasks and deterministic scorer (`backend/agent/verifier.py`, `env/`). The sample perfect run scores **3/3**; citing the model deposit cap incurs **−1** (2/3). These are scorer checks on synthetic outputs, not live model results.
+- [x] `read_agreement` with in-memory PDF extraction and PII redaction, `compute_money`, English/Kannada `draft_message`, and the `send_and_schedule` approval gate. Approved drafts are recorded in memory; external delivery is not configured.
+- [ ] Planning agent and live API (next).
 
-Baseline test result: **51 passed, 6 subtests passed** (`python -m pytest -q`). Current: **75 passed** after the law tools and frontend stub checks. A root package import guard was added so pytest can collect tests from this checkout; `housing/` and `server/` are unchanged. Validation currently uses the earlier project's Python 3.10.11 environment; the event backend targets Python 3.11.
+Validation: **135 passed** (`python -m pytest -q`); **51 passed** at import. A root package import guard was added so pytest can collect tests from this checkout; `housing/` and `server/` are unchanged. Validation currently uses the earlier project's Python 3.10.11 environment; the event backend targets Python 3.11.
 
 ## Simple, scalable, secure
 
-- **Simple.** Rules do the work wherever rules are enough. The Rent Act test, money-at-risk formulas, citation check and scorer are plain Python over JSON, with no model involved; the model is used only to read clauses and draft messages. Runs live in memory, with no database or queue.
+- **Simple.** Rules do the work wherever rules are enough. The Rent Act test, money-at-risk formulas, citation check and scorer are plain Python over JSON, with no model involved; the model plans which tools to call and states claims for the verifier, while reading, pricing, citation checks, drafts and scoring stay deterministic. Runs live in memory, with no database or queue.
 - **Scalable.** Law is data. Each state is one JSON law pack (`law/karnataka.json` today) with a source link per section; the agent, verifier and screens stay the same for a new state.
-- **Secure.** Keys come only from environment variables (`.env` is ignored). Uploaded agreements are kept in memory for the request, and Aadhaar, PAN and phone numbers are redacted before any model call (redaction lands with `read_agreement`). Claims citing a section that is missing from the pack or does not apply in Karnataka are blocked. Team planning notes are kept out of the repository.
+- **Secure.** Keys come only from environment variables (`.env` is ignored). Uploaded agreements are kept in memory for the request, and `read_agreement` redacts Aadhaar, PAN and phone numbers before any model call. Claims citing a section that is missing from the pack or does not apply in Karnataka are blocked. Team planning notes are kept out of the repository.
 
 ## Before and after
 
@@ -37,9 +39,9 @@ Baseline test result: **51 passed, 6 subtests passed** (`python -m pytest -q`). 
 ## Built at ChronoForge
 
 - [x] Sourced law library and jurisdiction tools
-- [ ] Citation verifier and wrong-law blocking
-- [ ] Three tenancy evaluation tasks and deterministic scorer
-- [ ] Agreement redaction, money calculations and approval-gated messages
+- [x] Citation verifier and wrong-law blocking
+- [x] Three tenancy evaluation tasks and deterministic scorer
+- [x] Agreement redaction, money calculations and approval-gated messages
 - [ ] Model provider, planning agent and decision trace
 - [ ] FastAPI run, answer and approval endpoints
 - [ ] Next.js review and move-out screens with English and Kannada drafts (screens built on stubs; live API pending)
@@ -73,7 +75,7 @@ Open http://127.0.0.1:7861. The offline housing interface needs no model key. `.
 - Earlier Dhara AI prototype: imported from the team's Dhara-Ai repository; its existing source notices are preserved.
 - Meta OpenEnv / openenv-core: environment interfaces and runtime, including FastAPI, Uvicorn, Pydantic, Gradio and websockets.
 - Python dependencies: OpenAI Python SDK, python-dotenv, pytest, pytest-cov, httpx, setuptools and wheel.
-- Local document tools: PyMuPDF, Pillow, RapidOCR, ONNX Runtime and NumPy.
+- Local document tools: PyMuPDF, Pillow, RapidOCR, ONNX Runtime and NumPy. Event PDF extraction: [pypdf](https://pypdf.readthedocs.io/).
 - [India Code](https://www.indiacode.nic.in/) and [PRS Legislative Research](https://prsindia.org/billtrack/the-model-tenancy-act-2021): planned statute and legislative references.
 - Frontend: [Next.js](https://nextjs.org/), React and [Tailwind CSS](https://tailwindcss.com/) (MIT); [Lucide](https://lucide.dev/) icons (ISC); Geist and Geist Mono (Vercel, OFL-1.1) and Noto Sans Kannada (Google, OFL-1.1) via `next/font`.
 - [Groq](https://groq.com/) and [Sarvam](https://www.sarvam.ai/): planned model providers; event integration and provider selection remain pending.
