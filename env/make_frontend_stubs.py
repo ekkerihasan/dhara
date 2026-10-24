@@ -14,10 +14,13 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from backend.agent import landlord
+from backend.agent.negotiation import letter_items
 from backend.agent.verifier import verify_claims
+from backend.models import Decision, Negotiation, NegotiationRound, TenantLimits
 from backend.tools.agreement import read_agreement
 from backend.tools.law import check_jurisdiction, lookup_section
-from backend.tools.messages import draft_message
+from backend.tools.messages import draft_message, itemisation_letter
 from backend.tools.money import compute_money
 from env.scorer import score
 
@@ -239,6 +242,54 @@ def build_moveout() -> dict[str, Any]:
     }
 
 
+def build_blr_negotiation() -> dict[str, Any]:
+    """The strict owner on three blr_flat clauses. Offers come from the task's move table and the letter from
+    draft_message; only the tenant agent's decisions (what the model would say) are written here."""
+    task = json.loads((TASKS / "blr_flat.json").read_text(encoding="utf-8"))
+    persona, clause_ids = "strict_owner", ["C2", "C3", "C4"]
+    first = landlord.opening(task, persona, clause_ids)
+    round_1 = [
+        Decision(clause_id="C2", decision="reject", section_id="ICA-74", verdict="cited",
+                 reason="Forfeiting the whole deposit on any breach is a penalty; only reasonable compensation for actual loss is recoverable."),
+        Decision(clause_id="C3", decision="counter", counter_terms={"lock_in_months": 3}, section_id="ICA-74", verdict="cited",
+                 reason="Six months' rent on early exit is far above the likely loss; the tenant can accept a 3-month lock-in."),
+        Decision(clause_id="C4", decision="reject", section_id="TPA-108(m)", verdict="cited",
+                 reason="A flat Rs 15,000 ignores the exception for reasonable wear and tear."),
+    ]
+    second = landlord.respond(task, persona, round_1)
+    round_2 = [
+        Decision(clause_id="C2", decision="accept", reason="No forfeiture, and the refund within 30 days is within the tenant's limit.", verdict="unverified"),
+        # The model accepted the 4-month lock-in; code flipped it because the tenant's limit is 3.
+        Decision(clause_id="C3", decision="reject", reason="exceeds tenant limit: max_lock_in_months", verdict="unverified", limit_override=True),
+        Decision(clause_id="C4", decision="accept", reason="Rs 8,000 is within the tenant's Rs 10,000 limit for exit painting.", verdict="unverified"),
+    ]
+    ask = BLR_FINDINGS["C3"]["ask"]
+    negotiation = Negotiation(
+        persona=persona, limits=TenantLimits(), status="stalled",
+        rounds=[NegotiationRound(round=1, offers=first, decisions=round_1, model_ms=2140),
+                NegotiationRound(round=2, offers=second, decisions=round_2, model_ms=1870)],
+        agreed_terms={"C2": dict(second[0].terms), "C3": {"lock_in_months": 3, "ask": ask}, "C4": dict(second[2].terms)},
+        settled_clauses=["C2", "C4"], open_clauses=["C3"])
+    categories = [{"clause_ref": ref, "category": cat} for ref, cat in (("C2", "deposit_forfeiture"), ("C3", "lock_in"), ("C4", "painting_or_cleaning_fixed"))]
+    items = letter_items(negotiation, categories)
+    return {**negotiation.model_dump(),
+            "agreed_letter": {lang: draft_message(items, "request", lang)["text"] for lang in ("en", "kn", "hi")},
+            "sections": section_meta({"ICA-74", "TPA-108(m)"})}
+
+
+def build_moveout_itemisation(moveout: dict[str, Any]) -> dict[str, Any]:
+    """The landlord sent one number: Dhara asks for the itemised list before disputing anything."""
+    claim, deposit, withheld = "painting and repairs 80396", 100000, 80396
+    letter = {lang: itemisation_letter(deposit, withheld, claim, "C3", lang)["text"] for lang in ("en", "kn", "hi")}
+    return {**{k: v for k, v in moveout.items() if k not in ("deductions", "sections")},
+            "id": "moveout_itemisation", "status": "needs_itemisation", "deposit_inr": deposit,
+            "facts": {**moveout["facts"], "deposit_inr": deposit}, "deductions": [], "drafts": [],
+            "claimed_text": claim, "letter": letter,
+            "itemisation": {"index": 0, "at": "", "type": "needs_itemisation", "reason": "the deductions are a single line",
+                            "withheld_inr": withheld, "deposit_inr": deposit},
+            "sections": section_meta({"ICA-74"})}
+
+
 # Synthetic runs shipped with the scorer: one correct, one that cites the Model Tenancy Act cap.
 SCORED_RUNS = [
     ("sample_run", "Correct run", "Right governing law, money within Rs 500, only sections from the law pack."),
@@ -295,5 +346,8 @@ def write(name: str, data: dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     write("blr_flat.json", build_blr_flat())
-    write("moveout.json", build_moveout())
+    write("blr_flat_negotiation.json", build_blr_negotiation())
+    moveout_stub = build_moveout()
+    write("moveout.json", moveout_stub)
+    write("moveout_itemisation.json", build_moveout_itemisation(moveout_stub))
     write("scores.json", build_scores())

@@ -2,19 +2,23 @@
 // every call is answered from stubs/*.json so the screens can be built and demoed without the API.
 
 import blrFlat from "@/stubs/blr_flat.json";
+import blrNegotiation from "@/stubs/blr_flat_negotiation.json";
 import moveout from "@/stubs/moveout.json";
+import moveoutItemisation from "@/stubs/moveout_itemisation.json";
 import { backendFacts, fromBackend, fromBackendMoveout, type BackendMoveout, type BackendRun } from "./backend";
 import { inr, LOCAL_BODY_LABEL } from "./format";
-import type { ApprovalStep, Facts, Language, MoveoutInput, MoveoutRun, QuestionStep, Run, RunInput } from "./types";
+import type { ApprovalStep, Facts, Language, MoveoutInput, MoveoutRun, Negotiation, QuestionStep, Run, RunInput, TraceStep } from "./types";
 
 export const USE_STUBS = process.env.NEXT_PUBLIC_USE_STUBS !== "false";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 const STUB_RUN_ID = "blr_flat";
 const STUB_MOVEOUT_ID = "moveout";
+const STUB_ITEMISATION_ID = "moveout_itemisation";
+const STUB_ROUND_MS = 1800; // the sample negotiation fills in one round at a time after a review starts
 
 /** The sample runs (top-bar links) always come from the stubs, even when the live API is on. */
-const isSample = (id: string) => USE_STUBS || id === STUB_RUN_ID || id === STUB_MOVEOUT_ID;
+const isSample = (id: string) => USE_STUBS || id === STUB_RUN_ID || id === STUB_MOVEOUT_ID || id === STUB_ITEMISATION_ID;
 const FOLLOW_UP_DAYS = 7;
 
 // ---------- live API (BUILD.md Phase 5 endpoints) ----------
@@ -65,6 +69,8 @@ interface StubState {
   language: Language;
   entered: Facts | null; // what the tenant typed, compared with the sample flat
   unknown?: string[]; // facts answered "I don't know"
+  readyAt?: string | null; // when the findings were ready; the sample negotiation runs from here
+  persona?: string; // the landlord style the tenant picked
 }
 
 const DEFAULT_STATE: StubState = { answer: null, needsAnswer: false, approvedAt: null, language: "en", entered: null };
@@ -115,6 +121,30 @@ function sampleNote(entered: Facts | null, sample: Facts, unknown: string[] = []
   return diffs.length ? `You entered ${diffs.join(", ")}.` : null;
 }
 
+/** The trace steps the backend appends for a negotiation, rebuilt from the Negotiation itself. */
+function negotiationSteps(negotiation: Negotiation, start: number): TraceStep[] {
+  const steps: TraceStep[] = [];
+  for (const r of negotiation.rounds) {
+    steps.push({ index: start + steps.length, at: "", type: "landlord_offer", round: r.round, persona: negotiation.persona, offers: r.offers });
+    steps.push({ index: start + steps.length, at: "", type: "tenant_decision", round: r.round, decisions: r.decisions, model_ms: r.model_ms, fallback: r.fallback, error: null });
+  }
+  if (negotiation.status !== "running") {
+    const { agreed_terms, settled_clauses, open_clauses } = negotiation;
+    steps.push({ index: start + steps.length, at: "", type: "negotiation_settled", agreed_terms, settled_clauses, open_clauses });
+  }
+  return steps;
+}
+
+/** The sample negotiation, as far as it has got: round 1 first, then round 2 and the outcome. */
+function stubNegotiation(readyAt: string | null | undefined): Negotiation {
+  const full = structuredClone(blrNegotiation) as unknown as Negotiation & { agreed_letter?: unknown };
+  delete full.agreed_letter;
+  const elapsed = readyAt ? Date.now() - new Date(readyAt).getTime() : Infinity;
+  const rounds = Math.min(full.rounds.length, Math.floor(elapsed / STUB_ROUND_MS));
+  if (rounds >= full.rounds.length) return full;
+  return { ...full, rounds: full.rounds.slice(0, rounds), status: "running", agreed_terms: {}, settled_clauses: [], open_clauses: [] };
+}
+
 function stubRun(id: string): Run {
   if (id !== STUB_RUN_ID) throw new Error(`No stubbed run "${id}". Try /review/${STUB_RUN_ID}.`);
   const run = structuredClone(blrFlat) as unknown as Run;
@@ -131,8 +161,15 @@ function stubRun(id: string): Run {
   }
   // The trace keeps the sample's own answer so it matches the tool calls below it; sample_note names the difference.
   run.sample_note = sampleNote(state.entered, run.facts, state.unknown);
+  if (state.persona === "reasonable_broker")
+    run.sample_note = `${run.sample_note ?? ""} You chose a reasonable broker; the sample negotiation is against a strict owner.`.trim();
+
+  if (!state.readyAt && state.entered) writeState(id, { ...state, readyAt: new Date().toISOString() });
+  run.negotiation = stubNegotiation(state.approvedAt ? null : (readyAt(id) ?? null));
+  run.trace.push(...negotiationSteps(run.negotiation, run.trace.length));
 
   if (state.approvedAt) {
+    run.drafts = [{ ...run.drafts[0], text: blrNegotiation.agreed_letter, note: run.drafts[0].note }];
     const approval: ApprovalStep = {
       index: run.trace.length,
       type: "approval",
@@ -147,12 +184,16 @@ function stubRun(id: string): Run {
   return run;
 }
 
+function readyAt(id: string): string | null | undefined {
+  return readState(id).readyAt;
+}
+
 // ---------- public API ----------
 
 export async function createRun(input: RunInput): Promise<string> {
   if (USE_STUBS) {
     await delay(400);
-    writeState(STUB_RUN_ID, { ...DEFAULT_STATE, needsAnswer: input.facts.built_year === null, language: input.facts.language, entered: input.facts });
+    writeState(STUB_RUN_ID, { ...DEFAULT_STATE, needsAnswer: input.facts.built_year === null, language: input.facts.language, entered: input.facts, persona: input.persona });
     return STUB_RUN_ID;
   }
   const run = await postJson<BackendRun>("/api/runs", {
@@ -160,6 +201,8 @@ export async function createRun(input: RunInput): Promise<string> {
     pdf_base64: input.file ? await toBase64(input.file) : null,
     facts: backendFacts(input.facts),
     language: input.facts.language,
+    limits: input.limits,
+    persona: input.persona,
   });
   saveFacts(run.id, input.facts);
   return run.id;
@@ -180,7 +223,7 @@ export async function answerQuestion(id: string, field: keyof Facts, value: stri
     const state = readState(id);
     const entered = state.entered ? { ...state.entered, [field]: Number(value) || null } : null;
     const unknown = value === "" ? [...(state.unknown ?? []), field] : state.unknown; // "" = I don't know
-    writeState(id, { ...state, answer: value || "unknown", entered, unknown });
+    writeState(id, { ...state, answer: value || "unknown", entered, unknown, readyAt: new Date().toISOString() });
     return;
   }
   const facts = { ...loadFacts(id), [field]: value === "" ? null : Number(value) || value }; // "" = I don't know
@@ -188,30 +231,52 @@ export async function answerQuestion(id: string, field: keyof Facts, value: stri
   await postJson(`/api/runs/${encodeURIComponent(id)}/answer`, { facts: { [field]: facts[field] } });
 }
 
-export async function approveDraft(id: string, draftId: string): Promise<void> {
+/** Approve the run's draft; with a negotiation, the agreed terms the tenant saw (the backend rewrites the letter from them). */
+export async function approveDraft(id: string, draftId: string, agreedTerms: Negotiation["agreed_terms"] | null = null): Promise<void> {
   if (isSample(id)) {
     await delay(400);
     writeState(id, { ...readState(id), approvedAt: new Date().toISOString() });
     return;
   }
   void draftId; // the backend approves the run's single draft
-  await postJson(`/api/runs/${encodeURIComponent(id)}/approve`, { approved: true });
+  await postJson(`/api/runs/${encodeURIComponent(id)}/approve`, agreedTerms ? { approved: true, agreed_terms: agreedTerms } : { approved: true });
 }
 
 export async function createMoveout(input: MoveoutInput): Promise<string> {
+  const lumpSum = !input.deductions.length;
   if (USE_STUBS) {
     await delay(400);
-    return "moveout";
+    saveMoveoutInput(lumpSum ? STUB_ITEMISATION_ID : STUB_MOVEOUT_ID, input);
+    return lumpSum ? STUB_ITEMISATION_ID : STUB_MOVEOUT_ID;
   }
-  const { deposit_inr, ...body } = input;
-  const review = await postJson<BackendMoveout>("/api/moveout", body);
-  saveFacts(review.id, { ...EMPTY_FACTS, ...(input.facts as Partial<Facts>), deposit_inr, language: input.language });
+  const review = await postJson<BackendMoveout>("/api/moveout", input);
+  saveFacts(review.id, { ...EMPTY_FACTS, ...(input.facts as Partial<Facts>), deposit_inr: input.deposit_inr, language: input.language });
+  saveMoveoutInput(review.id, input);
   return review.id;
+}
+
+// The itemised resubmission reuses the agreement, checklist and facts of the first request.
+function saveMoveoutInput(id: string, input: MoveoutInput): void {
+  try {
+    sessionStorage.setItem(`dhara:moveout:${id}`, JSON.stringify(input));
+  } catch {
+    // storage blocked: the resubmit form falls back to the sample request
+  }
+}
+
+export function loadMoveoutInput(id: string): MoveoutInput | null {
+  try {
+    const raw = sessionStorage.getItem(`dhara:moveout:${id}`);
+    return raw ? (JSON.parse(raw) as MoveoutInput) : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getMoveout(id: string): Promise<MoveoutRun> {
   if (isSample(id)) {
     await delay(250);
+    if (id === STUB_ITEMISATION_ID) return structuredClone(moveoutItemisation) as unknown as MoveoutRun;
     if (id !== STUB_MOVEOUT_ID) throw new Error(`No stubbed move-out "${id}". Try /moveout/moveout.`);
     return structuredClone(moveout) as unknown as MoveoutRun;
   }

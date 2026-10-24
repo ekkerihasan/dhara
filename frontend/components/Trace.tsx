@@ -1,6 +1,7 @@
-import { ChevronRight, CircleHelp, FileText, ListTodo, Send, ShieldCheck, Wrench } from "lucide-react";
-import { time } from "@/lib/format";
+import { Bot, ChevronRight, CircleHelp, FileText, Handshake, ListTodo, Receipt, Send, ShieldCheck, Store, Wrench } from "lucide-react";
+import { inr, time } from "@/lib/format";
 import type { Section, TraceStep } from "@/lib/types";
+import { PERSONA_LABEL, termsText } from "./Negotiation";
 import { SectionChip } from "./SectionChip";
 import { VerdictBadge } from "./VerdictBadge";
 
@@ -13,6 +14,10 @@ const KIND: Record<TraceStep["type"], string> = {
   verifier: "Verifier",
   draft: "Draft",
   approval: "Approval",
+  landlord_offer: "Landlord offer",
+  tenant_decision: "Tenant decision",
+  negotiation_settled: "Negotiation",
+  needs_itemisation: "Itemisation first",
 };
 
 function badgeClass(step: TraceStep): string {
@@ -33,6 +38,14 @@ function StepIcon({ step }: { step: TraceStep }) {
       return <FileText {...ICON} />;
     case "approval":
       return <Send {...ICON} />;
+    case "landlord_offer":
+      return <Store {...ICON} />;
+    case "tenant_decision":
+      return <Bot {...ICON} />;
+    case "negotiation_settled":
+      return <Handshake {...ICON} />;
+    case "needs_itemisation":
+      return <Receipt {...ICON} />;
   }
 }
 
@@ -123,6 +136,67 @@ function StepBody({ step, sections }: { step: TraceStep; sections: Record<string
             <span className="badge badge-green">Approved</span>
           </div>
           <p>{step.follow_up_date ? `Follow-up recorded for ${step.follow_up_date}. Not delivered automatically.` : "No follow-up recorded."}</p>
+        </>
+      );
+    case "landlord_offer":
+      return (
+        <>
+          <div className="timeline-head">
+            <h3>
+              Round {step.round}: {PERSONA_LABEL[step.persona]} made {step.offers.length} {step.offers.length === 1 ? "offer" : "offers"}
+            </h3>
+          </div>
+          <ul>
+            {step.offers.map((o) => (
+              <li key={o.move_id}>
+                <span className="mono">{o.clause_id}</span> {termsText(o.terms)}
+              </li>
+            ))}
+          </ul>
+        </>
+      );
+    case "tenant_decision":
+      return (
+        <>
+          <div className="timeline-head">
+            <h3>Round {step.round}: tenant agent decided</h3>
+            {step.fallback ? <span className="badge badge-amber">rule-based</span> : <span className="badge">model {(step.model_ms / 1000).toFixed(1)} s</span>}
+          </div>
+          <ul>
+            {step.decisions.map((d) => (
+              <li key={d.clause_id}>
+                <span className="mono">{d.clause_id}</span> {d.decision}
+                {d.limit_override && " (limit enforced)"} · {d.verdict}
+                {d.section_id && <> · <SectionChip id={d.section_id} sections={sections} /></>}
+              </li>
+            ))}
+          </ul>
+          {step.error && <p className="reason">Model step failed: {step.error}. Rule-based decisions instead.</p>}
+        </>
+      );
+    case "negotiation_settled":
+      return (
+        <>
+          <div className="timeline-head">
+            <h3>Negotiation {step.open_clauses.length ? "stalled" : "settled"}</h3>
+            <span className={`badge ${step.open_clauses.length ? "badge-amber" : "badge-green"}`}>
+              {step.settled_clauses.length} agreed · {step.open_clauses.length} open
+            </span>
+          </div>
+          <p>The agreed terms wait for the tenant&apos;s approval; open clauses keep the tenant&apos;s ask.</p>
+        </>
+      );
+    case "needs_itemisation":
+      return (
+        <>
+          <div className="timeline-head">
+            <h3>Asked for the itemised list first</h3>
+            <SectionChip id="ICA-74" sections={sections} />
+          </div>
+          <p>
+            {inr(step.withheld_inr)} withheld{step.deposit_inr ? ` from a deposit of ${inr(step.deposit_inr)}` : ""}, and {step.reason}. No item is disputed
+            until the landlord itemises it.
+          </p>
         </>
       );
   }

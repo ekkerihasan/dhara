@@ -8,18 +8,20 @@ import { Topbar } from "@/components/Topbar";
 const TOC = [
   { id: "agreement", title: "The agreement" },
   { id: "facts", title: "Facts about the rental" },
+  { id: "limits", title: "Your limits" },
   { id: "how", title: "What the agent does" },
   { id: "chatbot", title: "Why not a chatbot" },
 ];
 
 // Plain-model behaviour comes from the scored run in env/results/scores.json (same model, no tools, no checker).
 const COMPARE = [
-  { aspect: "Which law applies", chatbot: "Assumed the Karnataka Rent Act protects the tenant, on all 3 test tasks", dhara: "Tests the building's age, rent and area against the Act's own exclusions first" },
+  { aspect: "Which law applies", chatbot: "Named the wrong governing law on all 3 test tasks; on 2 it assumed the Karnataka Rent Act protects the tenant", dhara: "Tests the building's age, rent and area against the Act's own exclusions first" },
   { aspect: "A missing fact", chatbot: "Answers anyway", dhara: "Stops and asks; \"I don't know\" leaves the law unresolved instead of guessed" },
-  { aspect: "Legal citations", chatbot: "Nothing checks them; on the flat test, about 1 in 5 of its legal points had no valid Karnataka section", dhara: "A claim without a valid Karnataka section is blocked before you see it" },
+  { aspect: "Legal citations", chatbot: "Nothing checks them; negotiating for the flat, it cited a Rent Act section (KRA-15) although the Act does not cover that flat", dhara: "A claim without a valid Karnataka section is blocked before you see it" },
   { aspect: "Rupee amounts", chatbot: "Its own arithmetic, each time", dhara: "Fixed formulas in code: the same answer every run" },
   { aspect: "Your personal data", chatbot: "The whole document goes to the model", dhara: "Aadhaar, PAN and phone numbers are removed first" },
   { aspect: "What you get", chatbot: "A chat reply", dhara: "A priced report, a letter in English, Kannada or Hindi, a follow-up date, and the move-out check" },
+  { aspect: "Negotiates counter-offers against your limits and the law", chatbot: "No", dhara: "Yes" },
   { aspect: "Proof", chatbot: "None", dhara: "Every step is in the decision trace" },
 ];
 
@@ -29,6 +31,7 @@ const STEPS = [
   { title: "Act", text: "Reads the agreement, runs the Karnataka Rent Act test, looks up sections, prices each clause in rupees." },
   { title: "Verify", text: "Every legal claim must cite a section that applies in Karnataka. Wrong-law and uncited claims are blocked." },
   { title: "Draft and wait", text: "Writes the counter-proposal in English, Kannada or Hindi, then waits for your approval. Once approved, you can share it on WhatsApp yourself." },
+  { title: "Negotiate within your limits", text: "Answers the landlord's counter-offers for up to two rounds: accept, reject or counter, each reason cited to a section. Code flips any accept past your limits to a reject; you approve the agreed terms once." },
 ];
 
 export default function Home() {
@@ -96,7 +99,8 @@ export default function Home() {
                 </table>
               </div>
               <figcaption>
-                Scored by plain code on three synthetic test agreements, out of 3: plain chatbot 1.78, 2.00 and 2.00; Dhara 3.00, 3.00 and 2.67.{" "}
+                Scored by plain code on three synthetic test agreements, out of 4 for the two pre-signing agreements (with negotiation) and 3 for
+                the move-out: plain chatbot 3.00, 3.00 and 2.00; Dhara 3.72, 3.67 and 2.75.{" "}
                 <Link href="/scores">See the evaluation</Link>.
               </figcaption>
             </figure>

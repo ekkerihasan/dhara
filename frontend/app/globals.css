@@ -446,3 +446,29 @@ html.theme-fade, html.theme-fade *, html.theme-fade *::before, html.theme-fade *
 .vs-icon { margin-top: 3px; }
 .vs-icon.is-bad { color: var(--danger); }
 .vs-icon.is-good { color: var(--safe); }
+
+/* negotiation rounds: landlord offer on the left, tenant decision on the right; stacked on phones */
+.nego-status { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; font-size: 13.5px; margin: var(--space-4) 0 0; }
+.nego-round { background: var(--paper); }
+.nego-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-top: 1px solid var(--rule); }
+.nego-cols-head { border-top: 0; font: 600 11.5px var(--sans); letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--sheet); }
+.nego-cols-head span { display: inline-flex; align-items: center; gap: 6px; padding: 8px var(--space-4); }
+.nego-cell { padding: var(--space-3) var(--space-4); min-width: 0; }
+.nego-cell + .nego-cell { border-left: 1px solid var(--rule); }
+.nego-clause { margin: 0 0 4px; font: 600 14px/1.4 var(--sans); color: var(--ink); }
+.nego-clause .mono { color: var(--muted); font-weight: 400; margin-right: 4px; }
+.nego-text { margin: 6px 0 0; font: 14px/1.55 var(--sans); color: var(--ink-2); }
+.nego-terms { margin: 6px 0 0; font: 12.5px/1.5 var(--mono); color: var(--muted); }
+.nego-badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+@media (max-width: 720px) {
+  .nego-cols { grid-template-columns: minmax(0, 1fr); }
+  .nego-cols-head { display: none; }
+  .nego-cell + .nego-cell { border-left: 0; border-top: 1px dashed var(--rule); }
+}
+.timeline-badge.t-landlord_offer { color: var(--warn); }
+.timeline-badge.t-tenant_decision { color: var(--accent); }
+.timeline-badge.t-negotiation_settled { color: var(--safe); }
+.timeline-badge.t-needs_itemisation { color: var(--warn); }
+.input-suffix { display: flex; align-items: center; gap: var(--space-2); }
+.input-suffix input { flex: 1; min-width: 0; }
+.input-suffix span { font-size: 13.5px; color: var(--muted); white-space: nowrap; }

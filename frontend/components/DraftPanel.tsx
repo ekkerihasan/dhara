@@ -16,11 +16,15 @@ export function DraftPanel({
   initialLanguage,
   approval,
   onApprove,
+  approveLabel = "Approve",
+  waiting = null,
 }: {
   draft: Draft;
   initialLanguage: Language;
   approval: ApprovalStep | null;
-  onApprove: () => Promise<void>;
+  onApprove: (() => Promise<void>) | null; // null: a letter to copy and send yourself; nothing to approve here
+  approveLabel?: string;
+  waiting?: string | null; // why approval is not possible yet, e.g. the negotiation is still running
 }) {
   const available = LANGUAGES.filter((l) => draft.text[l.code]);
   const [language, setLanguage] = useState<Language>(draft.text[initialLanguage] ? initialLanguage : (available[0]?.code ?? "en"));
@@ -28,6 +32,7 @@ export function DraftPanel({
   const [copied, setCopied] = useState(false);
 
   const approve = async () => {
+    if (!onApprove) return;
     setBusy(true);
     try {
       await onApprove();
@@ -74,7 +79,7 @@ export function DraftPanel({
             Approved. Follow-up on {approval.follow_up_date}. Copy it or share it on WhatsApp; you send it yourself.
           </span>
         ) : (
-          <span>Review the text, then approve it. Dhara never sends anything on its own.</span>
+          <span>{waiting ?? (onApprove ? "Review the text, then approve it. Dhara never sends anything on its own." : "Copy it and send it yourself.")}</span>
         )}
         <span className="spacer" />
         <button className="btn btn-sm" type="button" onClick={copy}>
@@ -87,10 +92,10 @@ export function DraftPanel({
             Share on WhatsApp
           </a>
         )}
-        {!approval && (
-          <button className="btn btn-sm primary" type="button" onClick={approve} disabled={busy}>
+        {!approval && onApprove && (
+          <button className="btn btn-sm primary" type="button" onClick={approve} disabled={busy || Boolean(waiting)}>
             <Send size={14} aria-hidden />
-            {busy ? "Approving…" : "Approve"}
+            {busy ? "Approving…" : approveLabel}
           </button>
         )}
       </div>

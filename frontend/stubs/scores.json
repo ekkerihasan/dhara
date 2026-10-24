@@ -19,6 +19,7 @@
         "governing_law_correct": 1,
         "money_within_500": 1.0,
         "citations_exist": 1.0,
+        "negotiation_correct": 0.0,
         "wrong_law_penalty": 0,
         "total": 3.0
       },
@@ -33,6 +34,7 @@
         "governing_law_correct": 1,
         "money_within_500": 1.0,
         "citations_exist": 1.0,
+        "negotiation_correct": 0.0,
         "wrong_law_penalty": -1,
         "total": 2.0
       },
@@ -173,7 +175,7 @@
     }
   ],
   "eval": {
-    "date": "2026-10-24",
+    "date": "2026-10-25",
     "rows": [
       {
         "task": "blr_flat",
@@ -181,27 +183,444 @@
         "score": {
           "governing_law_correct": 0,
           "money_within_500": 1.0,
-          "citations_exist": 0.7777777777777778,
+          "citations_exist": 1.0,
+          "negotiation_correct": 1.0,
           "wrong_law_penalty": 0,
-          "total": 1.7777777777777777
+          "total": 3.0
         },
         "error": null,
         "findings": 5,
-        "governing_law": "KARNATAKA_RENT_ACT"
+        "governing_law": "KARNATAKA_RENT_ACT",
+        "tool_calls": null,
+        "negotiation": {
+          "persona": "strict_owner",
+          "limits": {
+            "max_lock_in_months": 3,
+            "refund_within_days": 30,
+            "max_exit_painting_inr": 10000
+          },
+          "rounds": [
+            {
+              "round": 1,
+              "offers": [
+                {
+                  "clause_id": "C2",
+                  "move_id": "blr-C2-strict-1",
+                  "text": "The deposit stays forfeited if you break any term or leave early. I return the rest within 60 days.",
+                  "terms": {
+                    "refund_within_days": 60,
+                    "forfeit_on_any_breach": true
+                  }
+                },
+                {
+                  "clause_id": "C3",
+                  "move_id": "blr-C3-strict-1",
+                  "text": "Six months lock-in is standard in this area. I can't reduce it.",
+                  "terms": {
+                    "lock_in_months": 6
+                  }
+                },
+                {
+                  "clause_id": "C4",
+                  "move_id": "blr-C4-strict-1",
+                  "text": "Painting is Rs 15,000 flat. Every tenant pays it.",
+                  "terms": {
+                    "painting_inr": 15000
+                  }
+                },
+                {
+                  "clause_id": "C6",
+                  "move_id": "blr-C6-strict-1",
+                  "text": "Two months' notice from you. From my side one month is enough.",
+                  "terms": {
+                    "tenant_notice_months": 2,
+                    "landlord_notice_months": 1
+                  }
+                }
+              ],
+              "decisions": [
+                {
+                  "clause_id": "C2",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "forfeit_on_any_breach": false,
+                    "refund_within_days": 30
+                  },
+                  "reason": "Deposit should be returned within 30 days and not be forfeited for any breach, per tenant's fairness standard.",
+                  "section_id": "KRA-15",
+                  "verdict": "unverified",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C3",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "lock_in_months": 3
+                  },
+                  "reason": "Lock‑in period exceeds tenant's acceptable limit of three months.",
+                  "section_id": "TPA-106",
+                  "verdict": "unverified",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C4",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "painting_inr": 10000
+                  },
+                  "reason": "Painting cost exceeds tenant's limit of Rs 10,000.",
+                  "section_id": "ICA-74",
+                  "verdict": "unverified",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C6",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "landlord_notice_months": 2,
+                    "tenant_notice_months": 2
+                  },
+                  "reason": "Notice periods must be equal and not exceed two months, as required by the tenant's fairness standard.",
+                  "section_id": "TPA-106",
+                  "verdict": "unverified",
+                  "limit_override": false
+                }
+              ],
+              "model_ms": 3125,
+              "fallback": false
+            },
+            {
+              "round": 2,
+              "offers": [
+                {
+                  "clause_id": "C2",
+                  "move_id": "blr-C2-strict-2",
+                  "text": "Fine, I'll drop the forfeiture line. Refund within 30 days, minus actual damage with bills.",
+                  "terms": {
+                    "refund_within_days": 30,
+                    "forfeit_on_any_breach": false
+                  }
+                },
+                {
+                  "clause_id": "C3",
+                  "move_id": "blr-C3-strict-2",
+                  "text": "I can do 4 months lock-in, not less.",
+                  "terms": {
+                    "lock_in_months": 4
+                  }
+                },
+                {
+                  "clause_id": "C4",
+                  "move_id": "blr-C4-strict-2",
+                  "text": "Alright, Rs 8,000 for painting, and that is my last offer.",
+                  "terms": {
+                    "painting_inr": 8000
+                  }
+                },
+                {
+                  "clause_id": "C6",
+                  "move_id": "blr-C6-strict-2",
+                  "text": "Okay, two months' notice both ways.",
+                  "terms": {
+                    "tenant_notice_months": 2,
+                    "landlord_notice_months": 2
+                  }
+                }
+              ],
+              "decisions": [
+                {
+                  "clause_id": "C2",
+                  "decision": "accept",
+                  "counter_terms": null,
+                  "reason": "The refund period matches the tenant's limit and there is no forfeiture clause, which aligns with the tenant's fairness standard.",
+                  "section_id": null,
+                  "verdict": "unverified",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C3",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "lock_in_months": 3
+                  },
+                  "reason": "The proposed four‑month lock‑in exceeds the tenant's maximum of three months; a shorter lock‑in aligns with typical lease defaults.",
+                  "section_id": "TPA-106",
+                  "verdict": "unverified",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C4",
+                  "decision": "accept",
+                  "counter_terms": null,
+                  "reason": "The painting amount is within the tenant's ceiling of Rs 10,000, satisfying the tenant's limit.",
+                  "section_id": null,
+                  "verdict": "unverified",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C6",
+                  "decision": "accept",
+                  "counter_terms": null,
+                  "reason": "Both parties receive the same two‑month notice, meeting the tenant's fairness standard of equal notice not exceeding two months.",
+                  "section_id": null,
+                  "verdict": "unverified",
+                  "limit_override": false
+                }
+              ],
+              "model_ms": 2311,
+              "fallback": false
+            }
+          ],
+          "status": "stalled",
+          "agreed_terms": {
+            "C2": {
+              "refund_within_days": 30,
+              "forfeit_on_any_breach": false
+            },
+            "C3": {
+              "lock_in_months": 3
+            },
+            "C4": {
+              "painting_inr": 8000
+            },
+            "C6": {
+              "tenant_notice_months": 2,
+              "landlord_notice_months": 2
+            }
+          },
+          "settled_clauses": [
+            "C2",
+            "C4",
+            "C6"
+          ],
+          "open_clauses": [
+            "C3"
+          ]
+        },
+        "negotiation_errors": []
       },
       {
         "task": "blr_flat",
         "mode": "agent",
         "score": {
           "governing_law_correct": 1,
-          "money_within_500": 1.0,
-          "citations_exist": 1.0,
+          "money_within_500": 0.8,
+          "citations_exist": 0.9166666666666666,
+          "negotiation_correct": 1.0,
           "wrong_law_penalty": 0,
-          "total": 3.0
+          "total": 3.716666666666667
         },
         "error": null,
-        "findings": 5,
-        "governing_law": "TPA_CONTRACT"
+        "findings": 4,
+        "governing_law": "TPA_CONTRACT",
+        "tool_calls": 7,
+        "negotiation": {
+          "persona": "strict_owner",
+          "limits": {
+            "max_lock_in_months": 3,
+            "refund_within_days": 30,
+            "max_exit_painting_inr": 10000
+          },
+          "rounds": [
+            {
+              "round": 1,
+              "offers": [
+                {
+                  "clause_id": "C2",
+                  "move_id": "blr-C2-strict-1",
+                  "text": "The deposit stays forfeited if you break any term or leave early. I return the rest within 60 days.",
+                  "terms": {
+                    "refund_within_days": 60,
+                    "forfeit_on_any_breach": true
+                  }
+                },
+                {
+                  "clause_id": "C3",
+                  "move_id": "blr-C3-strict-1",
+                  "text": "Six months lock-in is standard in this area. I can't reduce it.",
+                  "terms": {
+                    "lock_in_months": 6
+                  }
+                },
+                {
+                  "clause_id": "C4",
+                  "move_id": "blr-C4-strict-1",
+                  "text": "Painting is Rs 15,000 flat. Every tenant pays it.",
+                  "terms": {
+                    "painting_inr": 15000
+                  }
+                },
+                {
+                  "clause_id": "C6",
+                  "move_id": "blr-C6-strict-1",
+                  "text": "Two months' notice from you. From my side one month is enough.",
+                  "terms": {
+                    "tenant_notice_months": 2,
+                    "landlord_notice_months": 1
+                  }
+                }
+              ],
+              "decisions": [
+                {
+                  "clause_id": "C2",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "forfeit_on_any_breach": false,
+                    "refund_within_days": 30
+                  },
+                  "reason": "Forfeiting the entire deposit on any breach is excessive; ICA-74 supports only reasonable compensation, not full forfeiture.",
+                  "section_id": "ICA-74",
+                  "verdict": "cited",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C3",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "lock_in_months": 3
+                  },
+                  "reason": "A six‑month lock‑in exceeds the tenant’s limit of three months; ICA-74 requires penalties to be reasonable and proportionate.",
+                  "section_id": "ICA-74",
+                  "verdict": "cited",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C4",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "painting_inr": 10000
+                  },
+                  "reason": "The flat Rs 15,000 painting charge is beyond reasonable cost; TPA-108(m) limits restoration duties to actual wear and tear costs.",
+                  "section_id": "TPA-108(m)",
+                  "verdict": "cited",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C6",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "landlord_notice_months": 2,
+                    "tenant_notice_months": 2
+                  },
+                  "reason": "Notice periods should be equal for both parties and not exceed two months; TPA-106 sets a default notice framework supporting this balance.",
+                  "section_id": "TPA-106",
+                  "verdict": "cited",
+                  "limit_override": false
+                }
+              ],
+              "model_ms": 3233,
+              "fallback": false
+            },
+            {
+              "round": 2,
+              "offers": [
+                {
+                  "clause_id": "C2",
+                  "move_id": "blr-C2-strict-2",
+                  "text": "Fine, I'll drop the forfeiture line. Refund within 30 days, minus actual damage with bills.",
+                  "terms": {
+                    "refund_within_days": 30,
+                    "forfeit_on_any_breach": false
+                  }
+                },
+                {
+                  "clause_id": "C3",
+                  "move_id": "blr-C3-strict-2",
+                  "text": "I can do 4 months lock-in, not less.",
+                  "terms": {
+                    "lock_in_months": 4
+                  }
+                },
+                {
+                  "clause_id": "C4",
+                  "move_id": "blr-C4-strict-2",
+                  "text": "Alright, Rs 8,000 for painting, and that is my last offer.",
+                  "terms": {
+                    "painting_inr": 8000
+                  }
+                },
+                {
+                  "clause_id": "C6",
+                  "move_id": "blr-C6-strict-2",
+                  "text": "Okay, two months' notice both ways.",
+                  "terms": {
+                    "tenant_notice_months": 2,
+                    "landlord_notice_months": 2
+                  }
+                }
+              ],
+              "decisions": [
+                {
+                  "clause_id": "C2",
+                  "decision": "accept",
+                  "counter_terms": null,
+                  "reason": "The refund within 30 days without forfeiture meets the tenant's limits and fairness standard.",
+                  "section_id": null,
+                  "verdict": "unverified",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C3",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "lock_in_months": 3
+                  },
+                  "reason": "A lock‑in period of 3 months aligns with the tenant's maximum and is a reasonable compensation under ICA‑74.",
+                  "section_id": "ICA-74",
+                  "verdict": "cited",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C4",
+                  "decision": "accept",
+                  "counter_terms": null,
+                  "reason": "The Rs 8,000 painting charge is within the tenant's limit and is reasonable.",
+                  "section_id": null,
+                  "verdict": "unverified",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C6",
+                  "decision": "accept",
+                  "counter_terms": null,
+                  "reason": "Two‑month notice for both parties satisfies the fairness standard of equal notice not exceeding two months.",
+                  "section_id": null,
+                  "verdict": "unverified",
+                  "limit_override": false
+                }
+              ],
+              "model_ms": 2500,
+              "fallback": false
+            }
+          ],
+          "status": "stalled",
+          "agreed_terms": {
+            "C2": {
+              "refund_within_days": 30,
+              "forfeit_on_any_breach": false
+            },
+            "C3": {
+              "lock_in_months": 3,
+              "ask": "Limit the lock‑in penalty to the rent for the actual remaining months."
+            },
+            "C4": {
+              "painting_inr": 8000
+            },
+            "C6": {
+              "tenant_notice_months": 2,
+              "landlord_notice_months": 2
+            }
+          },
+          "settled_clauses": [
+            "C2",
+            "C4",
+            "C6"
+          ],
+          "open_clauses": [
+            "C3"
+          ]
+        },
+        "negotiation_errors": []
       },
       {
         "task": "pg_room",
@@ -210,12 +629,160 @@
           "governing_law_correct": 0,
           "money_within_500": 1.0,
           "citations_exist": 1.0,
+          "negotiation_correct": 1.0,
           "wrong_law_penalty": 0,
-          "total": 2.0
+          "total": 3.0
         },
         "error": null,
         "findings": 2,
-        "governing_law": "KARNATAKA_RENT_ACT"
+        "governing_law": "TPA_CONTRACT",
+        "tool_calls": null,
+        "negotiation": {
+          "persona": "strict_owner",
+          "limits": {
+            "max_lock_in_months": 3,
+            "refund_within_days": 30,
+            "max_exit_painting_inr": 10000
+          },
+          "rounds": [
+            {
+              "round": 1,
+              "offers": [
+                {
+                  "clause_id": "C2",
+                  "move_id": "pg-C2-strict-1",
+                  "text": "Deposit is forfeited if you leave early. I return what's left in 90 days.",
+                  "terms": {
+                    "refund_within_days": 90,
+                    "forfeit_on_any_breach": true
+                  }
+                },
+                {
+                  "clause_id": "C3",
+                  "move_id": "pg-C3-strict-1",
+                  "text": "Cleaning is Rs 3,000. Same for everyone.",
+                  "terms": {
+                    "painting_inr": 3000
+                  }
+                },
+                {
+                  "clause_id": "C5",
+                  "move_id": "pg-C5-strict-1",
+                  "text": "It's my building. I'll enter the room whenever I need to.",
+                  "terms": {
+                    "notice_hours": 0
+                  }
+                }
+              ],
+              "decisions": [
+                {
+                  "clause_id": "C2",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "forfeit_on_any_breach": false,
+                    "refund_within_days": 30
+                  },
+                  "reason": "Deposit should be returned within 30 days and not be forfeited for any breach, aligning with fairness and ICA-74 limiting penalties.",
+                  "section_id": "ICA-74",
+                  "verdict": "unverified",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C3",
+                  "decision": "accept",
+                  "counter_terms": null,
+                  "reason": "The cleaning charge of Rs 3,000 is within the tenant's limit and acceptable.",
+                  "section_id": null,
+                  "verdict": "unverified",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C5",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "notice_hours": 24
+                  },
+                  "reason": "Landlord must give at least 24 hours notice before entering, matching the tenant's fairness standard and KRA-48(3) inspection notice requirement.",
+                  "section_id": "KRA-48(3)",
+                  "verdict": "unverified",
+                  "limit_override": false
+                }
+              ],
+              "model_ms": 4734,
+              "fallback": false
+            },
+            {
+              "round": 2,
+              "offers": [
+                {
+                  "clause_id": "C2",
+                  "move_id": "pg-C2-strict-2",
+                  "text": "I can return it in 60 days, but the forfeiture stays.",
+                  "terms": {
+                    "refund_within_days": 60,
+                    "forfeit_on_any_breach": true
+                  }
+                },
+                {
+                  "clause_id": "C5",
+                  "move_id": "pg-C5-strict-2",
+                  "text": "I'll tell you 12 hours before I come in.",
+                  "terms": {
+                    "notice_hours": 12
+                  }
+                }
+              ],
+              "decisions": [
+                {
+                  "clause_id": "C2",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "forfeit_on_any_breach": false,
+                    "refund_within_days": 30
+                  },
+                  "reason": "The tenant requires a refund within 30 days and no deposit forfeiture on any breach, matching their fairness standard.",
+                  "section_id": "ICA-74",
+                  "verdict": "unverified",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C5",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "notice_hours": 24
+                  },
+                  "reason": "A minimum of 24‑hour notice respects the tenant's right to reasonable quiet enjoyment and equal notice periods.",
+                  "section_id": "KRA-48(3)",
+                  "verdict": "unverified",
+                  "limit_override": false
+                }
+              ],
+              "model_ms": 2828,
+              "fallback": false
+            }
+          ],
+          "status": "stalled",
+          "agreed_terms": {
+            "C2": {
+              "refund_within_days": 30,
+              "forfeit_on_any_breach": false
+            },
+            "C3": {
+              "painting_inr": 3000
+            },
+            "C5": {
+              "notice_hours": 24
+            }
+          },
+          "settled_clauses": [
+            "C3"
+          ],
+          "open_clauses": [
+            "C2",
+            "C5"
+          ]
+        },
+        "negotiation_errors": []
       },
       {
         "task": "pg_room",
@@ -224,12 +791,184 @@
           "governing_law_correct": 1,
           "money_within_500": 1.0,
           "citations_exist": 1.0,
+          "negotiation_correct": 0.6666666666666666,
           "wrong_law_penalty": 0,
-          "total": 3.0
+          "total": 3.6666666666666665
         },
         "error": null,
         "findings": 2,
-        "governing_law": "UNRESOLVED"
+        "governing_law": "UNRESOLVED",
+        "tool_calls": 5,
+        "negotiation": {
+          "persona": "strict_owner",
+          "limits": {
+            "max_lock_in_months": 3,
+            "refund_within_days": 30,
+            "max_exit_painting_inr": 10000
+          },
+          "rounds": [
+            {
+              "round": 1,
+              "offers": [
+                {
+                  "clause_id": "C2",
+                  "move_id": "pg-C2-strict-1",
+                  "text": "Deposit is forfeited if you leave early. I return what's left in 90 days.",
+                  "terms": {
+                    "refund_within_days": 90,
+                    "forfeit_on_any_breach": true
+                  }
+                },
+                {
+                  "clause_id": "C3",
+                  "move_id": "pg-C3-strict-1",
+                  "text": "Cleaning is Rs 3,000. Same for everyone.",
+                  "terms": {
+                    "painting_inr": 3000
+                  }
+                },
+                {
+                  "clause_id": "C5",
+                  "move_id": "pg-C5-strict-1",
+                  "text": "It's my building. I'll enter the room whenever I need to.",
+                  "terms": {
+                    "notice_hours": 0
+                  }
+                }
+              ],
+              "decisions": [
+                {
+                  "clause_id": "C2",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "forfeit_on_any_breach": false,
+                    "reasonable_compensation": true,
+                    "refund_within_days": 30
+                  },
+                  "reason": "The tenant seeks a refund within 30 days and no automatic forfeiture, only reasonable compensation for any breach.",
+                  "section_id": "ICA-74",
+                  "verdict": "cited",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C3",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "cleaning_charge_actual": true,
+                    "cleaning_charge_cap_inr": 10000
+                  },
+                  "reason": "A fixed Rs 3,000 cleaning fee is excessive; charges should reflect actual cleaning costs up to a reasonable cap.",
+                  "section_id": "ICA-74",
+                  "verdict": "cited",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C5",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "notice_hours": 24
+                  },
+                  "reason": "Landlord entry must respect the tenant’s right to quiet enjoyment with at least 24 hours notice.",
+                  "section_id": "TPA-108(c)",
+                  "verdict": "cited",
+                  "limit_override": false
+                }
+              ],
+              "model_ms": 4093,
+              "fallback": false
+            },
+            {
+              "round": 2,
+              "offers": [
+                {
+                  "clause_id": "C2",
+                  "move_id": "pg-C2-strict-2",
+                  "text": "I can return it in 60 days, but the forfeiture stays.",
+                  "terms": {
+                    "refund_within_days": 60,
+                    "forfeit_on_any_breach": true
+                  }
+                },
+                {
+                  "clause_id": "C3",
+                  "move_id": "pg-C3-strict-2",
+                  "text": "Rs 3,000 cleaning, I won't change it.",
+                  "terms": {
+                    "painting_inr": 3000
+                  }
+                },
+                {
+                  "clause_id": "C5",
+                  "move_id": "pg-C5-strict-2",
+                  "text": "I'll tell you 12 hours before I come in.",
+                  "terms": {
+                    "notice_hours": 12
+                  }
+                }
+              ],
+              "decisions": [
+                {
+                  "clause_id": "C2",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "forfeit_on_any_breach": false,
+                    "refund_within_days": 30
+                  },
+                  "reason": "The tenant should receive the deposit back within 30 days and only reasonable compensation for breach, not full forfeiture.",
+                  "section_id": "ICA-74",
+                  "verdict": "cited",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C3",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "painting_inr": 0
+                  },
+                  "reason": "A fixed cleaning charge is not justified; costs should reflect actual cleaning expenses.",
+                  "section_id": "ICA-74",
+                  "verdict": "cited",
+                  "limit_override": false
+                },
+                {
+                  "clause_id": "C5",
+                  "decision": "counter",
+                  "counter_terms": {
+                    "notice_hours": 24
+                  },
+                  "reason": "Landlord must give at least 24 hours notice before entry, matching the tenant’s fairness standard.",
+                  "section_id": "KRA-48(3)",
+                  "verdict": "cited",
+                  "limit_override": false
+                }
+              ],
+              "model_ms": 3156,
+              "fallback": false
+            }
+          ],
+          "status": "stalled",
+          "agreed_terms": {
+            "C2": {
+              "refund_within_days": 30,
+              "forfeit_on_any_breach": false,
+              "ask": "Reduce the forfeiture of the security deposit to reasonable compensation rather than the full amount."
+            },
+            "C3": {
+              "painting_inr": 3000,
+              "ask": "Remove the fixed cleaning charge or make it reasonable based on actual cleaning costs."
+            },
+            "C5": {
+              "notice_hours": 24
+            }
+          },
+          "settled_clauses": [],
+          "open_clauses": [
+            "C2",
+            "C3",
+            "C5"
+          ]
+        },
+        "negotiation_errors": []
       },
       {
         "task": "moveout",
@@ -238,12 +977,16 @@
           "governing_law_correct": 0,
           "money_within_500": 1.0,
           "citations_exist": 1.0,
+          "negotiation_correct": null,
           "wrong_law_penalty": 0,
           "total": 2.0
         },
         "error": null,
         "findings": 3,
-        "governing_law": "KARNATAKA_RENT_ACT"
+        "governing_law": "KARNATAKA_RENT_ACT",
+        "tool_calls": null,
+        "negotiation": null,
+        "negotiation_errors": []
       },
       {
         "task": "moveout",
@@ -251,13 +994,17 @@
         "score": {
           "governing_law_correct": 1,
           "money_within_500": 1.0,
-          "citations_exist": 0.6666666666666666,
+          "citations_exist": 0.75,
+          "negotiation_correct": null,
           "wrong_law_penalty": 0,
-          "total": 2.6666666666666665
+          "total": 2.75
         },
         "error": null,
         "findings": 3,
-        "governing_law": "TPA_CONTRACT"
+        "governing_law": "TPA_CONTRACT",
+        "tool_calls": null,
+        "negotiation": null,
+        "negotiation_errors": []
       }
     ],
     "model": "openai/gpt-oss-120b"

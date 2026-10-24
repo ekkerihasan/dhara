@@ -14,6 +14,8 @@ import type {
   JurisdictionReason,
   Language,
   MoveoutRun,
+  Negotiation,
+  NeedsItemisationStep,
   Run,
   RunStatus,
   Severity,
@@ -48,6 +50,7 @@ export interface BackendRun {
   approval: { follow_up_date?: string | null; delivery_status?: string } | null;
   notice: string;
   error: string | null;
+  negotiation: Negotiation | null;
 }
 
 /** The facts the backend's PropertyFacts accepts; it rejects any other field. */
@@ -56,12 +59,13 @@ export function backendFacts(facts: Facts) {
   return { rent_per_month, built_year, local_body, premises_use, substantial_renovation_year };
 }
 
-const STATUS: Record<BackendRun["status"], RunStatus> = {
+const STATUS: Record<BackendMoveout["status"], RunStatus> = {
   running: "running",
   needs_input: "needs_input",
   ready: "awaiting_approval",
   approved: "approved",
   failed: "failed",
+  needs_itemisation: "needs_itemisation",
 };
 
 const SEVERITY: Record<FindingCategory, Severity> = {
@@ -181,7 +185,40 @@ function toStep(step: BackendStep, index: number, facts: Facts, seenPlan: boolea
       if (data.error) return { ...base, type: "tool_call", tool: "run", input: {}, output: data.error, summary: step.label };
       return { ...base, type: "approval", draft_id: "d1", approved: true, follow_up_date: (approval.follow_up_date as string | null) ?? null };
     }
+    case "landlord_offer":
+      return { ...base, type: "landlord_offer", round: Number(data.round), persona: data.persona as Negotiation["persona"], offers: (data.offers as Negotiation["rounds"][number]["offers"]) ?? [] };
+    case "tenant_decision":
+      return {
+        ...base,
+        type: "tenant_decision",
+        round: Number(data.round),
+        decisions: (data.decisions as Negotiation["rounds"][number]["decisions"]) ?? [],
+        model_ms: Number(data.model_ms ?? 0),
+        fallback: Boolean(data.fallback),
+        error: (data.error as string | undefined) ?? null,
+      };
+    case "negotiation_settled":
+      return {
+        ...base,
+        type: "negotiation_settled",
+        agreed_terms: (data.agreed_terms as Negotiation["agreed_terms"]) ?? {},
+        settled_clauses: (data.settled_clauses as string[]) ?? [],
+        open_clauses: (data.open_clauses as string[]) ?? [],
+      };
+    case "needs_itemisation":
+      return itemisationStep(step, index);
   }
+}
+
+function itemisationStep(step: BackendStep, index: number): NeedsItemisationStep {
+  return {
+    index,
+    at: "",
+    type: "needs_itemisation",
+    reason: String(step.data.reason ?? ""),
+    withheld_inr: Number(step.data.withheld_inr ?? 0),
+    deposit_inr: (step.data.deposit_inr as number | null) ?? null,
+  };
 }
 
 export function fromBackend(b: BackendRun, facts: Facts, title: string): Run {
@@ -223,12 +260,14 @@ export function fromBackend(b: BackendRun, facts: Facts, title: string): Run {
     max_tool_calls: 12,
     not_a_lawyer: true,
     notice: b.notice,
+    negotiation: b.negotiation ?? null,
   };
 }
 
 export interface BackendMoveout {
   id: string;
-  status: BackendRun["status"];
+  status: BackendRun["status"] | "needs_itemisation";
+  trace: BackendStep[];
   deductions: { id: string; label: string; amount_inr: number; verdict?: "allowed" | "disputed"; reason?: string; evidence_ids?: string[]; section_ids?: string[] }[];
   checklist: (ChecklistEntry & { id: string })[];
   drafts: BackendRun["drafts"];
@@ -236,6 +275,9 @@ export interface BackendMoveout {
   approval: { follow_up_date?: string | null } | null;
   notice: string;
   error: string | null;
+  claimed_text: string | null;
+  deposit_inr: number | null;
+  letter: Partial<Record<Language, string>> | null;
 }
 
 export function fromBackendMoveout(b: BackendMoveout, facts: Facts): MoveoutRun {
@@ -250,18 +292,22 @@ export function fromBackendMoveout(b: BackendMoveout, facts: Facts): MoveoutRun 
   const drafts: Draft[] = b.drafts.length
     ? [{ id: "c1", tone: "challenge", to: "Landlord", text: Object.fromEntries(b.drafts.map((d) => [d.language, d.text])), note: b.drafts[0].translation_note }]
     : [];
+  const itemisation = b.trace.find((s) => s.type === "needs_itemisation");
   return {
     id: b.id,
     title: "Your move-out deductions",
     status: STATUS[b.status],
     facts,
-    deposit_inr: facts.deposit_inr ?? 0,
+    deposit_inr: b.deposit_inr ?? facts.deposit_inr ?? 0,
     checklist: b.checklist,
     deductions,
     next_steps: b.next_steps,
     sections: {},
     drafts,
     follow_up_date: b.approval?.follow_up_date ?? null,
+    claimed_text: b.claimed_text,
+    letter: b.letter,
+    itemisation: itemisation ? itemisationStep(itemisation, 0) : null,
     live: true,
     not_a_lawyer: true,
     notice: b.notice,

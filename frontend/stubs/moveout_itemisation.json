@@ -1,0 +1,131 @@
+{
+  "id": "moveout_itemisation",
+  "title": "Move-out, 2BHK flat, Bengaluru (BBMP area)",
+  "status": "needs_itemisation",
+  "facts": {
+    "rent_per_month": 25000,
+    "deposit_inr": 100000,
+    "built_year": 2019,
+    "substantial_renovation_year": null,
+    "local_body": "municipal_corporation",
+    "premises_use": "residential",
+    "language": "en"
+  },
+  "deposit_inr": 100000,
+  "checklist": [
+    {
+      "date": "2026-01-01",
+      "item": "E1 Paint",
+      "condition": "Scuffs and faded paint already present",
+      "evidence": "Synthetic dated checklist; no uploaded image"
+    },
+    {
+      "date": "2026-01-01",
+      "item": "E2 Floor",
+      "condition": "Ordinary surface wear recorded",
+      "evidence": "Synthetic dated checklist; no uploaded image"
+    }
+  ],
+  "next_steps": [
+    {
+      "title": "Written demand",
+      "detail": "Send the approved challenge. Dhara records a follow-up 7 days later.",
+      "certainty": "established"
+    },
+    {
+      "title": "Legal notice",
+      "detail": "If there is no refund, a firmer notice drafted from the same findings, preferably sent through an advocate.",
+      "certainty": "established"
+    },
+    {
+      "title": "Civil money-recovery suit",
+      "detail": "The Rent Act does not apply here, so not the Rent Controller: a recovery suit in the Court of Small Causes, Bengaluru, within its pecuniary limit (limit unverified).",
+      "certainty": "established"
+    },
+    {
+      "title": "Consumer forum (e-Daakhil)",
+      "detail": "Whether a tenancy deposit dispute is a consumer complaint is contested. Shown for completeness only.",
+      "certainty": "uncertain"
+    }
+  ],
+  "sample_request": {
+    "agreement_text": "C1. Monthly rent is INR 25000 and refundable deposit is INR 150000.\nC2. Fixed cleaning charge INR 5000 on move-out.\nC3. Painting is deductible only for tenant-caused damage supported by dated evidence.\nC4. Reasonable wear and tear is excluded from damage deductions.",
+    "checklist": [
+      {
+        "id": "E1",
+        "date": "2026-01-01",
+        "item": "paint",
+        "condition": "Scuffs and faded paint already present",
+        "evidence": "Synthetic dated checklist; no uploaded image"
+      },
+      {
+        "id": "E2",
+        "date": "2026-01-01",
+        "item": "floor",
+        "condition": "Ordinary surface wear recorded",
+        "evidence": "Synthetic dated checklist; no uploaded image"
+      }
+    ],
+    "deductions": [
+      {
+        "clause_ref": "C3",
+        "category": "painting_or_cleaning_fixed",
+        "label": "painting",
+        "amount_inr": 15000,
+        "evidence_ids": [
+          "E1"
+        ]
+      },
+      {
+        "clause_ref": "C2",
+        "category": "painting_or_cleaning_fixed",
+        "label": "cleaning",
+        "amount_inr": 5000,
+        "evidence_ids": []
+      },
+      {
+        "clause_ref": "C4",
+        "category": "wear_and_tear",
+        "label": "wear and tear",
+        "amount_inr": 8000,
+        "evidence_ids": [
+          "E2"
+        ]
+      }
+    ],
+    "facts": {
+      "rent_per_month": 25000,
+      "built_year": 2019,
+      "local_body": "municipal_corporation",
+      "premises_use": "residential"
+    }
+  },
+  "not_a_lawyer": true,
+  "notice": "Dhara AI is not a lawyer and this is not legal advice. It explains the agreement against the cited sections so you can negotiate; for a dispute, consult an advocate.",
+  "deductions": [],
+  "drafts": [],
+  "claimed_text": "painting and repairs 80396",
+  "letter": {
+    "en": "Regarding my security deposit of Rs 1,00,000: Rs 80,396 has been withheld as one amount (\"painting and repairs 80396\").\nPlease send a per-item breakdown of this amount, with bills or quotes for each item, within 7 days.\nUnder the Indian Contract Act, 1872, s.74, only reasonable compensation for actual loss can be recovered. Clause C3 of our agreement also provides for deductions, which should be applied item by item.\nOn receipt I will respond item by item.",
+    "kn": "ನನ್ನ ರೂ 1,00,000 ಭದ್ರತಾ ಠೇವಣಿಯಲ್ಲಿ ರೂ 80,396 ಅನ್ನು ಒಂದೇ ಮೊತ್ತವಾಗಿ (\"painting and repairs 80396\") ತಡೆಹಿಡಿಯಲಾಗಿದೆ.\nದಯವಿಟ್ಟು ಈ ಮೊತ್ತದ ಪ್ರತಿ ಅಂಶದ ವಿವರವನ್ನು, ಪ್ರತಿಯೊಂದಕ್ಕೂ ಬಿಲ್ ಅಥವಾ ಕೊಟೇಶನ್‌ನೊಂದಿಗೆ, 7 ದಿನಗಳೊಳಗೆ ಕಳುಹಿಸಿ.\nಭಾರತೀಯ ಒಪ್ಪಂದ ಕಾಯ್ದೆ, 1872, ಸೆಕ್ಷನ್ 74ರ ಪ್ರಕಾರ ನಿಜವಾದ ನಷ್ಟಕ್ಕೆ ಸಮಂಜಸ ಪರಿಹಾರವನ್ನು ಮಾತ್ರ ವಸೂಲಿ ಮಾಡಬಹುದು. ನಮ್ಮ ಒಪ್ಪಂದದ ಷರತ್ತು C3 ಕೂಡ ಕಡಿತಗಳ ಬಗ್ಗೆ ಹೇಳುತ್ತದೆ; ಅದನ್ನು ಪ್ರತಿ ಅಂಶಕ್ಕೆ ಅನ್ವಯಿಸಬೇಕು.\nವಿವರ ಬಂದ ನಂತರ ಪ್ರತಿ ಅಂಶಕ್ಕೂ ಉತ್ತರಿಸುತ್ತೇನೆ.",
+    "hi": "मेरी Rs 1,00,000 की सुरक्षा जमा राशि में से Rs 80,396 एक ही रकम के रूप में (\"painting and repairs 80396\") रोके गए हैं।\nकृपया 7 दिनों के भीतर इस रकम का मदवार विवरण, हर मद के बिल या कोटेशन के साथ, भेजें।\nभारतीय संविदा अधिनियम, 1872, धारा 74 के अनुसार केवल वास्तविक नुकसान का उचित मुआवज़ा ही वसूला जा सकता है। हमारे समझौते की शर्त C3 भी कटौतियों के बारे में है, जिसे हर मद पर अलग से लागू किया जाना चाहिए।\nविवरण मिलने पर हर मद का अलग-अलग उत्तर दिया जाएगा।"
+  },
+  "itemisation": {
+    "index": 0,
+    "at": "",
+    "type": "needs_itemisation",
+    "reason": "the deductions are a single line",
+    "withheld_inr": 80396,
+    "deposit_inr": 100000
+  },
+  "sections": {
+    "ICA-74": {
+      "id": "ICA-74",
+      "act": "Indian Contract Act, 1872",
+      "section": "74",
+      "title": "Penalty and compensation",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/2187/2/A187209.pdf",
+      "applies_in_karnataka": true
+    }
+  }
+}
