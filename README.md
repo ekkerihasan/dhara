@@ -18,7 +18,7 @@ The same model reviews each test agreement twice: once with no tools and no veri
 | `pg_room`: PG room, building age unknown, three negotiated | **3.00 / 4**, said the Rent Act does not apply | **3.67 / 4**, countered a cleaning charge that was within the limit |
 | `moveout`: three claimed deductions against the move-in checklist | **2.00 / 3**, said the Rent Act applies | **2.75 / 3** |
 
-Without the rent-law test, the plain model named the wrong governing law on every task. In negotiation, both chose correctly on the flat; the plain model also cited a Rent Act section (KRA-15) for a flat the Act does not cover, which nothing checked, while every section the agent cited passed the verifier. In this run the model never tried to accept past the tenant's limits, so the code that enforces them did not have to act. One live run each with `openai/gpt-oss-120b` on 25 Oct 2026, so scores vary a little between runs; reproduce with `python -m env.run_eval`.
+Without the rent-law test, the plain model named the wrong governing law on every task. In negotiation, both chose correctly on the flat; the plain model also cited a Rent Act section (KRA-15) for a flat the Act does not cover, which nothing checked, while every section the agent cited on the flat passed the verifier. Rent Act sections are blocked in negotiation unless the Act is confirmed to apply. In this run the model never tried to accept past the tenant's limits, so the code that enforces them did not have to act. One live run each with `openai/gpt-oss-120b` on 25 Oct 2026, so scores vary a little between runs; reproduce with `python -m env.run_eval`.
 
 ---
 

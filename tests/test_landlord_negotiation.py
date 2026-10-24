@@ -171,3 +171,13 @@ def test_api_unknown_agreement_has_no_negotiation(client) -> None:
     run = client.get(f"/api/runs/{run_id}").json()
     assert run["status"] == "ready" and run["negotiation"] is None
     assert client.post(f"/api/runs/{run_id}/approve", json={"approved": True}).json()["status"] == "approved"
+
+
+def test_verifier_blocks_a_rent_act_citation_while_coverage_is_unresolved() -> None:
+    state = state_for(PG, decide_model(lambda offer: ("reject", "KRA-48(3)" if offer["clause_id"] == "C5" else "ICA-74")))
+    result = negotiate(state, PG, [], None)
+
+    verdicts = {d.clause_id: d.verdict for d in result.rounds[0].decisions}
+    assert verdicts == {"C2": "cited", "C3": "cited", "C5": "blocked"}
+    covered = negotiate(state_for(PG, decide_model(lambda offer: ("reject", "KRA-48(3)"))), PG, [], True)
+    assert covered.rounds[0].decisions[0].verdict == "cited"  # the Act applies: the section may be cited

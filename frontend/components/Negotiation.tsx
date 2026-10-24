@@ -68,7 +68,7 @@ function DecisionCell({ decision, sections }: { decision: Decision; sections: Re
 export function Negotiation({ negotiation, findings, sections }: { negotiation: NegotiationData; findings: Finding[]; sections: Record<string, Section> }) {
   const status = STATUS[negotiation.status];
   const limits = negotiation.limits;
-  const clauseText = (id: string) => findings.find((f) => f.clause_ref === id)?.clause_text;
+  const clauseText = (id: string) => findings.find((f) => f.clause_ref === id)?.clause_text?.replace(/^C\d+\.\s*/, ""); // the live text keeps its "C2. " prefix
   const opening = (id: string) => negotiation.rounds[0]?.offers.find((o) => o.clause_id === id)?.terms ?? {};
   const settled = negotiation.settled_clauses;
 

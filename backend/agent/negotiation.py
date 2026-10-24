@@ -46,8 +46,10 @@ Dhara's fairness standard (also not law): no forfeiture of the deposit on any br
 both sides and no more than 2 months, and at least 24 hours' notice before the landlord enters.
 Every reject or counter must cite one section id from this list, and never one marked NOT applicable:
 {law}
-If the Rent Act result says the Act does not apply, cite no KRA section.
-Never call a term illegal, unlawful, void or prohibited; say what the cited section's paraphrase supports."""
+Karnataka Rent Act (KRA) sections need the Rent Act result to say the Act applies; when it does not apply or is
+unresolved, cite a non-KRA section instead (ICA, TPA or RA). A reject or counter still always needs a section id.
+Never call a term illegal, unlawful, void, "not permitted", "not permissible", prohibited or a violation; say what
+the cited section's paraphrase supports."""
 
 # The section a rule-based decision cites when no finding names one, by term key.
 DEFAULT_SECTIONS = {"lock_in_months": "ICA-74", "refund_within_days": "ICA-74", "painting_inr": "TPA-108(m)",
@@ -84,13 +86,13 @@ def _rule_decision(offer: Offer, limits: TenantLimits, finding: dict[str, Any] |
 
 
 def _verdict(decision: Decision, rent_act_applies: bool | None) -> str:
-    """The verifier, unchanged, plus the Rent Act coverage rule for this flat."""
+    """The verifier, unchanged, plus the Rent Act coverage rule: a KRA section needs confirmed coverage."""
     if not decision.section_id:
         return "unverified"
     checked = verify_claims([{"text": decision.reason, "section_id": decision.section_id}])[0]
     if checked.verdict == "blocked":
         return "blocked"
-    if rent_act_applies is False and decision.section_id.startswith("KRA-"):
+    if rent_act_applies is not True and decision.section_id.startswith("KRA-"):  # not covered, or unresolved
         return "blocked"
     return checked.verdict
 
