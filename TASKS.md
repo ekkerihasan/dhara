@@ -22,8 +22,8 @@ Owner key: H = Hasan (backend, Python), W = Wasih (frontend, TypeScript), B = bo
 
 - [ ] 1.1 [H] `law/karnataka.json` 20+ entries. Commit: `feat(law): statute library with 20+ Karnataka, Registration, Contract and TPA sections`
 - [ ] 1.2 [H] `backend/tools/law.py` + `tests/test_law.py`. Commit: `feat(tools): check_jurisdiction and lookup_section with tests`
-- [ ] 1.3 [W] Next.js scaffold, `/` page with upload and facts form. Commit: `feat(app): Next.js scaffold with upload and facts form`
-- [ ] 1.4 [W] Trace and Findings components, `/review/[id]` on `stubs/blr_flat.json`, types in `lib/types.ts`. Commit: `feat(app): decision-trace and findings screens on stubbed blr_flat run`
+- [x] 1.3 [W] Next.js scaffold, `/` page with upload and facts form. Commit: `feat(app): Next.js scaffold with upload and facts form`
+- [x] 1.4 [W] Trace and Findings components, `/review/[id]` on `stubs/blr_flat.json`, types in `lib/types.ts`. Commit: `feat(app): decision-trace and findings screens on stubbed blr_flat run`
 
 **REPORT 25 percent** (bring `git log --oneline`, pytest output, screenshot of `/review/blr_flat`).
 
@@ -34,7 +34,7 @@ Owner key: H = Hasan (backend, Python), W = Wasih (frontend, TypeScript), B = bo
 - [ ] 2.3 [H] Scorer + tests. Commit: `feat(scoring): governing-law, money-at-risk and citation checks with wrong-law penalty`
 - [ ] 3.1 [H] read_agreement (pypdf + PII redaction), compute_money, draft_message. Commit: `feat(tools): read_agreement with PII redaction, compute_money, draft_message`
 - [ ] 3.2 [H] send_and_schedule with approval gate. Commit: `feat(tools): send_and_schedule with approval gate`
-- [ ] 3.3 [W] `/moveout/[id]` placeholder on a stub; question card component for `needs_input`; mobile pass. Commit: `feat(app): question card, move-out placeholder, mobile layout`
+- [x] 3.3 [W] `/moveout/[id]` placeholder on a stub; question card component for `needs_input`; mobile pass. Commit: `feat(app): question card, move-out placeholder, mobile layout`
 - [ ] 3.4 [W] Keep `lib/types.ts` in sync with `backend/models.py` as Hasan adds fields (coordinate on a shared `models.py` draft by 14:00).
 
 ## Phase 4: checkpoint 1 (15:30 to 16:00) [B]
@@ -116,4 +116,6 @@ Final (confirm time), 7 to 8 minutes: problem (1 min, Wasih), what is new vs the
 
 Phase 0 complete (Hasan): baseline import `7132cfa` (`chore: initialize Dhara AI project`) and TASKS update `32afffc`, pushed to master of https://github.com/ekkerihasan/dhara (team repo; replaces `AbdulWasih05/dhara-tenancy` in 0.B). Validation: 51 tests and 6 subtests passed using the earlier project's Python 3.10.11 environment; ignore rules, empty API-key placeholders and staged secret check passed. Python 3.11 setup remains pending.
 
-Phase 1 not started: no `law/`, `backend/`, `env/` or `frontend/` yet. Next for H: 1.1, 1.2. Next for W: 1.3, 1.4.
+Phase 1 not started: no `law/`, `backend/`, `env/` or `frontend/` yet. Next for H: 1.1, 1.2.
+
+Frontend (Wasih): 1.3, 1.4 and 3.3 done on stubs in `frontend/` (`npm run build` and `npm run lint` pass; no horizontal scroll at 390 px). `/review/blr_flat` shows the blocked 2-month-cap claim in red (ready for 4.3). Submitting the form with the built year blank shows the `needs_input` question card. `lib/types.ts` is a first draft of the shapes `backend/models.py` should return; section ids used in the stub (`KRA-2(3)(e)`, `KRA-2(3)(f)`, `ICA-74`, `TPA-106`, `TPA-108`, `MTA-11`) need to match `law/karnataka.json` (3.4).

@@ -1,0 +1,70 @@
+{
+  "id": "moveout",
+  "title": "Move-out, 2BHK flat, Bengaluru (BBMP area)",
+  "status": "awaiting_approval",
+  "facts": {
+    "rent_per_month": 25000,
+    "deposit_inr": 150000,
+    "built_year": 2019,
+    "substantial_renovation_year": null,
+    "local_body": "municipal_corporation",
+    "premises_use": "residential",
+    "language": "en"
+  },
+  "deposit_inr": 150000,
+  "checklist": [
+    { "date": "2025-11-01", "item": "Living room walls", "condition": "Freshly painted, no marks", "evidence": "4 photos, signed by both parties" },
+    { "date": "2025-11-01", "item": "Bedroom 2 wardrobe", "condition": "Left door hinge loose", "evidence": "1 photo, noted by owner" },
+    { "date": "2025-11-01", "item": "Kitchen", "condition": "Clean; chimney filter greasy", "evidence": "2 photos" },
+    { "date": "2026-09-30", "item": "Living room walls", "condition": "Light scuffs near switchboards", "evidence": "3 photos at handover" }
+  ],
+  "deductions": [
+    {
+      "label": "Repainting the whole flat",
+      "claimed_inr": 15000,
+      "verdict": "disputed",
+      "reason": "The move-in checklist shows fresh paint and the handover photos show only light scuffs after 11 months: reasonable wear and tear, which the tenant does not have to restore.",
+      "section_ids": ["TPA-108"]
+    },
+    {
+      "label": "Deep cleaning",
+      "claimed_inr": 5000,
+      "verdict": "allowed",
+      "reason": "Clause 9 allows cleaning at actual cost up to Rs 5,000 and an invoice was shared. Within the agreed limit.",
+      "section_ids": []
+    },
+    {
+      "label": "General wear and tear",
+      "claimed_inr": 8000,
+      "verdict": "disputed",
+      "reason": "A lump sum for 'wear and tear' charges for exactly what the tenant is not liable for, with no itemised loss. Only reasonable compensation for actual loss is recoverable.",
+      "section_ids": ["TPA-108", "ICA-74"]
+    }
+  ],
+  "next_steps": [
+    { "title": "Written demand", "detail": "Send the approved challenge. Dhara schedules a follow-up 7 days later.", "certainty": "established" },
+    { "title": "Legal notice", "detail": "If there is no refund, a firmer notice drafted from the same findings, preferably sent through an advocate.", "certainty": "established" },
+    { "title": "Civil money-recovery suit", "detail": "The Rent Act does not apply here, so not the Rent Controller: a recovery suit in the Court of Small Causes, Bengaluru, within its pecuniary limit (limit unverified).", "certainty": "established" },
+    { "title": "Consumer forum (e-Daakhil)", "detail": "Whether a tenancy deposit dispute is a consumer complaint is contested. Shown for completeness only.", "certainty": "uncertain" }
+  ],
+  "sections": {
+    "ICA-74": {
+      "id": "ICA-74",
+      "act": "Indian Contract Act, 1872",
+      "section": "74",
+      "title": "Compensation for breach of contract where penalty stipulated for",
+      "source_url": "https://www.indiacode.nic.in/",
+      "applies_in_karnataka": true
+    },
+    "TPA-108": {
+      "id": "TPA-108",
+      "act": "Transfer of Property Act, 1882",
+      "section": "108",
+      "title": "Rights and liabilities of lessor and lessee",
+      "source_url": "https://www.indiacode.nic.in/",
+      "applies_in_karnataka": true
+    }
+  },
+  "not_a_lawyer": true,
+  "notice": "Dhara AI is not a lawyer and this is not legal advice. It explains the agreement against the cited sections so you can negotiate; for a dispute, consult an advocate."
+}
