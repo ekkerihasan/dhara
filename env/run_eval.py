@@ -1,4 +1,4 @@
-"""Score the plain model (baseline) against the full Dhara agent on each Flow 1 task.
+"""Score the plain model (baseline) against the full Dhara agent on each task.
 
 Both get the same agreement, the same categories and the same law pack. The baseline has no tools
 and no verifier, so it must decide the governing law and every rupee amount itself, and all of its
@@ -15,13 +15,14 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Callable
 
+from backend.agent.moveout import MoveoutState, start_moveout
 from backend.agent.tenant import MONEY_INPUTS, AgentState, ProviderChat, _law_index, start_agent
 from backend.llm.provider import ProviderError, chat
 from backend.tools.agreement import read_agreement
 from env.scorer import score
 
 ROOT = Path(__file__).resolve().parents[1]
-TASKS = ("blr_flat", "pg_room")  # moveout is Flow 2 and is scored by its own agent
+TASKS = ("blr_flat", "pg_room", "moveout")  # moveout is Flow 2: claimed deductions against the move-in checklist
 RESULTS = ROOT / "env" / "results"
 
 BASELINE_PROMPT = """You review a residential rental agreement in Karnataka for the tenant. You have no tools.
@@ -31,6 +32,16 @@ Reply with ONLY a JSON object:
                 "money_at_risk_inr": integer rupees, "section_ids": [section ids]}}],
   "claims": [{{"text": "a legal claim", "section_id": "a section id or null"}}]}}
 Money at risk by category: {money} Escalation counts only above 10 percent a year: (percent - 10) percent of annual rent.
+Section ids you may cite:
+{law}"""
+
+
+MOVEOUT_BASELINE_PROMPT = """You check a landlord's move-out deductions for a tenant in Karnataka. You have no tools.
+Reply with ONLY a JSON object:
+{{"governing_law": "TPA_CONTRACT" if the Karnataka Rent Act does not apply, "KARNATAKA_RENT_ACT" if it applies, "UNRESOLVED" if facts are missing,
+  "findings": [one per claimed deduction: {{"clause_ref": its clause_ref, "category": its category, "money_at_risk_inr": the claimed amount,
+                "verdict": "allowed" or "disputed", "section_ids": [section ids]}}],
+  "claims": [{{"text": "a legal claim", "section_id": "a section id or null"}}]}}
 Section ids you may cite:
 {law}"""
 
@@ -49,10 +60,15 @@ def _json_object(text: str) -> dict[str, Any]:
 
 def baseline_run(task: dict[str, Any], model: ProviderChat) -> dict[str, Any]:
     """One plain model call, parsed into the scorer's run shape."""
-    messages = [
-        {"role": "system", "content": BASELINE_PROMPT.format(money=MONEY_INPUTS, law=_law_index())},
-        {"role": "user", "content": json.dumps({"clauses": read_agreement(task["agreement_text"])["clauses"], "facts": task["facts"]}, ensure_ascii=False)},
-    ]
+    clauses = read_agreement(task["agreement_text"])["clauses"]
+    if "claimed_deductions" in task:
+        prompt = MOVEOUT_BASELINE_PROMPT.format(law=_law_index())
+        payload = {"clauses": clauses, "facts": task["facts"], "move_in_checklist": task["move_in_checklist"],
+                   "claimed_deductions": [{k: v for k, v in d.items() if k != "expected_verdict"} for d in task["claimed_deductions"]]}
+    else:
+        prompt = BASELINE_PROMPT.format(money=MONEY_INPUTS, law=_law_index())
+        payload = {"clauses": clauses, "facts": task["facts"]}
+    messages = [{"role": "system", "content": prompt}, {"role": "user", "content": json.dumps(payload, ensure_ascii=False)}]
     reply = _json_object(model(messages, []).text or "")
     findings = []
     for f in reply.get("findings", []):
@@ -65,8 +81,21 @@ def baseline_run(task: dict[str, Any], model: ProviderChat) -> dict[str, Any]:
     return {"governing_law": str(reply.get("governing_law", "")), "findings": findings, "claims": claims}
 
 
+def moveout_run(task: dict[str, Any], model: ProviderChat) -> dict[str, Any]:
+    """The Flow 2 agent: every claimed deduction becomes a finding at its claimed amount."""
+    deductions = [{"id": f"D{i}", **{k: v for k, v in d.items() if k != "expected_verdict"}} for i, d in enumerate(task["claimed_deductions"], start=1)]
+    state = MoveoutState(task["id"], read_agreement(task["agreement_text"])["clauses"], task["move_in_checklist"], deductions,
+                         dict(task["facts"]), task.get("language", "en"), model)
+    response = start_moveout(state)
+    findings = [{"clause_ref": d["clause_ref"], "category": d["category"], "money_at_risk_inr": d["amount_inr"],
+                 "section_ids": d.get("section_ids", [])} for d in response["deductions"]]
+    return {"governing_law": governing_label(state.rent_act_applies), "findings": findings, "claims": [], "status": response["status"]}
+
+
 def agent_run(task: dict[str, Any], model: ProviderChat) -> dict[str, Any]:
     """The full agent; a fact the task leaves blank is answered "I don't know"."""
+    if "claimed_deductions" in task:
+        return moveout_run(task, model)
     state = AgentState(task["id"], read_agreement(task["agreement_text"])["clauses"], dict(task["facts"]), task.get("language", "en"), model)
     response = start_agent(state)
     if response.status == "needs_input":

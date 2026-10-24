@@ -57,3 +57,16 @@ def test_evaluate_and_markdown() -> None:
     assert {row["mode"] for row in results["rows"]} == {"baseline", "agent"}
     assert "| blr_flat | agent |" in markdown(results, "fake")
     assert governing_label(None) == "UNRESOLVED"
+
+
+def test_moveout_agent_run_scores_claimed_deductions() -> None:
+    from test_moveout import VERDICTS
+    from test_moveout import scripted_model as moveout_model
+    from env.run_eval import moveout_run
+    from env.scorer import score
+
+    task = json.loads((Path(__file__).parents[1] / "env/tasks/moveout.json").read_text())
+    run = moveout_run(task, moveout_model(VERDICTS))
+    assert run["governing_law"] == "TPA_CONTRACT"
+    assert [f["money_at_risk_inr"] for f in run["findings"]] == [15000, 5000, 8000]
+    assert score(task, run)["money_within_500"] == 1.0

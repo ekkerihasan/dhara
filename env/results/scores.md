@@ -4,7 +4,9 @@ Same model, same agreement, same law pack. The baseline has no tools and no veri
 
 | Task | Mode | Governing law | Money within Rs 500 | Citations exist | Wrong-law penalty | Total |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| blr_flat | baseline | 0 | 1.00 | 0.86 | 0 | **1.86** |
+| blr_flat | baseline | 0 | 1.00 | 0.78 | 0 | **1.78** |
 | blr_flat | agent | 1 | 1.00 | 1.00 | 0 | **3.00** |
 | pg_room | baseline | 0 | 1.00 | 1.00 | 0 | **2.00** |
 | pg_room | agent | 1 | 1.00 | 1.00 | 0 | **3.00** |
+| moveout | baseline | 0 | 1.00 | 1.00 | 0 | **2.00** |
+| moveout | agent | 1 | 1.00 | 0.67 | 0 | **2.67** |

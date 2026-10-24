@@ -17,9 +17,10 @@ from typing import Any
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.agent.moveout import MoveoutState, approve_moveout, start_moveout
 from backend.agent.tenant import AgentState, approve_agent, start_agent
 from backend.llm.provider import chat
-from backend.models import AnswerRequest, ApprovalRequest, RunRequest, RunResponse
+from backend.models import AnswerRequest, ApprovalRequest, MoveoutRequest, RunRequest, RunResponse
 from backend.tools.agreement import read_agreement
 
 LOGGER = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ app = FastAPI(title="Dhara AI", description="Agentic tenancy copilot for Karnata
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allow_methods=["GET", "POST"], allow_headers=["*"])
 
 RUNS: dict[str, AgentState] = {}
+MOVEOUTS: dict[str, MoveoutState] = {}
 provider_chat = chat  # replaced by a fake model in tests
 
 
@@ -98,5 +100,44 @@ def approve(run_id: str, request: ApprovalRequest) -> RunResponse:
         raise HTTPException(400, "Approval must be explicit: send approved true")
     try:
         return approve_agent(state)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
+# ---------- Flow 2: move-out ----------
+
+def _moveout(review_id: str) -> MoveoutState:
+    state = MOVEOUTS.get(review_id)
+    if state is None:
+        raise HTTPException(404, f"No move-out review {review_id}")
+    return state
+
+
+@app.post("/api/moveout")
+def create_moveout(request: MoveoutRequest, background: BackgroundTasks) -> dict[str, Any]:
+    try:
+        clauses = read_agreement(request.agreement_text)["clauses"]
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    deductions = [{"id": f"D{i}", **d.model_dump()} for i, d in enumerate(request.deductions, start=1)]
+    state = MoveoutState(str(uuid.uuid4()), clauses, [e.model_dump() for e in request.checklist], deductions,
+                         request.facts.model_dump(), request.language, provider_chat)
+    MOVEOUTS[state.id] = state
+    background.add_task(start_moveout, state)
+    return state.response()
+
+
+@app.get("/api/moveout/{review_id}")
+def get_moveout(review_id: str) -> dict[str, Any]:
+    return _moveout(review_id).response()
+
+
+@app.post("/api/moveout/{review_id}/approve")
+def approve_moveout_review(review_id: str, request: ApprovalRequest) -> dict[str, Any]:
+    state = _moveout(review_id)
+    if not request.approved:
+        raise HTTPException(400, "Approval must be explicit: send approved true")
+    try:
+        return approve_moveout(state)
     except ValueError as exc:
         raise HTTPException(409, str(exc)) from exc

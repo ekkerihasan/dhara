@@ -7,9 +7,9 @@
       "score": {
         "governing_law_correct": 0,
         "money_within_500": 1.0,
-        "citations_exist": 0.8571428571428571,
+        "citations_exist": 0.7777777777777778,
         "wrong_law_penalty": 0,
-        "total": 1.8571428571428572
+        "total": 1.7777777777777777
       },
       "error": null,
       "findings": 5,
@@ -56,6 +56,34 @@
       "error": null,
       "findings": 2,
       "governing_law": "UNRESOLVED"
+    },
+    {
+      "task": "moveout",
+      "mode": "baseline",
+      "score": {
+        "governing_law_correct": 0,
+        "money_within_500": 1.0,
+        "citations_exist": 1.0,
+        "wrong_law_penalty": 0,
+        "total": 2.0
+      },
+      "error": null,
+      "findings": 3,
+      "governing_law": "KARNATAKA_RENT_ACT"
+    },
+    {
+      "task": "moveout",
+      "mode": "agent",
+      "score": {
+        "governing_law_correct": 1,
+        "money_within_500": 1.0,
+        "citations_exist": 0.6666666666666666,
+        "wrong_law_penalty": 0,
+        "total": 2.6666666666666665
+      },
+      "error": null,
+      "findings": 3,
+      "governing_law": "TPA_CONTRACT"
     }
   ],
   "model": "openai/gpt-oss-120b"
