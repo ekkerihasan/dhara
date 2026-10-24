@@ -401,14 +401,8 @@ footer.doc-foot strong { color: var(--ink-2); }
 .timeline-item { scroll-margin-top: 96px; }
 .panel-note { padding: 0 var(--space-4) var(--space-3); font: 12.5px/1.5 var(--sans); color: var(--muted); }
 
-/* Theme switch (ThemeToggle.tsx): the old page fades out as the new one fades in. Opacity only, so the
-   browser composites it on the GPU and text never repaints mid-animation. */
-::view-transition-old(root), ::view-transition-new(root) {
-  animation-duration: 240ms;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  mix-blend-mode: normal;
-}
-/* Fallback for browsers without View Transitions: a brief colour crossfade, only during the switch. */
-html.theme-fade, html.theme-fade *, html.theme-fade *::before, html.theme-fade *::after {
-  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, fill 0.25s ease !important;
-}
+/* Theme switch (ThemeToggle.tsx): a circle in the new theme's page colour grows from the toggle button,
+   the theme changes underneath it, then it fades out. Colours match --paper in each theme. */
+.theme-wipe { position: fixed; z-index: 1000; border-radius: 50%; pointer-events: none; transform: scale(0); will-change: transform, opacity; }
+.theme-wipe[data-to="light"] { background: #ffffff; }
+.theme-wipe[data-to="dark"] { background: #0a0a0a; }
