@@ -399,3 +399,4 @@ footer.doc-foot strong { color: var(--ink-2); }
 .glance a.is-safe .glance-value { color: var(--safe); }
 .timeline-item:target .timeline-body { outline: 2px solid var(--accent); outline-offset: 6px; border-radius: 4px; }
 .timeline-item { scroll-margin-top: 96px; }
+.panel-note { padding: 0 var(--space-4) var(--space-3); font: 12.5px/1.5 var(--sans); color: var(--muted); }

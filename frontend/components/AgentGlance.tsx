@@ -31,7 +31,7 @@ export function AgentGlance({ trace }: { trace: TraceStep[] }) {
     { kind: "Verify", value: plural(checked, "claim"), href: first((s) => s.type === "verifier"), tone: "safe" },
     { kind: "Blocked", value: plural(blocked, "claim"), href: first((s) => s.type === "verifier" && s.verdict === "blocked"), tone: blocked ? "danger" : undefined },
     { kind: "Draft", value: plural(drafts, "message"), href: first((s) => s.type === "draft") },
-    { kind: "Approve", value: approved ? "Sent" : "Waiting", href: approved ? first((s) => s.type === "approval") : "#draft", tone: approved ? "safe" : undefined },
+    { kind: "Approve", value: approved ? "Approved" : "Waiting", href: approved ? first((s) => s.type === "approval") : "#draft", tone: approved ? "safe" : undefined },
   ];
 
   return (

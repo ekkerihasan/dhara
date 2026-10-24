@@ -23,6 +23,6 @@ export const STATUS_LABEL: Record<RunStatus, string> = {
   running: "Running",
   needs_input: "Needs your answer",
   awaiting_approval: "Awaiting your approval",
-  approved: "Approved, follow-up scheduled",
+  approved: "Approved, follow-up recorded",
   failed: "Failed",
 };

@@ -14,7 +14,7 @@ const STEPS = [
   { title: "Ask", text: "If a fact that decides the governing law is missing, it stops and asks you instead of guessing." },
   { title: "Act", text: "Reads the agreement, runs the Karnataka Rent Act test, looks up sections, prices each clause in rupees." },
   { title: "Verify", text: "Every legal claim must cite a section that applies in Karnataka. Wrong-law and uncited claims are blocked." },
-  { title: "Draft and wait", text: "Writes the counter-proposal in English or Kannada. Nothing is sent until you approve it." },
+  { title: "Draft and wait", text: "Writes the counter-proposal in English or Kannada, then waits for your approval." },
 ];
 
 export default function Home() {
@@ -24,11 +24,11 @@ export default function Home() {
       <main className="doc">
         <Toc items={TOC} />
         <article className="doc-main">
-          <p className="kicker">Karnataka · Agentic tenancy copilot</p>
+          <p className="kicker">Dhara AI · Agentic Copilot for Fair Renting · Karnataka</p>
           <h1 className="doc-title">Review a rental agreement before you sign it</h1>
           <p className="doc-subtitle">
             Dhara works out which law actually governs your rental, prices every unfair clause in rupees, and drafts the message to your landlord.
-            You approve every message it sends.
+            Nothing goes out without your approval.
           </p>
           <div className="abstract">
             <h2>Why this exists</h2>

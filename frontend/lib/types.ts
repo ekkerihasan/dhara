@@ -103,6 +103,7 @@ export interface Draft {
   tone: DraftTone;
   to: string;
   text: Record<Language, string>;
+  note: string | null; // draft_message's translation_note
 }
 
 // One reason from backend.tools.law.check_jurisdiction (docs/BACKEND_CONTRACT.md).

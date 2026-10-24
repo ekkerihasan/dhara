@@ -1,4 +1,4 @@
-# Dhara AI
+# Dhara AI: Agentic Copilot for Fair Renting
 
 An agentic tenancy copilot for Karnataka: review rental terms, negotiate changes, preserve move-in evidence, and challenge unfair deposit deductions with tenant approval.
 
