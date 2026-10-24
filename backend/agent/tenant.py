@@ -1,7 +1,10 @@
 """Agentic Flow 1 loop for agreement review.
 
-The model proposes tool calls, while deterministic tools and the verifier remain
-the source of truth for legal coverage and money-at-risk values.
+The model reads the redacted clauses and drives the review through tool calls;
+every tool result goes back to it before its next step. Deterministic tools and
+the verifier stay the source of truth: the model never sets a rupee amount or
+decides whether a section applies. If the model is unreachable, a rule-based
+pass over the clauses runs instead and the trace says so.
 """
 from __future__ import annotations
 
@@ -12,25 +15,76 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from backend.agent.verifier import verify_claims
-from backend.llm.provider import ToolCallOrText
+from backend.llm.provider import ProviderError, ToolCallOrText
 from backend.models import Draft, Finding, RunResponse, TraceStep
 from backend.tools.agreement import redact_pii
-from backend.tools.law import check_jurisdiction, lookup_section
+from backend.tools.law import LAW_PATH, check_jurisdiction, lookup_section
 from backend.tools.messages import draft_message, send_and_schedule
 from backend.tools.money import compute_money
 
 LOGGER = logging.getLogger(__name__)
 MAX_TOOL_CALLS = 12
+MAX_MODEL_TURNS = 8
+# Facts a tenant can actually answer; the agent pauses only for these.
+ASKABLE_FACTS = ("rent_per_month", "built_year", "local_body", "premises_use")
+FINDING_CATEGORIES = ("deposit_forfeiture", "lock_in", "painting_or_cleaning_fixed", "notice_shortfall", "rent_escalation_excess")
 NOT_A_LAWYER_NOTICE = "Dhara AI is not a lawyer. Verify important decisions with a qualified professional."
 
 ProviderChat = Callable[[list[dict[str, Any]], list[dict[str, Any]]], ToolCallOrText]
 
+MONEY_INPUTS = (
+    "deposit_forfeiture: deposit (number), on_any_breach (bool), on_early_exit (bool). "
+    "lock_in: monthly_rent, remaining_months. painting_or_cleaning_fixed: amount. "
+    "notice_shortfall: monthly_rent, required_months, given_months. "
+    "rent_escalation_excess: monthly_rent, escalation_percent (yearly)."
+)
+
 TOOL_SCHEMAS: list[dict[str, Any]] = [
-    {"type": "function", "function": {"name": "check_jurisdiction", "description": "Screen Karnataka Rent Act coverage from supplied facts.", "parameters": {"type": "object", "properties": {"facts": {"type": "object"}}, "required": ["facts"]}}},
-    {"type": "function", "function": {"name": "lookup_section", "description": "Look up a section in the Karnataka law pack.", "parameters": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}}},
-    {"type": "function", "function": {"name": "compute_money", "description": "Compute deterministic INR exposure for a finding.", "parameters": {"type": "object", "properties": {"finding_type": {"type": "string"}, "inputs": {"type": "object"}}, "required": ["finding_type", "inputs"]}}},
-    {"type": "function", "function": {"name": "draft_message", "description": "Draft a structured tenant request in English or Kannada.", "parameters": {"type": "object", "properties": {"findings": {"type": "array"}, "tone": {"type": "string"}, "language": {"type": "string"}}, "required": ["findings", "tone", "language"]}}},
+    {"type": "function", "function": {
+        "name": "record_finding",
+        "description": "Record one unfair clause. The rupee amount is computed by Dhara from your inputs; never state it yourself. "
+                       "Sections not in the law pack, or not applicable in Karnataka, are dropped.",
+        "parameters": {"type": "object", "properties": {
+            "clause_ref": {"type": "string", "description": "The clause id, e.g. C2"},
+            "category": {"type": "string", "enum": list(FINDING_CATEGORIES)},
+            "inputs": {"type": "object", "description": "Numbers read from the clause. " + MONEY_INPUTS},
+            "section_ids": {"type": "array", "items": {"type": "string"}},
+            "issue": {"type": "string", "description": "One plain sentence: why the clause is unfair to the tenant"},
+            "ask": {"type": "string", "description": "One plain sentence: the change the tenant should request"},
+        }, "required": ["clause_ref", "category", "inputs", "section_ids", "issue", "ask"]}}},
+    {"type": "function", "function": {
+        "name": "lookup_section",
+        "description": "Look up a section in the Karnataka law pack before citing it.",
+        "parameters": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}}},
+    {"type": "function", "function": {
+        "name": "finish",
+        "description": "End the review. List every legal claim you want to make; each is checked before the tenant sees it.",
+        "parameters": {"type": "object", "properties": {"claims": {"type": "array", "items": {"type": "object", "properties": {
+            "text": {"type": "string"}, "section_id": {"type": ["string", "null"]}}, "required": ["text"]}}},
+            "required": ["claims"]}}},
 ]
+
+
+def _law_index() -> str:
+    """Section ids the model may cite, each with the law pack's one-line paraphrase, one per line."""
+    entries = json.loads(LAW_PATH.read_text(encoding="utf-8"))
+    return "\n".join(f"{e['id']}: {e['title']}. {e.get('paraphrase', '')}" + ("" if e["applies_in_karnataka"] else " (NOT applicable in Karnataka)") for e in entries)
+
+
+SYSTEM_PROMPT = """You review a residential rental agreement in Karnataka for the tenant.
+1. Read every clause. For each clause that can cost the tenant money, call record_finding once, with the numbers you read from the clause text. Categories and their inputs: {money}
+2. Cite only section ids from this list, and never cite one marked NOT applicable:
+{law}
+   Usual sections: deposit_forfeiture and lock_in -> ICA-74; painting_or_cleaning_fixed -> TPA-108(m) and ICA-74; notice_shortfall -> TPA-106.
+   Record rent_escalation_excess for any yearly increase above 10 percent, always with section_ids [].
+   If the Rent Act result says the Act does not apply, do not cite any KRA section for a finding.
+3. Never state a rupee amount, a legal limit or a deadline yourself; the tools compute amounts.
+   Karnataka has no statutory cap on deposits or rent increases. The 10 percent escalation figure is Dhara's fairness threshold, not a law.
+   Every issue, ask and claim says no more than its section's paraphrase above, applied to the clause. Never call a clause illegal,
+   unlawful, void, "not permitted", "not permissible", "prohibited" or a violation. Example: "C2 forfeits the whole deposit; under
+   ICA-74 a landlord can recover only reasonable compensation, not the full stipulated amount."
+4. When every unfair clause is recorded, call finish with your legal claims, each with the section_id it relies on (or null if none).
+The Rent Act result for this flat is given to you; do not re-decide it."""
 
 
 @dataclass
@@ -54,6 +108,7 @@ class AgentState:
     tool_calls: int = 0
     seen_calls: set[str] = field(default_factory=set)
     tool_results: dict[str, Any] = field(default_factory=dict)
+    rent_act_applies: bool | None = None
 
     def add_trace(self, trace_type: str, label: str, **data: Any) -> None:
         self.trace.append(TraceStep(type=trace_type, label=label, data=data))
@@ -79,16 +134,19 @@ def _call_key(name: str, arguments: dict[str, Any]) -> str:
     return json.dumps([name, arguments], sort_keys=True, ensure_ascii=False)
 
 
-def _dispatch(state: AgentState, name: str, arguments: dict[str, Any]) -> Any:
-    """Dispatch one model tool call and record it, failing closed on repeats."""
-    if state.tool_calls >= MAX_TOOL_CALLS:
+def _dispatch(state: AgentState, name: str, arguments: dict[str, Any], counted: bool = True) -> Any:
+    """Dispatch one tool call and record it, failing closed on repeats.
+
+    The 12-call budget limits the model-driven loop; the rule-based fallback passes counted=False.
+    """
+    if counted and state.tool_calls >= MAX_TOOL_CALLS:
         raise RuntimeError("Maximum of 12 tool calls reached")
     key = _call_key(name, arguments)
     if key in state.seen_calls:
         state.add_trace("tool_call", "Blocked repeated tool call", tool=name, inputs=_safe_model_value(arguments), error="Identical repeated tool call blocked")
         return state.tool_results.get(key)
     state.seen_calls.add(key)
-    state.tool_calls += 1
+    state.tool_calls += counted
     safe_arguments = _safe_model_value(arguments)
     LOGGER.info("agent tool_call name=%s inputs=%s", name, str(safe_arguments)[:200])
     try:
@@ -101,6 +159,8 @@ def _dispatch(state: AgentState, name: str, arguments: dict[str, Any]) -> Any:
             result = lookup_section(safe_arguments["id"])
         elif name == "compute_money":
             result = {"money_at_risk_inr": compute_money(safe_arguments["finding_type"], safe_arguments["inputs"])}
+        elif name == "record_finding":
+            result = _record_finding(state, safe_arguments)
         elif name == "draft_message":
             result = draft_message(safe_arguments["findings"], safe_arguments["tone"], safe_arguments["language"])
         else:
@@ -110,6 +170,34 @@ def _dispatch(state: AgentState, name: str, arguments: dict[str, Any]) -> Any:
     state.add_trace("tool_call", name, tool=name, inputs=safe_arguments, output=result)
     state.tool_results[key] = result
     return result
+
+
+def _citable(state: AgentState, section_id: str | None) -> bool:
+    """A section may back a finding only if it is in the pack, applies in Karnataka and covers this flat."""
+    section = lookup_section(section_id) if section_id else None
+    if not section or not section["applies_in_karnataka"]:
+        return False
+    return not (state.rent_act_applies is False and section_id.startswith("KRA-"))
+
+
+def _record_finding(state: AgentState, arguments: dict[str, Any]) -> dict[str, Any]:
+    """Price a model-proposed finding with compute_money and keep only applicable sections."""
+    clause_ref = str(arguments["clause_ref"])
+    if _clause(state, clause_ref) is None:
+        raise ValueError(f"Unknown clause {clause_ref}")
+    category = arguments["category"]
+    if category not in FINDING_CATEGORIES:
+        raise ValueError(f"Unsupported category {category}")
+    if any(f.clause_ref == clause_ref and f.category == category for f in state.findings):
+        raise ValueError(f"{clause_ref} {category} is already recorded")
+    amount = compute_money(category, arguments["inputs"])
+    kept, dropped = [], []
+    for section_id in arguments.get("section_ids", []):
+        (kept if _citable(state, section_id) and category != "rent_escalation_excess" else dropped).append(section_id)
+    state.findings.append(Finding(clause_ref=clause_ref, category=category, issue=str(arguments["issue"]),
+                                  clause_text=_clause(state, clause_ref)["text"],
+                                  ask=str(arguments.get("ask", "")), money_at_risk_inr=amount, section_ids=kept))
+    return {"money_at_risk_inr": amount, "section_ids": kept, "dropped_section_ids": dropped}
 
 
 def _number(text: str, pattern: str, default: float | None = None) -> float | None:
@@ -159,17 +247,18 @@ def _deterministic_findings(state: AgentState) -> list[dict[str, Any]]:
                 category, inputs, sections = "notice_shortfall", {"monthly_rent": monthly_rent, "required_months": required, "given_months": given}, ["TPA-106"]
                 issue = "The stated notice is shorter than the agreement's required notice; check the contract and applicable default rules."
         if category:
-            result = _dispatch(state, "compute_money", {"finding_type": category, "inputs": inputs})
+            result = _dispatch(state, "compute_money", {"finding_type": category, "inputs": inputs}, counted=False)
             amount = int(result.get("money_at_risk_inr", 0))
-            results.append({"clause_ref": clause["id"], "category": category, "issue": issue,
+            results.append({"clause_ref": clause["id"], "clause_text": text, "category": category, "issue": issue,
                             "money_at_risk_inr": amount, "section_ids": sections})
     return results
 
 
 def _ask_for_missing(state: AgentState, jurisdiction: dict[str, Any]) -> bool:
+    """Pause only for facts a tenant can answer; other gaps stay visible as unresolved reasons."""
     if jurisdiction.get("applies") is not None:
         return False
-    missing = [str(item) for item in jurisdiction.get("missing", [])]
+    missing = [key for key in ASKABLE_FACTS if state.facts.get(key) is None]
     if not missing:
         return False
     labels = ", ".join(missing)
@@ -179,41 +268,67 @@ def _ask_for_missing(state: AgentState, jurisdiction: dict[str, Any]) -> bool:
     return True
 
 
-def _run_provider_advisory(state: AgentState) -> None:
-    """Give the configured model a safe chance to use the registered tools."""
-    messages = [
-        {"role": "system", "content": "Review this redacted tenancy agreement. Use only registered tools for legal sections and money. Never cite the Model Tenancy Act as binding Karnataka law."},
-        {"role": "user", "content": json.dumps(_safe_model_value({"clauses": state.clauses, "facts": state.facts}), ensure_ascii=False)},
+def _run_model_loop(state: AgentState, jurisdiction: dict[str, Any]) -> None:
+    """Let the model drive the review: each tool result goes back to it until it calls finish."""
+    messages: list[dict[str, Any]] = [
+        {"role": "system", "content": SYSTEM_PROMPT.format(money=MONEY_INPUTS, law=_law_index())},
+        {"role": "user", "content": json.dumps(_safe_model_value({"clauses": state.clauses, "facts": state.facts,
+                                                                  "rent_act": jurisdiction}), ensure_ascii=False)},
     ]
-    result = state.provider_chat(messages, TOOL_SCHEMAS)
-    if result.text:
-        state.claims.append({"text": redact_pii(result.text)[0], "section_id": None})
-    for call in result.tool_calls:
-        try:
-            _dispatch(state, call.name, call.arguments)
-        except RuntimeError as exc:
-            state.add_trace("tool_call", "Blocked tool call", tool=call.name, error=str(exc))
+    for _turn in range(MAX_MODEL_TURNS):
+        result = state.provider_chat(messages, TOOL_SCHEMAS)
+        if not result.tool_calls:
+            if result.text:
+                state.claims.append({"text": redact_pii(result.text)[0], "section_id": None})
+            return
+        messages.append({"role": "assistant", "content": result.text or "", "tool_calls": [
+            {"id": call.id, "type": "function", "function": {"name": call.name, "arguments": json.dumps(call.arguments, ensure_ascii=False)}}
+            for call in result.tool_calls]})
+        for call in result.tool_calls:
+            if call.name == "finish":
+                for claim in call.arguments.get("claims", []):
+                    state.claims.append({"text": redact_pii(str(claim.get("text", "")))[0], "section_id": claim.get("section_id")})
+                state.add_trace("tool_call", "finish", tool="finish", inputs={"claims": len(call.arguments.get("claims", []))}, output="review complete")
+                return
+            try:
+                output = _dispatch(state, call.name, call.arguments)
+            except RuntimeError as exc:
+                state.add_trace("tool_call", "Blocked tool call", tool=call.name, error=str(exc))
+                return
+            messages.append({"role": "tool", "tool_call_id": call.id, "content": json.dumps(output, ensure_ascii=False, default=str)})
+
+
+def _rule_based_findings(state: AgentState) -> None:
+    """Fallback when the model is unreachable: the regex pass over the clauses."""
+    covered = {(f.clause_ref, f.category) for f in state.findings}
+    raw_findings = [raw for raw in _deterministic_findings(state) if (raw["clause_ref"], raw["category"]) not in covered]
+    known: dict[str, bool] = {}  # look each section up once, so the trace has no repeated calls
+    for raw in raw_findings:
+        for section_id in raw["section_ids"]:
+            if section_id not in known:
+                known[section_id] = _dispatch(state, "lookup_section", {"id": section_id}, counted=False) is not None
+        raw["section_ids"] = [section_id for section_id in raw["section_ids"] if known[section_id]]
+    state.findings += [Finding(**finding) for finding in raw_findings]
 
 
 def _finish_analysis(state: AgentState) -> None:
-    raw_findings = _deterministic_findings(state)
-    for raw in raw_findings:
-        valid_sections: list[str] = []
-        for section_id in raw["section_ids"]:
-            section = _dispatch(state, "lookup_section", {"id": section_id})
-            if section is not None:
-                valid_sections.append(section_id)
-        raw["section_ids"] = valid_sections
-        state.claims.append({"text": raw["issue"], "section_id": valid_sections[0] if valid_sections else None})
-    state.findings = [Finding(**finding) for finding in raw_findings]
+    for finding in state.findings:
+        state.claims.append({"text": finding.issue, "section_id": finding.section_ids[0] if finding.section_ids else None})
     state.verdicts = [verdict.model_dump() for verdict in verify_claims(state.claims)]
+    for verdict in state.verdicts:
+        section_id = verdict.get("section_id") or ""
+        if verdict["verdict"] == "cited" and state.rent_act_applies is False and section_id.startswith("KRA-") and not section_id.startswith("KRA-2("):
+            verdict["verdict"], verdict["reason"] = "blocked", "The Karnataka Rent Act does not apply to this flat, so this section cannot support the claim"
     for verdict in state.verdicts:
         state.add_trace("verifier", "Claim checked", claim=verdict)
     draft_input = [finding.model_dump() for finding in state.findings]
-    draft_result = _dispatch(state, "draft_message", {"findings": draft_input, "tone": "request", "language": state.language})
-    if "error" not in draft_result:
-        state.drafts = [Draft(**draft_result)]
-        state.add_trace("draft", "Tenant draft prepared", draft=draft_result)
+    # Both languages, the tenant's choice first, so the screen can switch between them.
+    state.drafts = []
+    for language in dict.fromkeys([state.language, "en", "kn"]):
+        draft_result = _dispatch(state, "draft_message", {"findings": draft_input, "tone": "request", "language": language}, counted=False)
+        if "error" not in draft_result:
+            state.drafts.append(Draft(**draft_result))
+            state.add_trace("draft", "Tenant draft prepared", draft=draft_result)
     state.status = "ready"
     state.question = None
 
@@ -225,8 +340,14 @@ def start_agent(state: AgentState) -> AgentResponse:
     if _ask_for_missing(state, jurisdiction):
         return state.response()
     state.add_trace("tool_call", "Jurisdiction selected", output=jurisdiction)
+    state.rent_act_applies = jurisdiction.get("applies")
     try:
-        _run_provider_advisory(state)
+        state.findings, state.claims = [], []
+        try:
+            _run_model_loop(state, jurisdiction)
+        except ProviderError as exc:
+            state.add_trace("tool_call", "Model unavailable: rule-based fallback", error=str(exc))
+            _rule_based_findings(state)
         _finish_analysis(state)
     except Exception as exc:
         LOGGER.exception("tenant agent failed")
