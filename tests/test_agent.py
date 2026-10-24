@@ -86,6 +86,7 @@ def test_rule_based_fallback_when_model_is_unavailable() -> None:
 
     assert result.status == "ready"
     assert len(result.findings) == 5
+    assert all(f.clause_text and f.ask for f in result.findings)
     assert any(step.label == "Model unavailable: rule-based fallback" for step in result.trace)
 
 

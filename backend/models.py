@@ -58,8 +58,10 @@ class Finding(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     clause_ref: str
+    clause_text: str
     category: str
     issue: str
+    ask: str
     money_at_risk_inr: int = Field(ge=0)
     section_ids: list[str] = Field(default_factory=list)
 

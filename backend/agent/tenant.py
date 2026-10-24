@@ -230,26 +230,31 @@ def _deterministic_findings(state: AgentState) -> list[dict[str, Any]]:
         if "deposit" in lowered and ("forfeit" in lowered or "breach" in lowered or "early exit" in lowered) and deposit is not None:
             category, inputs, sections = "deposit_forfeiture", {"deposit": deposit, "on_any_breach": "breach" in lowered, "on_early_exit": "early exit" in lowered}, ["ICA-74"]
             issue = "The clause allows the full deposit to be forfeited on breach or early exit; assess reasonable compensation rather than automatic forfeiture."
+            ask = "Replace automatic forfeiture with deductions supported by documented loss and reasonable compensation."
         elif "lock-in" in lowered or "lock in" in lowered:
             months = _number(text, r"([\d.]+|one|two|three|four|five|six|seven|eight|nine|ten)\s+lock[- ]in months")
             if monthly_rent is not None and months is not None:
                 category, inputs, sections = "lock_in", {"monthly_rent": monthly_rent, "remaining_months": months}, ["ICA-74"]
                 issue = "The remaining lock-in exposure is calculated as rent for the stated remaining months; the clause needs a reasonable-compensation review."
+                ask = "Limit any early-exit payment to reasonable, evidenced loss rather than the full remaining lock-in."
         elif ("painting" in lowered or "cleaning" in lowered) and (amount := _number(text, r"INR\s*([\d,]+)")) is not None:
             category, inputs, sections = "painting_or_cleaning_fixed", {"amount": amount}, ["TPA-108(m)", "ICA-74"]
             issue = "A fixed exit charge should be tied to evidenced damage or cleaning beyond reasonable wear and tear."
+            ask = "Charge only for documented damage or cleaning beyond reasonable wear and tear."
         elif "escalation" in lowered and (percent := _number(text, r"([\d.]+)\s*percent")) is not None and monthly_rent is not None and percent > 10:
             category, inputs, sections = "rent_escalation_excess", {"monthly_rent": monthly_rent, "escalation_percent": percent}, []
             issue = "The escalation exceeds Dhara's 10 percent product-review threshold; discuss whether the commercial term is acceptable."
+            ask = "Ask to discuss a lower annual escalation; 10 percent is a product threshold, not a legal limit."
         elif "notice" in lowered and (required := _number(text, r"([\d.]+|one|two|three|four|five|six|seven|eight|nine|ten)\s+months?'? notice")) is not None:
             given = _number(text, r"([\d.]+|one|two|three|four|five|six|seven|eight|nine|ten)\s+month has been given")
             if given is not None and monthly_rent is not None:
                 category, inputs, sections = "notice_shortfall", {"monthly_rent": monthly_rent, "required_months": required, "given_months": given}, ["TPA-106"]
                 issue = "The stated notice is shorter than the agreement's required notice; check the contract and applicable default rules."
+                ask = "Confirm the notice obligation and any lawful shortfall against the written agreement."
         if category:
             result = _dispatch(state, "compute_money", {"finding_type": category, "inputs": inputs}, counted=False)
             amount = int(result.get("money_at_risk_inr", 0))
-            results.append({"clause_ref": clause["id"], "clause_text": text, "category": category, "issue": issue,
+            results.append({"clause_ref": clause["id"], "clause_text": text, "category": category, "issue": issue, "ask": ask,
                             "money_at_risk_inr": amount, "section_ids": sections})
     return results
 
