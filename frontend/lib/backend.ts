@@ -79,7 +79,7 @@ const QUESTION: Partial<Record<keyof Facts, { question: string; why: string }>> 
   premises_use: { question: "Is the flat used as a home?", why: "Section 2(3)(g) excludes most non-residential premises." },
 };
 
-const TOOL_NAMES = ["check_jurisdiction", "lookup_section", "compute_money", "record_finding", "draft_message", "finish"];
+const TOOL_NAMES = ["read_agreement", "check_jurisdiction", "lookup_section", "compute_money", "record_finding", "draft_message", "finish"];
 
 const record = (v: unknown): Record<string, unknown> => (v && typeof v === "object" ? (v as Record<string, unknown>) : {});
 const inr = (n: unknown) => `Rs ${Number(n).toLocaleString("en-IN")}`;
@@ -117,6 +117,10 @@ function toolSummary(tool: string, data: Record<string, unknown>): string {
   const input = record(data.inputs);
   if (data.error) return `${tool}: ${String(data.error)}`;
   switch (tool) {
+    case "read_agreement": {
+      const redactions = Object.values(record(output.redactions)).reduce<number>((sum, n) => sum + Number(n), 0);
+      return `${String(output.clauses)} clauses read; ${redactions} personal identifiers redacted before any model call.`;
+    }
     case "check_jurisdiction":
       return output.applies === false ? "Rent Act does not apply." : output.applies === true ? "Rent Act applies (conditional)." : "Rent Act coverage unresolved.";
     case "record_finding":

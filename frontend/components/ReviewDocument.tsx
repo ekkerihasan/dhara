@@ -151,9 +151,7 @@ export function ReviewDocument({ id }: { id: string }) {
           </div>
           <div>
             <dt>Tool calls</dt>
-            <dd>
-              {toolCalls} of {run.max_tool_calls}
-            </dd>
+            <dd>{toolCalls}</dd>
           </div>
           <div>
             <dt>Model</dt>
@@ -241,7 +239,11 @@ export function ReviewDocument({ id }: { id: string }) {
           {paused && (
             <div className="callout">
               <Info size={16} aria-hidden />
-              <p>The agent paused after reading the agreement. It will not guess a fact that decides which law applies.</p>
+              <p>
+                {run.status === "running"
+                  ? "The agent is working. The steps below fill in as it goes; a review takes up to a minute."
+                  : "The agent paused after reading the agreement. It will not guess a fact that decides which law applies."}
+              </p>
             </div>
           )}
           <Trace trace={run.trace} sections={run.sections} />
