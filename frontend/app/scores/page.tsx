@@ -7,7 +7,8 @@ import type { Section } from "@/lib/types";
 import scores from "@/stubs/scores.json";
 
 const TOC = [
-  { id: "result", title: "Two runs, one task" },
+  { id: "compare", title: "With and without tools" },
+  { id: "result", title: "How wrong law is scored" },
   { id: "checks", title: "What the scorer checks" },
   { id: "reproduce", title: "Reproduce it" },
 ];
@@ -22,6 +23,17 @@ const CHECKS: { key: Check; label: string; tests: string }[] = [
 ];
 
 const sections = scores.sections as Record<string, Section>;
+
+const LAW_LABEL: Record<string, string> = {
+  TPA_CONTRACT: "Rent Act does not apply",
+  KARNATAKA_RENT_ACT: "Rent Act applies",
+  UNRESOLVED: "Unresolved",
+};
+
+type EvalRow = { task: string; mode: string; governing_law: string | null; score: Record<string, number>; error: string | null };
+const live = scores.eval as { date: string; model: string; rows: EvalRow[] } | null;
+const evalTasks = live ? [...new Set(live.rows.map((r) => r.task))] : [];
+const evalRow = (task: string, mode: string) => live?.rows.find((r) => r.task === task && r.mode === mode);
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 
 /** The deterministic scorer (env/scorer.py) on the blr_flat task, from frontend/stubs/scores.json. */
@@ -33,14 +45,61 @@ export default function ScoresPage() {
       <main className="doc">
         <Toc items={TOC} />
         <article className="doc-main">
-          <p className="kicker">
-            Evaluation · <span className="mono">{scores.task.id}</span>
-          </p>
-          <h1 className="doc-title">Citing the wrong law costs a point</h1>
+          <p className="kicker">Evaluation</p>
+          <h1 className="doc-title">The same model, with and without Dhara&apos;s tools</h1>
           <p className="doc-subtitle">
-            Every run is scored by plain code, with no model involved, so the same answer always gets the same score. Here is the same task scored
-            twice: once correctly, once with the deposit-cap claim that circulates online.
+            Every run is scored by plain code, with no model involved, so the same answer always gets the same score. The plain model gets the
+            same agreement, instructions and law pack, but no tools and no checker.
           </p>
+
+          {live && (
+            <section className="section" id="compare">
+              <h2>With and without tools</h2>
+              <figure className="fig-table">
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Task</th>
+                        <th>Plain model said</th>
+                        <th className="num">Plain model</th>
+                        <th>Dhara agent said</th>
+                        <th className="num">Dhara agent</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {evalTasks.map((task) => {
+                        const base = evalRow(task, "baseline");
+                        const agent = evalRow(task, "agent");
+                        return (
+                          <tr key={task}>
+                            <td className="mono">{task}</td>
+                            <td className={base?.score.governing_law_correct ? undefined : "dim"}>
+                              {base?.error ? "error" : LAW_LABEL[base?.governing_law ?? ""] ?? base?.governing_law}
+                              {base && !base.score.governing_law_correct && <span className="badge badge-red" style={{ marginLeft: 6 }}>wrong law</span>}
+                            </td>
+                            <td className="num">{base ? fmt(base.score.total) : "—"} / 3</td>
+                            <td>{agent?.error ? "error" : LAW_LABEL[agent?.governing_law ?? ""] ?? agent?.governing_law}</td>
+                            <td className="num">
+                              <strong>{agent ? fmt(agent.score.total) : "—"}</strong> / 3
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <figcaption>
+                  One live run each with {live.model} on {live.date}, from <code>python -m env.run_eval</code>. The agent is scored on what reaches the
+                  tenant, after the checker has blocked bad claims.
+                </figcaption>
+              </figure>
+              <p>
+                Both got the rupee amounts right. The difference is the law: without the rent-law test, the plain model assumed the Karnataka Rent Act
+                protects the tenant.
+              </p>
+            </section>
+          )}
           <dl className="meta">
             <div>
               <dt>Task</dt>
@@ -67,7 +126,7 @@ export default function ScoresPage() {
           </dl>
 
           <section className="section" id="result">
-            <h2>Two runs, one task</h2>
+            <h2>How the scorer treats wrong law</h2>
             <div className="stats">
               <div className="stat is-safe">
                 <div className="stat-value">
@@ -147,7 +206,8 @@ export default function ScoresPage() {
             <h2>Reproduce it</h2>
             <p>From the repository root, the same numbers print in the terminal:</p>
             <pre className="codeblock">{`python -m env.scorer env/tasks/blr_flat.json env/tasks/sample_run.json
-python -m env.scorer env/tasks/blr_flat.json env/tasks/sample_run_wronglaw.json`}</pre>
+python -m env.scorer env/tasks/blr_flat.json env/tasks/sample_run_wronglaw.json
+python -m env.run_eval   # plain model vs agent, needs GROQ_API_KEY`}</pre>
           </section>
 
           <DocFooter />

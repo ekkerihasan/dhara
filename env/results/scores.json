@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-24",
+  "rows": [
+    {
+      "task": "blr_flat",
+      "mode": "baseline",
+      "score": {
+        "governing_law_correct": 0,
+        "money_within_500": 1.0,
+        "citations_exist": 0.8571428571428571,
+        "wrong_law_penalty": 0,
+        "total": 1.8571428571428572
+      },
+      "error": null,
+      "findings": 5,
+      "governing_law": "KARNATAKA_RENT_ACT"
+    },
+    {
+      "task": "blr_flat",
+      "mode": "agent",
+      "score": {
+        "governing_law_correct": 1,
+        "money_within_500": 1.0,
+        "citations_exist": 1.0,
+        "wrong_law_penalty": 0,
+        "total": 3.0
+      },
+      "error": null,
+      "findings": 5,
+      "governing_law": "TPA_CONTRACT"
+    },
+    {
+      "task": "pg_room",
+      "mode": "baseline",
+      "score": {
+        "governing_law_correct": 0,
+        "money_within_500": 1.0,
+        "citations_exist": 1.0,
+        "wrong_law_penalty": 0,
+        "total": 2.0
+      },
+      "error": null,
+      "findings": 2,
+      "governing_law": "KARNATAKA_RENT_ACT"
+    },
+    {
+      "task": "pg_room",
+      "mode": "agent",
+      "score": {
+        "governing_law_correct": 1,
+        "money_within_500": 1.0,
+        "citations_exist": 1.0,
+        "wrong_law_penalty": 0,
+        "total": 3.0
+      },
+      "error": null,
+      "findings": 2,
+      "governing_law": "UNRESOLVED"
+    }
+  ],
+  "model": "openai/gpt-oss-120b"
+}

@@ -259,6 +259,9 @@ def build_scores() -> dict[str, Any]:
         "max_total": 3,
         "runs": runs,
         "sections": section_meta(forbidden | {"ICA-74", "TPA-106", "TPA-108(m)"}),
+        # Live baseline-vs-agent results from python -m env.run_eval, when they exist
+        "eval": json.loads((ROOT / "env" / "results" / "scores.json").read_text(encoding="utf-8"))
+        if (ROOT / "env" / "results" / "scores.json").exists() else None,
     }
 
 
