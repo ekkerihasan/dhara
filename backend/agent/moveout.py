@@ -46,7 +46,8 @@ For every claimed deduction call record_verdict once:
 Cite only these section ids, never one marked NOT applicable, and no Rent Act (KRA) section if the Rent Act result says the Act does not apply:
 {law}
 Usual sections: wear and tear or pre-existing condition -> TPA-108(m); a charge beyond actual loss -> ICA-74.
-Never call a charge illegal or unlawful, and never state a deadline or limit that is not in a clause. Then call finish."""
+Never call a charge illegal, unlawful, void, "not permitted", "not permissible" or a violation, and never state a deadline
+or limit that is not in a clause. Say what the clause, the checklist and the section show. Then call finish."""
 
 
 @dataclass
