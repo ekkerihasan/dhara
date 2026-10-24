@@ -10,15 +10,15 @@ English, Kannada and Hindi | Karnataka law pack | Web app
 
 ## Results
 
-The same model reviews each test agreement twice: once with no tools and no verifier, once as the full Dhara agent. Scores are out of 3, from the deterministic scorer [`env/scorer.py`](env/scorer.py) ([`env/results/scores.md`](env/results/scores.md)) [[R13]](docs/REFERENCES.md#evaluation):
+The same model reviews each test agreement twice: once with no tools and no verifier, once as the full Dhara agent. On the two pre-signing tasks both then negotiate two rounds against the same scripted strict owner. Scores come from the deterministic scorer [`env/scorer.py`](env/scorer.py) ([`env/results/scores.md`](env/results/scores.md)) [[R13]](docs/REFERENCES.md#evaluation): governing law, money within Rs 500, citations that exist, and negotiation correct (did the tenant accept exactly the offers that were acceptable), out of 4; the move-out task has no negotiation and is out of 3.
 
 | Task | Plain model | Dhara agent |
 | --- | --- | --- |
-| `blr_flat`: Bengaluru flat, five unfair clauses | **1.78**, said the Rent Act applies | **3.00** |
-| `pg_room`: PG room, building age unknown | **2.00**, said the Rent Act applies | **3.00** |
-| `moveout`: three claimed deductions against the move-in checklist | **2.00**, said the Rent Act applies | **2.67**, gave no section for the cleaning charge it allowed |
+| `blr_flat`: Bengaluru flat, five unfair clauses, four negotiated | **3.00 / 4**, said the Rent Act applies | **3.72 / 4**, missed one of five clauses |
+| `pg_room`: PG room, building age unknown, three negotiated | **3.00 / 4**, said the Rent Act does not apply | **3.67 / 4**, countered a cleaning charge that was within the limit |
+| `moveout`: three claimed deductions against the move-in checklist | **2.00 / 3**, said the Rent Act applies | **2.75 / 3** |
 
-Both got the rupee amounts right. Without the rent-law test, the plain model assumed the Karnataka Rent Act protects the tenant on every task. One live run each with `openai/gpt-oss-120b`, so the plain model's score varies a little between runs; reproduce with `python -m env.run_eval`.
+Without the rent-law test, the plain model named the wrong governing law on every task. In negotiation, both chose correctly on the flat; the plain model also cited a Rent Act section (KRA-15) for a flat the Act does not cover, which nothing checked, while every section the agent cited passed the verifier. In this run the model never tried to accept past the tenant's limits, so the code that enforces them did not have to act. One live run each with `openai/gpt-oss-120b` on 25 Oct 2026, so scores vary a little between runs; reproduce with `python -m env.run_eval`.
 
 ---
 
@@ -45,8 +45,13 @@ Dhara (धारा) is what Indian law calls a section, as in "Dhara 302". Our 
 3. **Act:** the AI records each unfair clause with the facts it reads from it; our tools decide which law applies and compute the rupees at risk.
 4. **Verify:** every legal claim must cite a section that exists, applies in Karnataka and covers this flat; anything else is blocked.
 5. **Draft and wait:** a counter-proposal in English, Kannada and Hindi, each clause asking for a specific change with the section it rests on. Nothing goes out until the tenant approves, and approval records a follow-up; Dhara never sends anything itself.
+6. **Negotiate within your limits:** as soon as the findings exist, Dhara negotiates two rounds with a scripted landlord (a strict owner or a reasonable broker). Per round the AI makes one call to accept, reject or counter each offer, citing a section for every reject or counter; the verifier checks each section, and code turns any accept past the tenant's own limits (lock-in, refund days, exit painting) into a reject. The tenant approves the agreed terms once, and the letter is rewritten from them, keeping the tenant's ask for any clause still open.
 
-At move-out, the same pattern checks each deduction the landlord claims against the agreement and the dated move-in checklist: the AI records allowed or disputed with the evidence it relied on, code checks the sections, drafts the challenge and gives the next formal step (written demand, legal notice, then the Rent Controller only where the Act applies, otherwise a civil recovery suit; never a police complaint).
+At move-out, the same pattern checks each deduction the landlord claims against the agreement and the dated move-in checklist: the AI records allowed or disputed with the evidence it relied on, code checks the sections, drafts the challenge and gives the next formal step (written demand, legal notice, then the Rent Controller only where the Act applies, otherwise a civil recovery suit; never a police complaint). If the landlord sends one number, such as "painting and repairs 80396", Dhara does not dispute a figure it cannot see: it drafts a request for the itemised list with bills within 7 days (Indian Contract Act s.74: only reasonable compensation is recoverable), and checks each item once the list arrives.
+
+![Negotiation rounds on the review report](docs/screenshots/negotiation.jpg)
+
+![Itemisation first at move-out](docs/screenshots/itemisation.jpg)
 
 ![Intake form](docs/screenshots/intake.jpg)
 
@@ -57,13 +62,17 @@ At move-out, the same pattern checks each deduction the landlord claims against 
 | Read the clauses, decide what to check, extract amounts and conditions | AI (tool calls) | [`backend/agent/tenant.py`](backend/agent/tenant.py) |
 | Allowed or disputed for each move-out deduction, with checklist evidence | AI (tool calls) | [`backend/agent/moveout.py`](backend/agent/moveout.py) |
 | Next formal step after a refused refund | Code, fixed routes | [`backend/agent/moveout.py`](backend/agent/moveout.py) |
+| A lump-sum deduction: ask for the itemised list first | Code | [`backend/agent/moveout.py`](backend/agent/moveout.py) |
+| The landlord's offers and concessions | Code, a scripted move table per persona | [`backend/agent/landlord.py`](backend/agent/landlord.py), [`env/tasks/`](env/tasks/) |
+| Accept, reject or counter each offer, with a section | AI (one tool call per round) | [`backend/agent/negotiation.py`](backend/agent/negotiation.py) |
+| Never settle past the tenant's limits | Code | [`backend/agent/negotiation.py`](backend/agent/negotiation.py) |
 | Does the Karnataka Rent Act apply to this flat? | Code | [`backend/tools/law.py`](backend/tools/law.py) |
 | Rupees at risk per clause | Code, fixed formulas | [`backend/tools/money.py`](backend/tools/money.py) |
 | Is a citation allowed? | Code | [`backend/agent/verifier.py`](backend/agent/verifier.py) |
 | Redaction, drafts, approval gate | Code | [`backend/tools/agreement.py`](backend/tools/agreement.py), [`backend/tools/messages.py`](backend/tools/messages.py) |
 | Scoring | Code, no model | [`env/scorer.py`](env/scorer.py) |
 
-Each tool result goes back to the AI before its next step, up to 12 tool calls. If the model is unreachable, a rule-based pass runs instead and the trace says so.
+Each tool result goes back to the AI before its next step, up to 12 tool calls, negotiation included. If the model is unreachable, a rule-based pass runs instead and the trace says so.
 
 ### The Verifier
 
@@ -99,7 +108,11 @@ flowchart LR
     G --> J[check_jurisdiction]
     G --> C[compute_money]
     G --> V[verifier]
-    G --> D[draft_message<br/>EN / KN]
+    G --> D[draft_message<br/>EN / KN / HI]
+    G --> N[Negotiation<br/>backend/agent/negotiation.py]
+    N <-->|decide_offers| M
+    N --> O[Scripted landlord<br/>backend/agent/landlord.py]
+    N --> V
     J --> L[(law/karnataka.json)]
     V --> L
     E[env/run_eval.py] --> G
@@ -115,6 +128,7 @@ flowchart LR
 | **Model** | Groq `openai/gpt-oss-120b` behind one function, [`backend/llm/provider.py`](backend/llm/provider.py) | Pay per token; the provider can be swapped in one file |
 | **State** | In-memory runs keyed by id | No database or queue for a single-user review |
 | **Long runs** | The agent runs as a background task; the screen polls and shows the trace filling in | A review takes up to a minute with rate limits |
+| **Landlord** | A scripted move table per persona, not a second model | One model call per round, reproducible demos, and the scorer knows which offers were acceptable |
 | **Frontend** | Next.js, with a sample mode built from the real tools ([`env/make_frontend_stubs.py`](env/make_frontend_stubs.py)) | The screens work and stay honest before the backend runs |
 
 ## Quick Start
@@ -126,7 +140,7 @@ flowchart LR
 
 ### Configuration
 
-Copy `.env.example` to `.env` and set `GROQ_API_KEY`. Never commit real keys; `.env` is ignored by git.
+Copy `.env.example` to `.env` and set `GROQ_API_KEY`. Several keys can be given comma-separated; on a rate limit the provider moves to the next one. Never commit real keys; `.env` is ignored by git.
 
 ### Backend
 
@@ -149,8 +163,8 @@ Open http://localhost:3000, press **Use the sample agreement**, leave **Year bui
 
 ```bash
 python -m pytest -q                                                  # tools, verifier, scorer, agent loop, API
-python -m env.scorer env/tasks/blr_flat.json env/tasks/sample_run.json   # 3/3
-python -m env.run_eval                                               # plain model vs agent, needs GROQ_API_KEY
+python -m env.scorer env/tasks/blr_flat.json env/tasks/sample_run.json   # 3; the sample run has no negotiation
+python -m env.run_eval                                               # plain model vs agent, needs GROQ_API_KEY (EVAL_PAUSE_S spaces runs)
 ```
 
 ## Project Structure
@@ -163,13 +177,15 @@ dhara/
   ├── backend/
   │   ├── main.py               # FastAPI: runs, answer, approve; move-out reviews
   │   ├── agent/tenant.py       # Agent loop: tool calls, question, fallback, trace
-  │   ├── agent/moveout.py      # Flow 2: deduction verdicts, challenge, next formal step
+  │   ├── agent/moveout.py      # Flow 2: itemisation first, deduction verdicts, challenge, next formal step
+  │   ├── agent/negotiation.py  # Two rounds: decide_offers, verifier, limits enforced in code
+  │   ├── agent/landlord.py     # Scripted landlord: opening and concession per persona
   │   ├── agent/verifier.py     # Citation check
   │   ├── llm/provider.py       # The one model entry point
   │   └── tools/                # law, agreement (redaction), money, messages
   ├── env/
-  │   ├── tasks/                # blr_flat, pg_room, moveout (synthetic)
-  │   ├── scorer.py             # Governing law, money within Rs 500, citations, wrong-law penalty
+  │   ├── tasks/                # blr_flat, pg_room, moveout (synthetic), with landlord moves
+  │   ├── scorer.py             # Governing law, money within Rs 500, citations, negotiation correct, wrong-law penalty
   │   ├── run_eval.py           # Plain model vs agent
   │   └── results/              # scores.md, scores.json
   ├── frontend/                 # Next.js: intake, review report, move-out, evaluation
@@ -207,7 +223,9 @@ It scales because law is data: bringing Dhara to another state means sourcing it
 - [x] **Speak the terms:** the facts form can be filled by voice; Groq Whisper transcribes, the transcript is redacted, and the model fills only fields the tenant mentioned, which they check before submitting.
 - [x] **Share on WhatsApp:** once the tenant approves a letter, WhatsApp opens with it filled in; the tenant picks the contact and sends it. Dhara never sends anything itself.
 - [x] **Clause-type chart** on the Evaluation page: which unfair clauses appear across the test agreements; with consent, the same view by locality is the next step.
-- [ ] Stretch: a landlord agent that pushes back, a test of public chatbots.
+- [x] **Negotiation within the tenant's limits:** two rounds against a scripted strict owner or reasonable broker, one model call per round, limits enforced in code, the verifier on every reason, a rule-based fallback, and one approval of the agreed terms; scored as a fourth check.
+- [x] **Itemisation first at move-out:** a one-line deduction gets a request for the itemised list in English, Kannada and Hindi before any item is disputed.
+- [ ] Stretch: a test of public chatbots.
 
 ## Before and after
 
@@ -215,10 +233,12 @@ It scales because law is data: bringing Dhara to another state means sourcing it
 | --- | --- |
 | Offline rules-based Karnataka applicability screening and clause extraction | Sourced law pack, `check_jurisdiction` and the citation verifier with wrong-law blocking |
 | English, Kannada and Hindi message templates | Model-driven agent loop with tool calls, a single missing-fact question and a rule-based fallback |
-| Scripted counterparty negotiation | Three scored tasks, the deterministic scorer and the plain-model vs agent runner |
+| Scripted counterparty negotiation (rules only, no model) | Three scored tasks, the deterministic scorer and the plain-model vs agent runner |
 | Local PDF extraction and OCR | In-memory agreement reading with PII redaction, money formulas and the approval gate |
 | OpenEnv tasks, deterministic grading and tests | FastAPI endpoints for runs, answers and approvals |
 | Offline housing review without a model; a separate legacy model inference script | Next.js review report, decision trace, Kannada and Hindi drafts, move-out flow and evaluation page |
+| | Pre-signing negotiation: a new landlord move table, the model deciding each offer, tenant limits enforced in code, the negotiation_correct check; it does not use the prototype's negotiator |
+| | Itemisation-first letters for lump-sum move-out deductions |
 
 ## Built at ChronoForge
 
@@ -231,6 +251,8 @@ It scales because law is data: bringing Dhara to another state means sourcing it
 - [x] Next.js review and move-out screens with English, Kannada and Hindi drafts
 - [x] Baseline versus agent evaluation results
 - [x] Move-out deduction challenges and next formal step
+- [x] Two-round negotiation with a scripted landlord, tenant limits and a negotiation score
+- [x] Itemisation-first request for lump-sum move-out deductions
 
 ## Run the imported prototype
 
