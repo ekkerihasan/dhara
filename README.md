@@ -67,11 +67,11 @@ The same model reviews each test agreement twice: once with no tools and no veri
 
 | Task | Plain model | Dhara agent |
 | --- | --- | --- |
-| `blr_flat`: Bengaluru flat, five unfair clauses | **1.78**, said the Rent Act applies | **3.00** |
+| `blr_flat`: Bengaluru flat, five unfair clauses | **1.80**, said the Rent Act applies | **2.52**, returned three of five expected findings |
 | `pg_room`: PG room, building age unknown | **2.00**, said the Rent Act applies | **3.00** |
-| `moveout`: three claimed deductions against the move-in checklist | **2.00**, said the Rent Act applies | **2.67**, gave no section for the cleaning charge it allowed |
+| `moveout`: three claimed deductions against the move-in checklist | **2.00**, said the Rent Act applies | **3.00**, including a section for the allowed fixed cleaning charge |
 
-Both got the rupee amounts right. Without the rent-law test, the plain model assumed the Karnataka Rent Act protects the tenant on every task. One live run each with `openai/gpt-oss-120b`, so the plain model's score varies a little between runs; reproduce with `python -m env.run_eval`.
+The live rerun after the move-out citation fix used `openai/gpt-oss-120b` through Groq: 14 model requests with no provider failures. The agent scored 3/3 on PG and move-out; on the flat it returned only three of five expected findings, earning 60% money coverage and 2.52/3 overall. The plain model selected the wrong governing-law label on all three tasks. These are single-run results on synthetic agreements, not an accuracy estimate; both baseline and agent outputs can vary between runs. Reproduce with `python -m env.run_eval` after loading the provider environment variables.
 
 ![Evaluation page](docs/screenshots/evaluation.jpg)
 
