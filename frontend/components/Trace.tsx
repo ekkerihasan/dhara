@@ -133,7 +133,7 @@ export function Trace({ trace, sections }: { trace: TraceStep[]; sections: Recor
   return (
     <ol className="timeline">
       {trace.map((step) => (
-        <li key={step.index} className={`timeline-item ${step.type === "verifier" && step.verdict === "blocked" ? "is-blocked" : ""}`}>
+        <li key={step.index} id={`step-${step.index}`} className={`timeline-item ${step.type === "verifier" && step.verdict === "blocked" ? "is-blocked" : ""}`}>
           <span className={`timeline-badge ${badgeClass(step)}`}>
             <StepIcon step={step} />
           </span>

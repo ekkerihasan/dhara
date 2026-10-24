@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { createRun } from "@/lib/api";
 import { LOCAL_BODY_LABEL } from "@/lib/format";
+import { SAMPLE_AGREEMENT } from "@/stubs/sample-agreement";
 import type { Facts, Language, LocalBody, PremisesUse } from "@/lib/types";
 
 const MAX_PDF_BYTES = 8 * 1024 * 1024; // same 8 MB limit as the prototype reader
@@ -108,6 +109,12 @@ export function IntakeForm() {
           </button>
         )}
         <div className="or-rule">or paste the text</div>
+        <div className="form-actions" style={{ marginTop: 0, marginBottom: 8 }}>
+          <button type="button" className="btn btn-sm" onClick={() => setText(SAMPLE_AGREEMENT)}>
+            Use the sample agreement
+          </button>
+          <span className="field-hint">A synthetic 11-month Bengaluru flat agreement with 12 clauses.</span>
+        </div>
         <div className="field" style={{ maxWidth: 640 }}>
           <label className="sr-only" htmlFor="text">
             Agreement text

@@ -6,6 +6,7 @@ Next.js (App Router, TypeScript, Tailwind) client for the Dhara AI backend. Each
 cd frontend
 npm install
 npm run dev        # http://localhost:3000
+npm run demo       # production build and start, for screen sharing
 ```
 
 | Route | What it shows |
@@ -26,8 +27,8 @@ Geist and Geist Mono (Vercel, OFL-1.1), Noto Sans Kannada (Google, OFL-1.1), Luc
 
 ## Browser demo
 
-1. Open a fresh tab at `/`. Paste any clause text, leave **Year built** blank, and press **Review the agreement**. The run pauses with the question card (`needs_input`).
-2. Answer `2019`. The full report appears.
+1. Open a fresh tab at `/`. Press **Use the sample agreement**, leave **Year built** blank, and press **Review the agreement**. The run pauses with the question card (`needs_input`).
+2. Answer `2019`. The full report opens with the agent-at-a-glance strip; each item jumps to that step in the trace.
 3. In **Citation check**, the two red rows are the blocked claims: the Model Tenancy Act two-month cap (wrong law) and an uncited 30-day refund claim.
 4. In **Decision trace**, walk through the plan, the question, the tool calls (expand **Input and output**), the verifier steps and the draft.
 5. Optional: switch the counter-proposal to ಕನ್ನಡ and press **Approve and send** to show the follow-up date.

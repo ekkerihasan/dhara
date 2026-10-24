@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { answerQuestion, approveDraft, getRun } from "@/lib/api";
 import { inr, date, LOCAL_BODY_LABEL, STATUS_LABEL } from "@/lib/format";
 import type { ApprovalStep, QuestionStep, Run, VerifierStep } from "@/lib/types";
+import { AgentGlance } from "./AgentGlance";
 import { CitationCheck } from "./CitationCheck";
 import { DocFooter } from "./DocFooter";
 import { DraftPanel } from "./DraftPanel";
@@ -152,6 +153,7 @@ export function ReviewDocument({ id }: { id: string }) {
 
         {!paused && run.governing_law && (
           <>
+            <AgentGlance trace={run.trace} />
             <div className="stats">
               <div className="stat is-danger">
                 <div className="stat-value">{inr(total)}</div>

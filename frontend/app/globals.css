@@ -383,3 +383,19 @@ footer.doc-foot strong { color: var(--ink-2); }
   .stat-value { font-size: 21px; }
   .stat-value.is-text { font-size: 18px; }
 }
+
+/* agent-at-a-glance strip: the loop in one row, each step a link into the trace */
+.glance { list-style: none; padding: 0; margin: 0 0 var(--space-5); display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; counter-reset: glance; }
+@media (max-width: 760px) { .glance { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 440px) { .glance { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.glance li { margin: 0; min-width: 0; counter-increment: glance; }
+.glance a { display: grid; gap: 4px; height: 100%; padding: 8px 10px; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--sheet); color: var(--ink); text-decoration: none; transition: border-color 0.15s; }
+.glance a:hover { border-color: var(--accent); text-decoration: none; }
+.glance-kind { font: 500 10.5px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--subtle); }
+.glance-kind::before { content: counter(glance) " "; color: var(--accent); }
+.glance-value { font: 600 13.5px/1.3 var(--sans); font-variant-numeric: tabular-nums; }
+.glance a.is-danger { border-color: color-mix(in srgb, var(--danger) 40%, transparent); background: var(--danger-soft); }
+.glance a.is-danger .glance-value { color: var(--danger); }
+.glance a.is-safe .glance-value { color: var(--safe); }
+.timeline-item:target .timeline-body { outline: 2px solid var(--accent); outline-offset: 6px; border-radius: 4px; }
+.timeline-item { scroll-margin-top: 96px; }
