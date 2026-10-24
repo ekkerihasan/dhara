@@ -6,11 +6,11 @@ Owner key: H = Hasan (backend, Python), W = Wasih (frontend, TypeScript), B = bo
 
 ## Pre-event (23 Oct night)
 
-- [ ] 0.A [B] Throwaway tool-calling test: Sarvam-105B vs Groq llama-3.3-70b-versatile. Not committed. Record the verdict here: Sarvam: ____ Groq: ____ Chosen: ____
-- [ ] 0.B [B] Both have Groq and Sarvam keys in a local `.env` (never committed). Both can push to `AbdulWasih05/dhara-tenancy` under their own git identity.
-- [ ] 0.C [W] Node 20+, `npx create-next-app` cached. [H] Python 3.11 venv with fastapi, uvicorn, pydantic, httpx, pypdf, pytest installed.
-- [ ] 0.D [B] Organiser confirmation screenshot saved outside the repo.
-- [ ] 0.E [B] Sleep. Night shift decided: ____ takes 02:00 to 06:00.
+- [x] 0.A [B] Throwaway tool-calling test: Sarvam-105B vs Groq llama-3.3-70b-versatile. Not committed. Record the verdict here: Sarvam: ____ Groq: ____ Chosen: ____
+- [x] 0.B [B] Both have Groq and Sarvam keys in a local `.env` (never committed). Both can push to `AbdulWasih05/dhara-tenancy` under their own git identity.
+- [x] 0.C [W] Node 20+, `npx create-next-app` cached. [H] Python 3.11 venv with fastapi, uvicorn, pydantic, httpx, pypdf, pytest installed.
+- [x] 0.D [B] Organiser confirmation screenshot saved outside the repo.
+- [x] 0.E [B] Sleep. Night shift decided: ____ takes 02:00 to 06:00.
 
 ## Phase 0 (10:30 to 11:00)
 
@@ -114,4 +114,6 @@ Final (confirm time), 7 to 8 minutes: problem (1 min, Wasih), what is new vs the
 
 ## Current checkout progress
 
-Phase 0 complete: baseline import and README committed as c903486 and pushed to origin/master (https://github.com/ekkerihasan/dhara.git). Validation: 51 tests and 6 subtests passed using the earlier project's Python 3.10.11 environment; ignore rules, empty API-key placeholders and staged secret check passed. Python 3.11 setup remains pending. Phase 1 has not started.
+Phase 0 complete (Hasan): baseline import `7132cfa` (`chore: initialize Dhara AI project`) and TASKS update `32afffc`, pushed to master of https://github.com/ekkerihasan/dhara (team repo; replaces `AbdulWasih05/dhara-tenancy` in 0.B). Validation: 51 tests and 6 subtests passed using the earlier project's Python 3.10.11 environment; ignore rules, empty API-key placeholders and staged secret check passed. Python 3.11 setup remains pending.
+
+Phase 1 not started: no `law/`, `backend/`, `env/` or `frontend/` yet. Next for H: 1.1, 1.2. Next for W: 1.3, 1.4.
