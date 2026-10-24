@@ -93,7 +93,7 @@ export function ReviewDocument({ id }: { id: string }) {
   const verifier = run.trace.filter((s): s is VerifierStep => s.type === "verifier");
   const approval = run.trace.find((s): s is ApprovalStep => s.type === "approval") ?? null;
   const toolCalls = run.trace.filter((s) => s.type === "tool_call").length;
-  const total = run.findings.reduce((sum, f) => sum + f.money_at_risk_inr, 0);
+  const biggest = run.findings.reduce<(typeof run.findings)[number] | null>((top, f) => (!top || f.money_at_risk_inr > top.money_at_risk_inr ? f : top), null);
   const blocked = verifier.filter((s) => s.verdict === "blocked").length;
   const cited = verifier.filter((s) => s.verdict === "cited").length;
 
@@ -168,8 +168,10 @@ export function ReviewDocument({ id }: { id: string }) {
             <AgentGlance trace={run.trace} />
             <div className="stats">
               <div className="stat is-danger">
-                <div className="stat-value">{inr(total)}</div>
-                <div className="stat-label">Money at risk across {run.findings.length} clauses</div>
+                <div className="stat-value">{biggest ? inr(biggest.money_at_risk_inr) : "None"}</div>
+                <div className="stat-label">
+                  Biggest single risk{biggest ? ` (${biggest.clause_ref})` : ""}, of {run.findings.length} unfair clauses priced
+                </div>
               </div>
               <div className="stat">
                 <div className="stat-value is-text">{appliesLabel(run.governing_law.rent_act_applies)}</div>
@@ -204,7 +206,7 @@ export function ReviewDocument({ id }: { id: string }) {
 
             <section className="section" id="findings">
               <h2>Unfair clauses</h2>
-              <p>Each clause is priced with a fixed formula, not by the model, so the same agreement always gives the same number.</p>
+              <p>Each clause is priced with a fixed formula, not by the model, so the same agreement always gives the same number. The amounts are per clause and can overlap, so they are not added into one total.</p>
               <Findings findings={run.findings} sections={run.sections} />
             </section>
 

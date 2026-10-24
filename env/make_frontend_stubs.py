@@ -254,7 +254,7 @@ def build_scores() -> dict[str, Any]:
                      "claims": run.get("claims", []), "forbidden_cited": sorted(set(cited) & forbidden)})
     return {
         "task": {"id": task["id"], "findings": len(task["expected"]["findings"]),
-                 "money_total_inr": sum(f["money_at_risk_inr"] for f in task["expected"]["findings"]),
+                 "money_max_inr": max(f["money_at_risk_inr"] for f in task["expected"]["findings"]),
                  "governing_law": task["expected"]["governing_law"], "forbidden_sections": sorted(forbidden)},
         "max_total": 3,
         "runs": runs,

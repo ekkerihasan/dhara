@@ -51,8 +51,8 @@ export default function ScoresPage() {
               <dd>{scores.task.findings}</dd>
             </div>
             <div>
-              <dt>Money at risk</dt>
-              <dd>{inr(scores.task.money_total_inr)}</dd>
+              <dt>Biggest single risk</dt>
+              <dd>{inr(scores.task.money_max_inr)}</dd>
             </div>
             <div>
               <dt>Forbidden sections</dt>

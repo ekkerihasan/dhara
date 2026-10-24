@@ -12,9 +12,8 @@ const CATEGORY: Record<Finding["category"], string> = {
   rent_escalation_excess: "Rent escalation",
 };
 
-/** Unfair clauses, worst first, each priced in rupees with the formula from CLAUDE.md. */
+/** Unfair clauses, worst first, each priced in rupees by compute_money. Amounts can overlap, so they are never added up. */
 export function Findings({ findings, sections }: { findings: Finding[]; sections: Record<string, Section> }) {
-  const total = findings.reduce((sum, f) => sum + f.money_at_risk_inr, 0);
   return (
     <ul className="rows">
       {findings.map((f) => (
@@ -39,8 +38,10 @@ export function Findings({ findings, sections }: { findings: Finding[]; sections
         </li>
       ))}
       <li className="row-total">
-        <span>Total money at risk</span>
-        <span className="row-money">{inr(total)}</span>
+        <span className="dim" style={{ fontWeight: 400, fontSize: 13.5 }}>
+          Each amount is that clause&apos;s own exposure. They can overlap (a forfeited deposit can&apos;t also pay for painting), so they are not
+          added up.
+        </span>
       </li>
     </ul>
   );

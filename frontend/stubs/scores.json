@@ -2,7 +2,7 @@
   "task": {
     "id": "blr_flat",
     "findings": 5,
-    "money_total_inr": 355000,
+    "money_max_inr": 150000,
     "governing_law": "TPA_CONTRACT",
     "forbidden_sections": [
       "MTA-11(1)",
