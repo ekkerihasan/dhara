@@ -34,6 +34,38 @@ class RunRequest(BaseModel):
     language: Language = "en"
 
 
+class ChecklistEntry(BaseModel):
+    """One dated move-in checklist entry."""
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    date: str
+    item: str
+    condition: str
+    evidence: str = ""
+
+
+class ClaimedDeduction(BaseModel):
+    """One deduction the landlord claims from the deposit."""
+    model_config = ConfigDict(extra="forbid")
+
+    clause_ref: str
+    category: str
+    label: str
+    amount_inr: int = Field(ge=0)
+    evidence_ids: list[str] = Field(default_factory=list)
+
+
+class MoveoutRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    agreement_text: str
+    checklist: list[ChecklistEntry] = Field(default_factory=list)
+    deductions: list[ClaimedDeduction] = Field(min_length=1)
+    facts: PropertyFacts = Field(default_factory=PropertyFacts)
+    language: Language = "en"
+
+
 class AnswerRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

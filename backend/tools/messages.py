@@ -1,4 +1,8 @@
-"""Deterministic EN/KN requests built on the prototype templates."""
+"""Deterministic EN/KN letters: one fixed, reviewed sentence per clause type, plus the prototype templates.
+
+The model's own wording is never put in a letter or called translated; each finding contributes
+its clause reference and a sentence chosen by its category.
+"""
 from __future__ import annotations
 
 from datetime import date, timedelta
@@ -18,12 +22,80 @@ HEADERS = {
 }
 
 
+# What to ask for, by finding category. "request" is used before signing; "challenge" and "notice" at move-out.
+ASKS: dict[str, dict[str, dict[str, str]]] = {
+    "deposit_forfeiture": {
+        "request": {"en": "please replace forfeiture of the whole deposit with deduction of actual, itemised loss (Indian Contract Act, 1872, s.74).",
+                    "kn": "ಸಂಪೂರ್ಣ ಠೇವಣಿ ಮುಟ್ಟುಗೋಲಿನ ಬದಲು, ನಿಜವಾದ ಮತ್ತು ವಿವರವಾದ ನಷ್ಟವನ್ನು ಮಾತ್ರ ಕಡಿತಗೊಳಿಸಿ (ಭಾರತೀಯ ಒಪ್ಪಂದ ಕಾಯ್ದೆ, 1872, ಸೆಕ್ಷನ್ 74)."},
+        "challenge": {"en": "please refund this deduction or show the actual, itemised loss it covers (Indian Contract Act, 1872, s.74).",
+                      "kn": "ಈ ಕಡಿತವನ್ನು ಹಿಂತಿರುಗಿಸಿ, ಅಥವಾ ಇದು ಒಳಗೊಳ್ಳುವ ನಿಜವಾದ ಮತ್ತು ವಿವರವಾದ ನಷ್ಟವನ್ನು ತೋರಿಸಿ (ಭಾರತೀಯ ಒಪ್ಪಂದ ಕಾಯ್ದೆ, 1872, ಸೆಕ್ಷನ್ 74)."},
+    },
+    "lock_in": {
+        "request": {"en": "please cap the early-exit payment at one month's rent, or waive it if I find a replacement tenant.",
+                    "kn": "ಬೇಗ ಖಾಲಿ ಮಾಡಿದರೆ ಪಾವತಿಯನ್ನು ಒಂದು ತಿಂಗಳ ಬಾಡಿಗೆಗೆ ಮಿತಿಗೊಳಿಸಿ, ಅಥವಾ ನಾನು ಬದಲಿ ಬಾಡಿಗೆದಾರರನ್ನು ಹುಡುಕಿದರೆ ಮನ್ನಾ ಮಾಡಿ."},
+        "challenge": {"en": "please refund this charge or show the actual loss from my early exit (Indian Contract Act, 1872, s.74).",
+                      "kn": "ಈ ಶುಲ್ಕವನ್ನು ಹಿಂತಿರುಗಿಸಿ, ಅಥವಾ ನಾನು ಬೇಗ ಖಾಲಿ ಮಾಡಿದ್ದರಿಂದ ಆದ ನಿಜವಾದ ನಷ್ಟವನ್ನು ತೋರಿಸಿ (ಭಾರತೀಯ ಒಪ್ಪಂದ ಕಾಯ್ದೆ, 1872, ಸೆಕ್ಷನ್ 74)."},
+    },
+    "painting_or_cleaning_fixed": {
+        "request": {"en": "please charge painting or cleaning only for damage beyond reasonable wear and tear, judged against the dated move-in checklist (Transfer of Property Act, 1882, s.108(m)).",
+                    "kn": "ಸಮಂಜಸ ಸವಕಳಿಗಿಂತ ಹೆಚ್ಚಿನ ಹಾನಿಗೆ ಮಾತ್ರ, ದಿನಾಂಕದ ಪ್ರವೇಶ ಪಟ್ಟಿಯ ಆಧಾರದ ಮೇಲೆ, ಬಣ್ಣ ಅಥವಾ ಸ್ವಚ್ಛತೆಯ ವೆಚ್ಚ ವಿಧಿಸಿ (ಆಸ್ತಿ ವರ್ಗಾವಣೆ ಕಾಯ್ದೆ, 1882, ಸೆಕ್ಷನ್ 108(m))."},
+        "challenge": {"en": "please refund this deduction or share dated evidence of damage beyond reasonable wear and tear (Transfer of Property Act, 1882, s.108(m)).",
+                      "kn": "ಈ ಕಡಿತವನ್ನು ಹಿಂತಿರುಗಿಸಿ, ಅಥವಾ ಸಮಂಜಸ ಸವಕಳಿಗಿಂತ ಹೆಚ್ಚಿನ ಹಾನಿಯ ದಿನಾಂಕಸಹಿತ ಪುರಾವೆಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ (ಆಸ್ತಿ ವರ್ಗಾವಣೆ ಕಾಯ್ದೆ, 1882, ಸೆಕ್ಷನ್ 108(m))."},
+    },
+    "notice_shortfall": {
+        "request": {"en": "please agree that notice already given counts, or set the notice period to one month.",
+                    "kn": "ಈಗಾಗಲೇ ನೀಡಿದ ಸೂಚನೆಯನ್ನು ಪರಿಗಣಿಸಿ, ಅಥವಾ ಸೂಚನಾ ಅವಧಿಯನ್ನು ಒಂದು ತಿಂಗಳಿಗೆ ನಿಗದಿಪಡಿಸಿ."},
+        "challenge": {"en": "please refund this charge for the notice period, or explain how it follows from the agreement.",
+                      "kn": "ಸೂಚನಾ ಅವಧಿಗಾಗಿ ವಿಧಿಸಿದ ಈ ಶುಲ್ಕವನ್ನು ಹಿಂತಿರುಗಿಸಿ, ಅಥವಾ ಇದು ಒಪ್ಪಂದದಿಂದ ಹೇಗೆ ಬರುತ್ತದೆ ಎಂದು ವಿವರಿಸಿ."},
+    },
+    "rent_escalation_excess": {
+        "request": {"en": "please revise the yearly rent increase to 10%.",
+                    "kn": "ವಾರ್ಷಿಕ ಬಾಡಿಗೆ ಹೆಚ್ಚಳವನ್ನು 10% ಕ್ಕೆ ಇಳಿಸಿ."},
+        "challenge": {"en": "please apply the yearly rent increase only as the agreement states.",
+                      "kn": "ವಾರ್ಷಿಕ ಬಾಡಿಗೆ ಹೆಚ್ಚಳವನ್ನು ಒಪ್ಪಂದದಲ್ಲಿ ಹೇಳಿರುವಂತೆ ಮಾತ್ರ ಅನ್ವಯಿಸಿ."},
+    },
+    "wear_and_tear": {
+        "request": {"en": "please confirm that reasonable wear and tear will not be deducted (Transfer of Property Act, 1882, s.108(m)).",
+                    "kn": "ಸಮಂಜಸ ಸವಕಳಿಗೆ ಕಡಿತ ಮಾಡುವುದಿಲ್ಲ ಎಂದು ದೃಢೀಕರಿಸಿ (ಆಸ್ತಿ ವರ್ಗಾವಣೆ ಕಾಯ್ದೆ, 1882, ಸೆಕ್ಷನ್ 108(m))."},
+        "challenge": {"en": "please refund this deduction: reasonable wear and tear is excepted from the tenant's restoration duty (Transfer of Property Act, 1882, s.108(m)).",
+                      "kn": "ಈ ಕಡಿತವನ್ನು ಹಿಂತಿರುಗಿಸಿ: ಸಮಂಜಸ ಸವಕಳಿಗೆ ಬಾಡಿಗೆದಾರರು ಹೊಣೆಯಲ್ಲ (ಆಸ್ತಿ ವರ್ಗಾವಣೆ ಕಾಯ್ದೆ, 1882, ಸೆಕ್ಷನ್ 108(m))."},
+    },
+}
+OPENINGS = {
+    "request": {"en": "Hello, before I sign the agreement, I request the following changes:",
+                "kn": "ನಮಸ್ಕಾರ, ಒಪ್ಪಂದಕ್ಕೆ ಸಹಿ ಮಾಡುವ ಮೊದಲು ಈ ಬದಲಾವಣೆಗಳನ್ನು ಕೋರುತ್ತೇನೆ:"},
+    "challenge": {"en": "Regarding the deductions from my security deposit:", "kn": "ನನ್ನ ಭದ್ರತಾ ಠೇವಣಿಯಿಂದ ಮಾಡಿದ ಕಡಿತಗಳ ಬಗ್ಗೆ:"},
+}
+CLOSINGS = {
+    "request": {"en": "I am happy to sign once these changes are made. These are requests for discussion, subject to agreement and applicable law.",
+                "kn": "ಈ ಬದಲಾವಣೆಗಳನ್ನು ಸೇರಿಸಿದ ನಂತರ ಒಪ್ಪಂದಕ್ಕೆ ಸಹಿ ಮಾಡುತ್ತೇನೆ. ಇವು ಚರ್ಚೆಗಾಗಿ ಇರುವ ವಿನಂತಿಗಳು, ಒಪ್ಪಂದ ಮತ್ತು ಅನ್ವಯವಾಗುವ ಕಾನೂನಿಗೆ ಒಳಪಟ್ಟಿವೆ."},
+    "challenge": {"en": "Please reply in writing. I am happy to discuss any item with evidence.",
+                  "kn": "ದಯವಿಟ್ಟು ಲಿಖಿತವಾಗಿ ಉತ್ತರಿಸಿ. ಪುರಾವೆಗಳೊಂದಿಗೆ ಯಾವುದೇ ಅಂಶವನ್ನು ಚರ್ಚಿಸಬಹುದು."},
+}
+ASKS_NOTE = ("Fixed, reviewed sentences per clause type in English and Kannada; the model's own wording is not translated. "
+             "Native-language review is recommended.")
+
+
+def _ask_letter(findings: list[dict[str, Any]], tone: str, language: str) -> str:
+    """One line per finding, worded by its category; the clause reference comes from the finding."""
+    stage = "request" if tone == "request" else "challenge"
+    lines = [f"- {f.get('clause_ref', f.get('clause_id', '?'))}: {ASKS[f['category']][stage][language]}" for f in findings]
+    parts = [OPENINGS[stage][language], *lines, CLOSINGS[stage][language]]
+    if tone == "notice":  # the firmer follow-up opens with its reminder line
+        parts.insert(0, HEADERS[tone][language])
+    return "\n".join(parts)
+
+
 def draft_message(findings: list[dict[str, Any]], tone: str = "request", language: str = "en") -> dict[str, str]:
     """Use prototype templates; arbitrary source prose is never called translated."""
     if tone not in {"request", "challenge", "notice"} or language not in {"en", "kn"}:
         raise ValueError("Choose request/challenge/notice and en/kn")
     if not isinstance(findings, list) or not all(isinstance(item, dict) for item in findings):
         raise ValueError("findings must be a list of objects")
+    # Agent findings carry a known category: use the clause-specific sentences.
+    if findings and all(finding.get("category") in ASKS for finding in findings):
+        LOGGER.info("draft_message tone=%s language=%s findings=%s", tone, language, len(findings))
+        return {"text": _ask_letter(findings, tone, language), "language": language, "tone": tone, "translation_note": ASKS_NOTE}
     # Pass only structured fields to templates; no model prose is sent as if it
     # had been translated. Keep numerical preference requests where supported.
     safe = [{key: finding[key] for key in ("clause_id", "category", "rule", "limit", "direction") if key in finding}
