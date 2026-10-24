@@ -11,6 +11,10 @@ export const USE_STUBS = process.env.NEXT_PUBLIC_USE_STUBS !== "false";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 const STUB_RUN_ID = "blr_flat";
+const STUB_MOVEOUT_ID = "moveout";
+
+/** The sample runs (top-bar links) always come from the stubs, even when the live API is on. */
+const isSample = (id: string) => USE_STUBS || id === STUB_RUN_ID || id === STUB_MOVEOUT_ID;
 const FOLLOW_UP_DAYS = 7;
 
 // ---------- live API (BUILD.md Phase 5 endpoints) ----------
@@ -160,7 +164,7 @@ export async function createRun(input: RunInput): Promise<string> {
 }
 
 export async function getRun(id: string): Promise<Run> {
-  if (USE_STUBS) {
+  if (isSample(id)) {
     await delay(250);
     return stubRun(id);
   }
@@ -169,7 +173,7 @@ export async function getRun(id: string): Promise<Run> {
 }
 
 export async function answerQuestion(id: string, field: keyof Facts, value: string): Promise<void> {
-  if (USE_STUBS) {
+  if (isSample(id)) {
     await delay(600);
     const state = readState(id);
     const entered = state.entered ? { ...state.entered, [field]: Number(value) || null } : null;
@@ -182,7 +186,7 @@ export async function answerQuestion(id: string, field: keyof Facts, value: stri
 }
 
 export async function approveDraft(id: string, draftId: string): Promise<void> {
-  if (USE_STUBS) {
+  if (isSample(id)) {
     await delay(400);
     writeState(id, { ...readState(id), approvedAt: new Date().toISOString() });
     return;
@@ -203,15 +207,15 @@ export async function createMoveout(input: MoveoutInput): Promise<string> {
 }
 
 export async function getMoveout(id: string): Promise<MoveoutRun> {
-  if (USE_STUBS) {
+  if (isSample(id)) {
     await delay(250);
-    if (id !== "moveout") throw new Error(`No stubbed move-out "${id}". Try /moveout/moveout.`);
+    if (id !== STUB_MOVEOUT_ID) throw new Error(`No stubbed move-out "${id}". Try /moveout/moveout.`);
     return structuredClone(moveout) as unknown as MoveoutRun;
   }
   return fromBackendMoveout(await request<BackendMoveout>(`/api/moveout/${encodeURIComponent(id)}`), loadFacts(id));
 }
 
 export async function approveMoveout(id: string): Promise<void> {
-  if (USE_STUBS) return;
+  if (isSample(id)) return;
   await postJson(`/api/moveout/${encodeURIComponent(id)}/approve`, { approved: true });
 }
