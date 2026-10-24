@@ -66,3 +66,16 @@ def test_errors(client) -> None:
 def test_cors_allows_the_frontend(client) -> None:
     response = client.options("/api/runs", headers={"Origin": "http://localhost:3000", "Access-Control-Request-Method": "POST"})
     assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+
+
+def test_unknown_answer_lets_the_run_continue_unresolved(client) -> None:
+    facts = {"rent_per_month": 8000, "local_body": "municipal_corporation", "premises_use": "residential"}
+    run_id = client.post("/api/runs", json={"agreement_text": TASK["agreement_text"], "facts": facts}).json()["id"]
+    assert client.get(f"/api/runs/{run_id}").json()["status"] == "needs_input"
+
+    client.post(f"/api/runs/{run_id}/answer", json={"facts": {"built_year": None}})
+    run = client.get(f"/api/runs/{run_id}").json()
+    assert run["status"] == "ready"
+    checks = [s["data"] for s in run["trace"] if s["data"].get("tool") == "check_jurisdiction" and "output" in s["data"]]
+    jurisdiction = checks[-1]["output"]
+    assert jurisdiction["applies"] is None

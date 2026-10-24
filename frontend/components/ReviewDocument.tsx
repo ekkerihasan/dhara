@@ -4,7 +4,7 @@ import { Info, Scale, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { answerQuestion, approveDraft, getRun } from "@/lib/api";
-import { inr, date, LOCAL_BODY_LABEL, STATUS_LABEL } from "@/lib/format";
+import { inr, LOCAL_BODY_LABEL, STATUS_LABEL } from "@/lib/format";
 import type { ApprovalStep, QuestionStep, Run, VerifierStep } from "@/lib/types";
 import { AgentGlance } from "./AgentGlance";
 import { CitationCheck } from "./CitationCheck";
@@ -93,7 +93,7 @@ export function ReviewDocument({ id }: { id: string }) {
   const verifier = run.trace.filter((s): s is VerifierStep => s.type === "verifier");
   const approval = run.trace.find((s): s is ApprovalStep => s.type === "approval") ?? null;
   const toolCalls = run.trace.filter((s) => s.type === "tool_call").length;
-  const total = run.findings.reduce((sum, f) => sum + f.money_at_risk_inr, 0);
+  const biggest = run.findings.reduce<(typeof run.findings)[number] | null>((top, f) => (!top || f.money_at_risk_inr > top.money_at_risk_inr ? f : top), null);
   const blocked = verifier.filter((s) => s.verdict === "blocked").length;
   const cited = verifier.filter((s) => s.verdict === "cited").length;
 
@@ -120,6 +120,18 @@ export function ReviewDocument({ id }: { id: string }) {
           What governs this rental, which clauses cost the tenant money, and the message the agent drafted to fix them, with every step it took.
         </p>
 
+        {run.sample_note && (
+          <div className="callout callout-warning">
+            <TriangleAlert size={16} aria-hidden />
+            <div>
+              <p>
+                <strong>Sample mode.</strong> This report was computed by our tools for the sample flat. {run.sample_note}
+              </p>
+              <p>The live agent, coming next, recomputes the report from your own answers.</p>
+            </div>
+          </div>
+        )}
+
         <dl className="meta">
           <div>
             <dt>Rent</dt>
@@ -139,13 +151,11 @@ export function ReviewDocument({ id }: { id: string }) {
           </div>
           <div>
             <dt>Tool calls</dt>
-            <dd>
-              {toolCalls} of {run.max_tool_calls}
-            </dd>
+            <dd>{toolCalls}</dd>
           </div>
           <div>
-            <dt>Started</dt>
-            <dd>{date(run.created_at)}</dd>
+            <dt>Model</dt>
+            <dd>{run.model}</dd>
           </div>
         </dl>
 
@@ -156,8 +166,10 @@ export function ReviewDocument({ id }: { id: string }) {
             <AgentGlance trace={run.trace} />
             <div className="stats">
               <div className="stat is-danger">
-                <div className="stat-value">{inr(total)}</div>
-                <div className="stat-label">Money at risk across {run.findings.length} clauses</div>
+                <div className="stat-value">{biggest ? inr(biggest.money_at_risk_inr) : "None"}</div>
+                <div className="stat-label">
+                  Biggest single risk{biggest ? ` (${biggest.clause_ref})` : ""}, of {run.findings.length} unfair clauses priced
+                </div>
               </div>
               <div className="stat">
                 <div className="stat-value is-text">{appliesLabel(run.governing_law.rent_act_applies)}</div>
@@ -192,7 +204,7 @@ export function ReviewDocument({ id }: { id: string }) {
 
             <section className="section" id="findings">
               <h2>Unfair clauses</h2>
-              <p>Each clause is priced with a fixed formula, not by the model, so the same agreement always gives the same number.</p>
+              <p>Each clause is priced with a fixed formula, not by the model, so the same agreement always gives the same number. The amounts are per clause and can overlap, so they are not added into one total.</p>
               <Findings findings={run.findings} sections={run.sections} />
             </section>
 
@@ -227,7 +239,11 @@ export function ReviewDocument({ id }: { id: string }) {
           {paused && (
             <div className="callout">
               <Info size={16} aria-hidden />
-              <p>The agent paused after reading the agreement. It will not guess a fact that decides which law applies.</p>
+              <p>
+                {run.status === "running"
+                  ? "The agent is working. The steps below fill in as it goes; a review takes up to a minute."
+                  : "The agent paused after reading the agreement. It will not guess a fact that decides which law applies."}
+              </p>
             </div>
           )}
           <Trace trace={run.trace} sections={run.sections} />

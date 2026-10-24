@@ -109,6 +109,7 @@ class AgentState:
     seen_calls: set[str] = field(default_factory=set)
     tool_results: dict[str, Any] = field(default_factory=dict)
     rent_act_applies: bool | None = None
+    unknown_facts: set[str] = field(default_factory=set)  # the tenant answered "I don't know"
 
     def add_trace(self, trace_type: str, label: str, **data: Any) -> None:
         self.trace.append(TraceStep(type=trace_type, label=label, data=data))
@@ -263,7 +264,7 @@ def _ask_for_missing(state: AgentState, jurisdiction: dict[str, Any]) -> bool:
     """Pause only for facts a tenant can answer; other gaps stay visible as unresolved reasons."""
     if jurisdiction.get("applies") is not None:
         return False
-    missing = [key for key in ASKABLE_FACTS if state.facts.get(key) is None]
+    missing = [key for key in ASKABLE_FACTS if state.facts.get(key) is None and key not in state.unknown_facts]
     if not missing:
         return False
     labels = ", ".join(missing)
