@@ -58,7 +58,19 @@ def test_renovation_age_and_year_boundary() -> None:
     assert screen(substantial_renovation_year=2020)["applies"] is False
     result = screen(built_year=2011)
     assert result["applies"] is None
-    assert "completion_date" in result["missing"]
+    assert "completion_month" in result["missing"]
+
+
+def test_completion_month_settles_the_fifteen_year_boundary() -> None:
+    # TODAY is 24 Oct 2026, so a 2011 building turns 15 this year.
+    under = screen(built_year=2011, completion_month=11)
+    assert under["applies"] is False
+    assert any(r["section_id"] == "KRA-2(3)(f)" and r["status"] == "excluded" for r in under["reasons"])
+    over = screen(built_year=2011, completion_month=3)
+    assert "completion_month" not in over["missing"]
+    assert not any(r["section_id"] == "KRA-2(3)(f)" for r in over["reasons"])
+    same = screen(built_year=2011, completion_month=10)
+    assert same["applies"] is None and "completion_date" in same["missing"]
 
 
 @pytest.mark.parametrize("overrides", [
@@ -66,6 +78,7 @@ def test_renovation_age_and_year_boundary() -> None:
     {"built_year": True}, {"built_year": 2027},
     {"substantial_renovation_year": 1980}, {"other_exemptions_checked": "yes"},
     {"tenancy_date": "tomorrow"}, {"local_body": []},
+    {"completion_month": 13}, {"completion_month": True},
 ])
 def test_invalid_inputs(overrides: dict) -> None:
     with pytest.raises(ValueError):

@@ -42,6 +42,7 @@ def check_jurisdiction(
     premises_use: str | None,
     substantial_renovation_year: int | None = None,
     *,
+    completion_month: int | None = None,
     standard_rent_monthly: float | None = None,
     ownership_type: str | None = None,
     other_exemptions_checked: bool | None = None,
@@ -50,7 +51,9 @@ def check_jurisdiction(
 ) -> dict[str, Any]:
     """Wrap the prototype screen and collect all known exclusions.
 
-Year-only dates are deliberately unresolved in the fifteenth anniversary year.
+In the fifteenth anniversary year a year alone is not enough: completion_month
+(of the later of construction and renovation) settles it, except in that same
+month, where only the exact date would.
 The two supported local-body values encode confirmed First Schedule areas.
 Other areas and non-residential/PG premises require separate factual review.
 """
@@ -69,6 +72,9 @@ Other areas and non-residential/PG premises require separate factual review.
             raise ValueError("tenancy_date must use YYYY-MM-DD") from exc
         if started > today:
             raise ValueError("tenancy_date cannot be in the future")
+    if completion_month is not None and (isinstance(completion_month, bool) or not isinstance(completion_month, int)
+                                         or not 1 <= completion_month <= 12):
+        raise ValueError("completion_month must be 1 to 12")
     if other_exemptions_checked is not None and not isinstance(other_exemptions_checked, bool):
         raise ValueError("other_exemptions_checked must be true or false")
     for name, value in (("local_body", local_body), ("premises_use", premises_use), ("ownership_type", ownership_type)):
@@ -98,16 +104,23 @@ Other areas and non-residential/PG premises require separate factual review.
     age = today.year - latest_year if latest_year else None
     if built_year is None:
         missing.append("built_year")
-    if age == 15:
+    boundary = age == 15
+    if boundary and completion_month is None:
+        missing.append("completion_month")
+        reason("KRA-2(3)(f)", "needs_input", "The building turns 15 this year; the completion month decides whether the exemption still runs.")
+    elif boundary and completion_month == today.month:
         missing.append("completion_date")
-        reason("KRA-2(3)(f)", "needs_input", "Confirm the exact completion date at the fifteen-year boundary.")
+        reason("KRA-2(3)(f)", "needs_input", "The building turns 15 this month; confirm the exact completion date.")
+    elif boundary:
+        age = 14 if today.month < completion_month else 15
+        boundary = False
 
     facts = {
         "city": "Confirmed scheduled area" if area else "",
         "schedule_area": area or "unknown",
         "monthly_rent": rent_per_month,
         "standard_rent_monthly": standard_rent_monthly,
-        "building_age_years": None if age == 15 else age,
+        "building_age_years": None if boundary else age,
         "residential": premises_use == "residential",
         "ownership_type": ownership_type or "unknown",
         "other_exemptions_checked": other_exemptions_checked,

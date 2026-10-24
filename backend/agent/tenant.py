@@ -26,7 +26,7 @@ LOGGER = logging.getLogger(__name__)
 MAX_TOOL_CALLS = 12
 MAX_MODEL_TURNS = 8
 # Facts a tenant can actually answer; the agent pauses only for these.
-ASKABLE_FACTS = ("rent_per_month", "built_year", "local_body", "premises_use")
+ASKABLE_FACTS = ("rent_per_month", "built_year", "local_body", "premises_use", "completion_month")
 FINDING_CATEGORIES = ("deposit_forfeiture", "lock_in", "painting_or_cleaning_fixed", "notice_shortfall", "rent_escalation_excess")
 NOT_A_LAWYER_NOTICE = "Dhara AI is not a lawyer. Verify important decisions with a qualified professional."
 
@@ -264,7 +264,9 @@ def _ask_for_missing(state: AgentState, jurisdiction: dict[str, Any]) -> bool:
     """Pause only for facts a tenant can answer; other gaps stay visible as unresolved reasons."""
     if jurisdiction.get("applies") is not None:
         return False
-    missing = [key for key in ASKABLE_FACTS if state.facts.get(key) is None and key not in state.unknown_facts]
+    needed = set(jurisdiction.get("missing") or [])
+    missing = [key for key in ASKABLE_FACTS
+               if key in needed and state.facts.get(key) is None and key not in state.unknown_facts]
     if not missing:
         return False
     labels = ", ".join(missing)

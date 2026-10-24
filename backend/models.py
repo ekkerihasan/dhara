@@ -19,6 +19,7 @@ class PropertyFacts(BaseModel):
     local_body: str | None = None
     premises_use: str | None = None
     substantial_renovation_year: int | None = Field(default=None, ge=1)
+    completion_month: int | None = Field(default=None, ge=1, le=12)  # asked only when the building turns 15 this year
     standard_rent_monthly: float | None = Field(default=None, ge=0)
     ownership_type: str | None = None
     other_exemptions_checked: bool | None = None

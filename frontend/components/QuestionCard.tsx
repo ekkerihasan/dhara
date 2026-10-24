@@ -4,12 +4,15 @@ import { CircleHelp } from "lucide-react";
 import { useState } from "react";
 import type { QuestionStep } from "@/lib/types";
 
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
 /** Shown when a run is paused with status needs_input: the agent will not guess a jurisdiction input. */
 export function QuestionCard({ step, onAnswer }: { step: QuestionStep; onAnswer: (value: string) => Promise<void> }) {
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const numeric = step.field === "built_year" || step.field === "substantial_renovation_year";
+  const month = step.field === "completion_month";
 
   /** An empty value means "I don't know": the agent continues with the law marked unresolved. */
   const send = async (answer: string) => {
@@ -45,16 +48,27 @@ export function QuestionCard({ step, onAnswer }: { step: QuestionStep; onAnswer:
         <label className="sr-only" htmlFor="answer">
           {step.question}
         </label>
-        <input
-          id="answer"
-          type={numeric ? "number" : "text"}
-          inputMode={numeric ? "numeric" : undefined}
-          placeholder={numeric ? "e.g. 2019" : ""}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          required
-          autoFocus
-        />
+        {month ? (
+          <select id="answer" value={value} onChange={(e) => setValue(e.target.value)} required autoFocus>
+            <option value="">Choose a month</option>
+            {MONTHS.map((m, i) => (
+              <option key={m} value={i + 1}>
+                {m}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            id="answer"
+            type={numeric ? "number" : "text"}
+            inputMode={numeric ? "numeric" : undefined}
+            placeholder={numeric ? "e.g. 2019" : ""}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            required
+            autoFocus
+          />
+        )}
         <button className="btn primary" type="submit" disabled={busy || !value}>
           {busy ? "Resuming…" : "Answer and continue"}
         </button>

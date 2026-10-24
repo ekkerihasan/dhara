@@ -367,7 +367,7 @@ select:focus, textarea:focus, input:focus { outline: none; border-color: var(--i
 .question-card h2 { font: 600 19px/1.4 var(--sans); letter-spacing: -0.015em; margin: 0 0 var(--space-2); }
 .question-card p { margin: 0 0 var(--space-4); color: var(--ink-2); font-size: 14.5px; max-width: var(--measure); }
 .question-card form { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
-.question-card input { max-width: 200px; }
+.question-card input, .question-card select { max-width: 200px; }
 
 /* steps box-list */
 .box-list { list-style: none; padding: 0; margin: var(--space-5) 0; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--paper); }

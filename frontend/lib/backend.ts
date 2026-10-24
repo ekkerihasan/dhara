@@ -80,6 +80,10 @@ const QUESTION: Partial<Record<keyof Facts, { question: string; why: string }>> 
   rent_per_month: { question: "What is the monthly rent?", why: "Section 2(3)(e) of the Karnataka Rent Act depends on the rent." },
   local_body: { question: "Which local body is the flat in?", why: "The Karnataka Rent Act applies only in the areas listed in its First Schedule." },
   premises_use: { question: "Is the flat used as a home?", why: "Section 2(3)(g) excludes most non-residential premises." },
+  completion_month: {
+    question: "In which month was the building completed (or last substantially renovated)?",
+    why: "It turns 15 this year. Section 2(3)(f) exempts a building for 15 years after construction, so the month decides which law governs.",
+  },
 };
 
 const TOOL_NAMES = ["read_agreement", "check_jurisdiction", "lookup_section", "compute_money", "record_finding", "draft_message", "finish"];

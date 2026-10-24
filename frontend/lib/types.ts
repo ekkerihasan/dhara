@@ -9,6 +9,7 @@ export interface Facts {
   deposit_inr: number | null;
   built_year: number | null;
   substantial_renovation_year: number | null;
+  completion_month?: number | null; // asked only when the building turns 15 this year
   local_body: LocalBody | null;
   premises_use: PremisesUse;
   language: Language;
