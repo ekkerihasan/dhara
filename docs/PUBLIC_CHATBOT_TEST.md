@@ -1,10 +1,12 @@
-# Public chatbot test — exact prompts
+# Ten-question side test — revised self-evaluation scope
 
-Status: **test harness implemented; no public-chatbot responses collected yet**. This is separate from the Groq baseline-versus-agent evaluation. [Codex reference answers](CODEX_REFERENCE_ANSWERS.md) are available, explicitly excluded from the public comparison.
+Task 8.3 is **complete under the user's revised scope**: Codex generated and reviewed all ten answers using the project's law pack and answer key. Read the [completed self-evaluation table and answers](../env/results/codex_self_eval_report.md), backed by [machine-readable answers](../env/results/codex_self_eval_answers.json). Reproduce the report with `python -m env.self_eval`.
 
-Access checked on 25 October 2026: this coding session has no browser interaction tool, authenticated ChatGPT/Gemini connector, or browser debugging endpoint. A read-only page fetch reaches ChatGPT's landing page and Gemini's sign-in page; it cannot submit prompts or collect model replies. Task 8.3 therefore requires a public-product session before it can be completed. API model output must not be relabelled as a ChatGPT or Gemini public-product observation.
+This is an open-book self-review by the same assistant, not a blind benchmark or independent legal review. No ChatGPT/Gemini responses, accuracy percentage, or product comparison is claimed. This exercise is separate from the live Groq baseline-versus-agent evaluation. The [earlier short reference answers](CODEX_REFERENCE_ANSWERS.md) remain historical material.
 
-## Run protocol
+The original public-product capture protocol is retained below as an optional future experiment. It is no longer required to finish task 8.3. Its [public report](../env/results/public_chatbot_report.md) correctly remains not run; self-authored answers are never relabelled as public observations.
+
+## Optional public-product run protocol
 
 Use the same questions in ChatGPT and Gemini, preferably in a fresh conversation for each. Do not supply the answer key, Dhara's law pack or previous chatbot answers. Keep settings the same across questions and record whether browsing is enabled. One batch per product is acceptable only if recorded as a batch, not ten independent conversations.
 
@@ -106,4 +108,4 @@ Repeat for Q01–Q10 in each product. For a batch, save each question's verbatim
 | Q09: Essential services | Not run | Not run |
 | Q10: Deposit recovery route and deadline | Not run | Not run |
 
-No accuracy percentages or comparative claims can be reported until real answers are captured and reviewed. Task 8.3 remains incomplete while access is unavailable.
+No public-product accuracy percentages or comparative claims can be reported until real answers are captured and reviewed. This optional public comparison is separate from the completed self-authored task 8.3 exercise.

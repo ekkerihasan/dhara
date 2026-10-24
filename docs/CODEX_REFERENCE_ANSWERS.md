@@ -1,5 +1,7 @@
 # Codex reference answers
 
+Historical short answers from 24 October. The completed revised task 8.3 exercise has [expanded answers and a self-review table](../env/results/codex_self_eval_report.md), generated on 25 October at the user's request.
+
 These ten answers were authored in this Codex session on 24 October 2026 **after access to Dhara's law pack, answer key and preceding conversation**. They are reference material, not blind observations from the public ChatGPT product, not Gemini responses, and not eligible for public-comparison scores. No correctness percentage is assigned. This is not legal advice for an actual tenancy.
 
 Question wording and review criteria: [public chatbot test](PUBLIC_CHATBOT_TEST.md). Source links support review; a listed citation alone does not establish claim entailment.

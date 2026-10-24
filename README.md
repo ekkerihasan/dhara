@@ -87,17 +87,30 @@ On 25 October, a coverage check was added for explicitly priced clauses omitted 
 
 ![Evaluation page](docs/screenshots/evaluation.jpg)
 
-### Ten-question public chatbot side test
+### Ten-question Codex self-evaluation
 
-The [test protocol and ten questions](docs/PUBLIC_CHATBOT_TEST.md) cover model-law confusion, jurisdiction, deposit forfeiture, wear and tear, registration and recovery routes. A capture-and-report tool records each answer's model, timestamp, evidence and source-backed review.
+The [ten-question exercise](docs/PUBLIC_CHATBOT_TEST.md) covers model-law confusion, jurisdiction, deposit forfeiture, wear and tear, registration and recovery routes. At the user's request, task 8.3 uses Codex-generated answers rather than requiring ChatGPT/Gemini public-product responses.
 
-| Response source | Current status |
+| Artifact | Status |
 | --- | --- |
-| [Codex reference answers](docs/CODEX_REFERENCE_ANSWERS.md) | Ten self-authored answers with access to the project context; excluded from public-test scores |
-| ChatGPT public product | No answers captured |
-| Gemini public product | No answers captured |
+| [Self-evaluation report](env/results/codex_self_eval_report.md) | Ten answers, self-review table, source links and limitations |
+| [Machine-readable answers](env/results/codex_self_eval_answers.json) | Author, date, context access and per-answer review recorded |
+| Optional public-product comparison | Not run; no ChatGPT/Gemini performance claims |
 
-The [generated comparison](env/results/public_chatbot_report.md) keeps missing responses as **Not run**. Task 8.3's public-product comparison remains incomplete; these reference answers are not an independent ChatGPT/Gemini benchmark.
+**Task 8.3 is complete under this revised scope.** The same assistant authored and reviewed the answers with the law pack and answer key in view. This is an open-book reference consistency exercise, not an independent benchmark or an accuracy estimate. Reproduce the report with `python -m env.self_eval`.
+
+| Question | Distinction checked in the self-review |
+| --- | --- |
+| Q01: Deposit cap | Model law versus binding Karnataka law |
+| Q02: Modern building | Construction exclusion versus statutory-rent evidence |
+| Q03: Municipal council | Part B's threshold versus Part A's threshold |
+| Q04: Missing facts | Unresolved jurisdiction rather than guessing |
+| Q05: Escalation | Product threshold versus statutory maximum |
+| Q06: Forfeiture | Reasonable compensation rather than automatic full recovery |
+| Q07: Paint and wear | Dated evidence, contract and section 108 qualifications |
+| Q08: Registration | Registration versus notarisation |
+| Q09: Essential services | Coverage and just-and-sufficient-cause qualifications |
+| Q10: Recovery | Civil recovery suggestions without invented forums or deadlines |
 
 ### Negotiation practice and agreement photos
 
@@ -189,7 +202,7 @@ python -m env.scorer env/tasks/blr_flat.json env/tasks/sample_run.json   # 3/3
 python -m env.run_eval                                               # plain model vs agent, needs GROQ_API_KEY
 ```
 
-Validation on 25 October: **223 tests and 6 subtests passed** in the Windows Python 3.10.11 environment, `pip check` found no broken dependencies, and the frontend production build and ESLint passed. The plan's Python 3.11 environment target has not been independently validated on this Windows checkout.
+Validation on 25 October: **239 tests and 6 subtests passed** in the Windows Python 3.10.11 environment, `pip check` found no broken dependencies, and the frontend production build and ESLint passed. The plan's Python 3.11 environment target has not been independently validated on this Windows checkout.
 
 ## Project Structure
 
@@ -244,7 +257,8 @@ It scales because law is data: bringing Dhara to another state means sourcing it
 - [x] **Move-out:** claimed deductions checked against the move-in checklist, the challenge drafted, next formal step; live screen at `/moveout`.
 - [x] Stretch: model-driven simulated landlord, three rounds, approval and verified replies (`/negotiate`).
 - [x] Stretch: opt-in Sarvam Vision photo OCR with text review (`/scan`); live provider status is documented in [PHOTO_OCR.md](docs/PHOTO_OCR.md).
-- [ ] Stretch: Hindi drafts and the public-chatbot test. The capture tool is ready; authentic public-product answers remain missing.
+- [x] Stretch: ten-question Codex self-evaluation, replacing the public-product comparison at the user's request.
+- [ ] Stretch: Hindi drafts.
 
 ## Before and after
 
