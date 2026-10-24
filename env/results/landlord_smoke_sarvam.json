@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-24T19:08:13.931615+00:00",
+  "provider": "sarvam",
+  "model": "sarvam-105b",
+  "task_id": "pg_room",
+  "synthetic": true,
+  "simulated": true,
+  "delivery_status": "not_sent",
+  "status": "failed",
+  "turns": [],
+  "error": "The simulated landlord could not produce a verified response. Retry or ask a human.",
+  "provider_calls": [
+    {
+      "error": "Model response was empty"
+    }
+  ],
+  "verifier_events": []
+}

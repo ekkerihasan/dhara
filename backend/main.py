@@ -19,6 +19,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.agent.moveout import MoveoutState, approve_moveout, start_moveout
 from backend.agent.baseline import start_baseline
+from backend.agent.landlord import (NegotiationMessage, NegotiationRequest, NegotiationResponse,
+    NegotiationState, advance_landlord, new_negotiation, prepare_message)
 from backend.agent.tenant import AgentState, approve_agent, start_agent
 from backend.llm.provider import chat
 from backend.models import AnswerRequest, ApprovalRequest, MoveoutRequest, RunRequest, RunResponse
@@ -147,3 +149,44 @@ def approve_moveout_review(review_id: str, request: ApprovalRequest) -> dict[str
         return approve_moveout(state)
     except ValueError as exc:
         raise HTTPException(409, str(exc)) from exc
+
+
+# ---------- Stretch: simulated landlord negotiation ----------
+NEGOTIATIONS: dict[str, NegotiationState] = {}
+
+
+def _negotiation(negotiation_id: str) -> NegotiationState:
+    state = NEGOTIATIONS.get(negotiation_id)
+    if state is None:
+        raise HTTPException(404, "No negotiation with this id")
+    return state
+
+
+@app.post("/api/negotiations", response_model=NegotiationResponse)
+def create_negotiation(request: NegotiationRequest, background: BackgroundTasks) -> NegotiationResponse:
+    try:
+        state = new_negotiation(str(uuid.uuid4()), request, provider_chat)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    NEGOTIATIONS[state.id] = state
+    background.add_task(advance_landlord, state)
+    return state.response()
+
+
+@app.get("/api/negotiations/{negotiation_id}", response_model=NegotiationResponse)
+def get_negotiation(negotiation_id: str) -> NegotiationResponse:
+    return _negotiation(negotiation_id).response()
+
+
+@app.post("/api/negotiations/{negotiation_id}/message", response_model=NegotiationResponse)
+def negotiation_message(negotiation_id: str, request: NegotiationMessage,
+                        background: BackgroundTasks) -> NegotiationResponse:
+    state = _negotiation(negotiation_id)
+    if not request.approved:
+        raise HTTPException(400, "Explicit approval is required for each tenant proposal")
+    try:
+        prepare_message(state, request)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    background.add_task(advance_landlord, state)
+    return state.response()
