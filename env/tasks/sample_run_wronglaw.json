@@ -1,0 +1,50 @@
+{
+  "governing_law": "TPA_CONTRACT",
+  "findings": [
+    {
+      "clause_ref": "C2",
+      "category": "deposit_forfeiture",
+      "money_at_risk_inr": 150000,
+      "section_ids": [
+        "ICA-74"
+      ]
+    },
+    {
+      "clause_ref": "C3",
+      "category": "lock_in",
+      "money_at_risk_inr": 150000,
+      "section_ids": [
+        "ICA-74"
+      ]
+    },
+    {
+      "clause_ref": "C4",
+      "category": "painting_or_cleaning_fixed",
+      "money_at_risk_inr": 15000,
+      "section_ids": [
+        "TPA-108(m)",
+        "ICA-74"
+      ]
+    },
+    {
+      "clause_ref": "C5",
+      "category": "rent_escalation_excess",
+      "money_at_risk_inr": 15000,
+      "section_ids": []
+    },
+    {
+      "clause_ref": "C6",
+      "category": "notice_shortfall",
+      "money_at_risk_inr": 25000,
+      "section_ids": [
+        "TPA-106"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "text": "The law caps residential deposits at two months.",
+      "section_id": "MTA-11(1)"
+    }
+  ]
+}

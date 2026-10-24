@@ -1,0 +1,91 @@
+{
+  "id": "moveout",
+  "agreement_text": "C1. Monthly rent is INR 25000 and refundable deposit is INR 150000.\nC2. Fixed cleaning charge INR 5000 on move-out.\nC3. Painting is deductible only for tenant-caused damage supported by dated evidence.\nC4. Reasonable wear and tear is excluded from damage deductions.",
+  "facts": {
+    "rent_per_month": 25000,
+    "built_year": 2019,
+    "local_body": "municipal_corporation",
+    "premises_use": "residential"
+  },
+  "language": "en",
+  "move_in_checklist": [
+    {
+      "id": "E1",
+      "date": "2026-01-01",
+      "item": "paint",
+      "condition": "Scuffs and faded paint already present",
+      "evidence": "Synthetic dated checklist; no uploaded image"
+    },
+    {
+      "id": "E2",
+      "date": "2026-01-01",
+      "item": "floor",
+      "condition": "Ordinary surface wear recorded",
+      "evidence": "Synthetic dated checklist; no uploaded image"
+    }
+  ],
+  "claimed_deductions": [
+    {
+      "clause_ref": "C3",
+      "category": "painting_or_cleaning_fixed",
+      "label": "painting",
+      "amount_inr": 15000,
+      "evidence_ids": [
+        "E1"
+      ],
+      "expected_verdict": "disputed"
+    },
+    {
+      "clause_ref": "C2",
+      "category": "painting_or_cleaning_fixed",
+      "label": "cleaning",
+      "amount_inr": 5000,
+      "evidence_ids": [],
+      "expected_verdict": "allowed"
+    },
+    {
+      "clause_ref": "C4",
+      "category": "wear_and_tear",
+      "label": "wear and tear",
+      "amount_inr": 8000,
+      "evidence_ids": [
+        "E2"
+      ],
+      "expected_verdict": "disputed"
+    }
+  ],
+  "expected": {
+    "governing_law": "TPA_CONTRACT",
+    "findings": [
+      {
+        "clause_ref": "C3",
+        "category": "painting_or_cleaning_fixed",
+        "money_at_risk_inr": 15000,
+        "expected_sections": [
+          "TPA-108(m)"
+        ]
+      },
+      {
+        "clause_ref": "C2",
+        "category": "painting_or_cleaning_fixed",
+        "money_at_risk_inr": 5000,
+        "expected_sections": [
+          "ICA-74"
+        ]
+      },
+      {
+        "clause_ref": "C4",
+        "category": "wear_and_tear",
+        "money_at_risk_inr": 8000,
+        "expected_sections": [
+          "TPA-108(m)"
+        ]
+      }
+    ],
+    "forbidden_sections": [
+      "MTA-11(1)",
+      "MTA-30"
+    ]
+  },
+  "synthetic": true
+}

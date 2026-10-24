@@ -6,10 +6,12 @@ import { useCallback, useEffect, useState } from "react";
 import { answerQuestion, approveDraft, getRun } from "@/lib/api";
 import { inr, date, LOCAL_BODY_LABEL, STATUS_LABEL } from "@/lib/format";
 import type { ApprovalStep, QuestionStep, Run, VerifierStep } from "@/lib/types";
+import { AgentGlance } from "./AgentGlance";
 import { CitationCheck } from "./CitationCheck";
 import { DocFooter } from "./DocFooter";
 import { DraftPanel } from "./DraftPanel";
 import { Findings } from "./Findings";
+import { appliesLabel, Jurisdiction } from "./Jurisdiction";
 import { QuestionCard } from "./QuestionCard";
 import { SectionChips } from "./SectionChip";
 import { Toc, type TocItem } from "./Toc";
@@ -151,13 +153,14 @@ export function ReviewDocument({ id }: { id: string }) {
 
         {!paused && run.governing_law && (
           <>
+            <AgentGlance trace={run.trace} />
             <div className="stats">
               <div className="stat is-danger">
                 <div className="stat-value">{inr(total)}</div>
                 <div className="stat-label">Money at risk across {run.findings.length} clauses</div>
               </div>
               <div className="stat">
-                <div className="stat-value is-text">{run.governing_law.rent_act_applies ? "Applies" : "Does not apply"}</div>
+                <div className="stat-value is-text">{appliesLabel(run.governing_law.rent_act_applies)}</div>
                 <div className="stat-label">Karnataka Rent Act, 1999</div>
               </div>
               <div className="stat is-safe">
@@ -172,7 +175,7 @@ export function ReviewDocument({ id }: { id: string }) {
 
             <section className="section" id="law">
               <h2>Governing law</h2>
-              <div className={`callout ${run.governing_law.rent_act_applies ? "callout-safe" : "callout-warning"}`}>
+              <div className={`callout ${run.governing_law.rent_act_applies === true ? "callout-safe" : "callout-warning"}`}>
                 <Scale size={16} aria-hidden />
                 <div>
                   <p>{run.governing_law.summary}</p>
@@ -181,6 +184,7 @@ export function ReviewDocument({ id }: { id: string }) {
                   </p>
                 </div>
               </div>
+              <Jurisdiction law={run.governing_law} sections={run.sections} />
               <p>
                 Read with: <SectionChips ids={run.governing_law.governs} sections={run.sections} />
               </p>

@@ -112,7 +112,7 @@ function StepBody({ step, sections }: { step: TraceStep; sections: Record<string
             <h3>Drafted a message for approval</h3>
             <span className="badge badge-blue">{step.tone}</span>
           </div>
-          <p>Draft {step.draft_id} uses only cited claims. Nothing is sent until the tenant approves it.</p>
+          <p>Draft {step.draft_id} waits for the tenant to approve it.</p>
         </>
       );
     case "approval":
@@ -120,9 +120,9 @@ function StepBody({ step, sections }: { step: TraceStep; sections: Record<string
         <>
           <div className="timeline-head">
             <h3>Tenant approved draft {step.draft_id}</h3>
-            <span className="badge badge-green">Sent</span>
+            <span className="badge badge-green">Approved</span>
           </div>
-          <p>{step.follow_up_date ? `Follow-up scheduled for ${step.follow_up_date}.` : "No follow-up scheduled."}</p>
+          <p>{step.follow_up_date ? `Follow-up recorded for ${step.follow_up_date}. Not delivered automatically.` : "No follow-up recorded."}</p>
         </>
       );
   }
@@ -133,7 +133,7 @@ export function Trace({ trace, sections }: { trace: TraceStep[]; sections: Recor
   return (
     <ol className="timeline">
       {trace.map((step) => (
-        <li key={step.index} className={`timeline-item ${step.type === "verifier" && step.verdict === "blocked" ? "is-blocked" : ""}`}>
+        <li key={step.index} id={`step-${step.index}`} className={`timeline-item ${step.type === "verifier" && step.verdict === "blocked" ? "is-blocked" : ""}`}>
           <span className={`timeline-badge ${badgeClass(step)}`}>
             <StepIcon step={step} />
           </span>

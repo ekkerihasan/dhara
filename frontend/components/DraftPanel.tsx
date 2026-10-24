@@ -9,7 +9,7 @@ const LANGUAGES: { code: Language; label: string }[] = [
   { code: "kn", label: "ಕನ್ನಡ" },
 ];
 
-/** The outgoing message. Nothing leaves without the tenant pressing Approve (send_and_schedule refuses otherwise). */
+/** The outgoing message. send_and_schedule refuses anything not approved, and it records a follow-up; it does not deliver. */
 export function DraftPanel({
   draft,
   initialLanguage,
@@ -61,14 +61,15 @@ export function DraftPanel({
       <div className="panel-body" lang={language}>
         {draft.text[language]}
       </div>
+      {draft.note && <div className="panel-note">{draft.note}</div>}
       <div className="panel-foot">
         {approval ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--safe)" }}>
             <CalendarClock size={15} aria-hidden />
-            Approved. Follow-up scheduled for {approval.follow_up_date}.
+            Approved. Follow-up on {approval.follow_up_date}. Copy the text and send it yourself.
           </span>
         ) : (
-          <span>Review the text. Nothing is sent until you approve.</span>
+          <span>Review the text, then approve it. Dhara never sends anything on its own.</span>
         )}
         <span className="spacer" />
         <button className="btn btn-sm" type="button" onClick={copy}>
@@ -78,7 +79,7 @@ export function DraftPanel({
         {!approval && (
           <button className="btn btn-sm primary" type="button" onClick={approve} disabled={busy}>
             <Send size={14} aria-hidden />
-            {busy ? "Sending…" : "Approve and send"}
+            {busy ? "Approving…" : "Approve"}
           </button>
         )}
       </div>

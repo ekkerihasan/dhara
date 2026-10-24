@@ -8,7 +8,7 @@ const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono", display: 
 const kannada = Noto_Sans_Kannada({ subsets: ["kannada"], variable: "--font-kannada", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Dhara AI: tenancy copilot for Karnataka",
+  title: "Dhara AI: Agentic Copilot for Fair Renting",
   description: "Works out which law governs a rental, prices unfair clauses, and drafts the counter-proposal the tenant approves.",
 };
 

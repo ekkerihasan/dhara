@@ -13,55 +13,75 @@
   },
   "deposit_inr": 150000,
   "checklist": [
-    { "date": "2025-11-01", "item": "Living room walls", "condition": "Freshly painted, no marks", "evidence": "4 photos, signed by both parties" },
-    { "date": "2025-11-01", "item": "Bedroom 2 wardrobe", "condition": "Left door hinge loose", "evidence": "1 photo, noted by owner" },
-    { "date": "2025-11-01", "item": "Kitchen", "condition": "Clean; chimney filter greasy", "evidence": "2 photos" },
-    { "date": "2026-09-30", "item": "Living room walls", "condition": "Light scuffs near switchboards", "evidence": "3 photos at handover" }
+    {
+      "date": "2026-01-01",
+      "item": "E1 Paint",
+      "condition": "Scuffs and faded paint already present",
+      "evidence": "Synthetic dated checklist; no uploaded image"
+    },
+    {
+      "date": "2026-01-01",
+      "item": "E2 Floor",
+      "condition": "Ordinary surface wear recorded",
+      "evidence": "Synthetic dated checklist; no uploaded image"
+    }
   ],
   "deductions": [
     {
-      "label": "Repainting the whole flat",
+      "label": "C3 Painting",
       "claimed_inr": 15000,
       "verdict": "disputed",
-      "reason": "The move-in checklist shows fresh paint and the handover photos show only light scuffs after 11 months: reasonable wear and tear, which the tenant does not have to restore.",
-      "section_ids": ["TPA-108"]
+      "reason": "C3 allows painting only for tenant-caused damage with dated evidence, and the move-in checklist (E1) records scuffs and faded paint already present.",
+      "section_ids": [
+        "TPA-108(m)"
+      ]
     },
     {
-      "label": "Deep cleaning",
+      "label": "C2 Cleaning",
       "claimed_inr": 5000,
       "verdict": "allowed",
-      "reason": "Clause 9 allows cleaning at actual cost up to Rs 5,000 and an invoice was shared. Within the agreed limit.",
+      "reason": "C2 fixes a Rs 5,000 cleaning charge at move-out, and the claim matches the agreed amount.",
       "section_ids": []
     },
     {
-      "label": "General wear and tear",
+      "label": "C4 Wear and tear",
       "claimed_inr": 8000,
       "verdict": "disputed",
-      "reason": "A lump sum for 'wear and tear' charges for exactly what the tenant is not liable for, with no itemised loss. Only reasonable compensation for actual loss is recoverable.",
-      "section_ids": ["TPA-108", "ICA-74"]
+      "reason": "C4 excludes reasonable wear and tear, and the move-in checklist (E2) records ordinary surface wear.",
+      "section_ids": [
+        "TPA-108(m)"
+      ]
     }
   ],
   "next_steps": [
-    { "title": "Written demand", "detail": "Send the approved challenge. Dhara schedules a follow-up 7 days later.", "certainty": "established" },
-    { "title": "Legal notice", "detail": "If there is no refund, a firmer notice drafted from the same findings, preferably sent through an advocate.", "certainty": "established" },
-    { "title": "Civil money-recovery suit", "detail": "The Rent Act does not apply here, so not the Rent Controller: a recovery suit in the Court of Small Causes, Bengaluru, within its pecuniary limit (limit unverified).", "certainty": "established" },
-    { "title": "Consumer forum (e-Daakhil)", "detail": "Whether a tenancy deposit dispute is a consumer complaint is contested. Shown for completeness only.", "certainty": "uncertain" }
+    {
+      "title": "Written demand",
+      "detail": "Send the approved challenge. Dhara records a follow-up 7 days later.",
+      "certainty": "established"
+    },
+    {
+      "title": "Legal notice",
+      "detail": "If there is no refund, a firmer notice drafted from the same findings, preferably sent through an advocate.",
+      "certainty": "established"
+    },
+    {
+      "title": "Civil money-recovery suit",
+      "detail": "The Rent Act does not apply here, so not the Rent Controller: a recovery suit in the Court of Small Causes, Bengaluru, within its pecuniary limit (limit unverified).",
+      "certainty": "established"
+    },
+    {
+      "title": "Consumer forum (e-Daakhil)",
+      "detail": "Whether a tenancy deposit dispute is a consumer complaint is contested. Shown for completeness only.",
+      "certainty": "uncertain"
+    }
   ],
   "sections": {
-    "ICA-74": {
-      "id": "ICA-74",
-      "act": "Indian Contract Act, 1872",
-      "section": "74",
-      "title": "Compensation for breach of contract where penalty stipulated for",
-      "source_url": "https://www.indiacode.nic.in/",
-      "applies_in_karnataka": true
-    },
-    "TPA-108": {
-      "id": "TPA-108",
+    "TPA-108(m)": {
+      "id": "TPA-108(m)",
       "act": "Transfer of Property Act, 1882",
-      "section": "108",
-      "title": "Rights and liabilities of lessor and lessee",
-      "source_url": "https://www.indiacode.nic.in/",
+      "section": "108(m)",
+      "title": "Wear and tear",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
       "applies_in_karnataka": true
     }
   },

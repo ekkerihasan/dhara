@@ -4,10 +4,11 @@
   "title": "2BHK flat, Bengaluru (BBMP area), 11-month agreement",
   "status": "awaiting_approval",
   "created_at": "2026-10-24T11:42:05+05:30",
-  "model": "stub (llama-3.3-70b-versatile in live mode)",
+  "model": "stub built from backend tools (agent loop pending)",
+  "agreement_text": "C1. Monthly rent is INR 25000 and the refundable security deposit is INR 150000.\nC2. The entire deposit is forfeited on any breach or early exit.\nC3. Six lock-in months remain, payable at the monthly rent on early exit.\nC4. A fixed painting charge of INR 15000 is deducted on exit.\nC5. Annual rent escalation is 15 percent.\nC6. Two months' notice is required; one month has been given.",
   "facts": {
     "rent_per_month": 25000,
-    "deposit_inr": 250000,
+    "deposit_inr": 150000,
     "built_year": 2019,
     "substantial_renovation_year": null,
     "local_body": "municipal_corporation",
@@ -16,9 +17,34 @@
   },
   "governing_law": {
     "rent_act_applies": false,
-    "summary": "The Karnataka Rent Act, 1999 does not apply to this flat: the rent is above the Part A ceiling and the building is less than 15 years old. The lease is governed by the agreement itself, read with the Transfer of Property Act, 1882 and the Indian Contract Act, 1872.",
-    "section_ids": ["KRA-2(3)(e)", "KRA-2(3)(f)"],
-    "governs": ["TPA-106", "TPA-108", "ICA-74"]
+    "summary": "The Karnataka Rent Act, 1999 does not apply to this flat: it was built in 2019, inside the 15-year exemption in s.2(3)(f). The Part A rent ceiling in s.2(3)(e) turns on the statutory standard rent, not the Rs 25,000 market rent, so it is not relied on. The lease is governed by the agreement itself, read with the Transfer of Property Act, 1882 and the Indian Contract Act, 1872.",
+    "section_ids": [
+      "KRA-2(3)(f)"
+    ],
+    "reasons": [
+      {
+        "section_id": "KRA-2(3)(e)",
+        "status": "needs_input",
+        "text": "Obtain deemed/standard rent; monthly market rent alone does not establish this exclusion."
+      },
+      {
+        "section_id": "KRA-2(3)(f)",
+        "status": "excluded",
+        "text": "The stated construction/substantial-renovation age is below the section 2(3)(f) fifteen-year period."
+      }
+    ],
+    "missing": [
+      "standard_rent_monthly",
+      "ownership_type",
+      "other_exemptions_checked",
+      "tenancy_date"
+    ],
+    "note": "Coverage is screened from user-provided facts; judicial interpretation and undisclosed exemptions are not verified.",
+    "governs": [
+      "TPA-106",
+      "TPA-108(m)",
+      "ICA-74"
+    ]
   },
   "trace": [
     {
@@ -28,29 +54,35 @@
       "steps": [
         "Read the agreement and split it into clauses (read_agreement, PII redacted first).",
         "Decide which law governs: run the Karnataka Rent Act applicability test (check_jurisdiction).",
-        "Look up every section I intend to rely on (lookup_section).",
+        "Look up the sections I intend to rely on (lookup_section).",
         "Price each unfair clause in rupees (compute_money).",
         "Send every legal claim through the verifier before it reaches the tenant.",
-        "Draft a polite counter-proposal for the landlord and wait for the tenant's approval."
+        "Draft a counter-proposal for the landlord and wait for the tenant's approval."
       ]
     },
     {
       "index": 1,
       "type": "tool_call",
-      "at": "2026-10-24T11:42:07+05:30",
+      "at": "2026-10-24T11:42:06+05:30",
       "tool": "read_agreement",
-      "summary": "12 clauses over 4 pages; 3 personal identifiers redacted before any model call.",
-      "input": { "source": "pdf", "bytes": 184322 },
+      "input": {
+        "source": "text",
+        "characters": 385
+      },
       "output": {
-        "clauses": 12,
-        "pages": 4,
-        "redactions": { "aadhaar": 1, "pan": 0, "phone": 2 }
-      }
+        "clauses": 6,
+        "redactions": {
+          "aadhaar": 0,
+          "pan": 0,
+          "phone": 0
+        }
+      },
+      "summary": "6 clauses; 0 personal identifiers redacted before any model call."
     },
     {
       "index": 2,
       "type": "question",
-      "at": "2026-10-24T11:42:09+05:30",
+      "at": "2026-10-24T11:42:08+05:30",
       "field": "built_year",
       "question": "In which year was the building constructed (or last substantially renovated)?",
       "why": "Section 2(3)(f) of the Karnataka Rent Act exempts a building for 15 years after construction. I cannot decide which law governs without it.",
@@ -59,9 +91,8 @@
     {
       "index": 3,
       "type": "tool_call",
-      "at": "2026-10-24T11:43:31+05:30",
+      "at": "2026-10-24T11:42:09+05:30",
       "tool": "check_jurisdiction",
-      "summary": "Rent Act does not apply: s.2(3)(e) rent ceiling and s.2(3)(f) 15-year exemption.",
       "input": {
         "rent_per_month": 25000,
         "built_year": 2019,
@@ -72,199 +103,302 @@
       "output": {
         "applies": false,
         "reasons": [
-          { "section_id": "KRA-2(3)(e)", "text": "Rent Rs 25,000 exceeds the Rs 3,500 ceiling for a First Schedule Part A area." },
-          { "section_id": "KRA-2(3)(f)", "text": "Built in 2019: within 15 years of construction." }
+          {
+            "section_id": "KRA-2(3)(e)",
+            "status": "needs_input",
+            "text": "Obtain deemed/standard rent; monthly market rent alone does not establish this exclusion."
+          },
+          {
+            "section_id": "KRA-2(3)(f)",
+            "status": "excluded",
+            "text": "The stated construction/substantial-renovation age is below the section 2(3)(f) fifteen-year period."
+          }
         ],
-        "missing": []
-      }
+        "missing": [
+          "standard_rent_monthly",
+          "ownership_type",
+          "other_exemptions_checked",
+          "tenancy_date"
+        ],
+        "note": "Coverage is screened from user-provided facts; judicial interpretation and undisclosed exemptions are not verified.",
+        "questions": []
+      },
+      "summary": "Rent Act does not apply: s.2(3)(f) 15-year exemption. s.2(3)(e) needs the statutory rent, so it is left unresolved."
     },
     {
       "index": 4,
       "type": "tool_call",
-      "at": "2026-10-24T11:43:32+05:30",
+      "at": "2026-10-24T11:42:10+05:30",
       "tool": "lookup_section",
-      "summary": "ICA-74 found; applies in Karnataka.",
-      "input": { "id": "ICA-74" },
-      "output": { "id": "ICA-74", "act": "Indian Contract Act, 1872", "section": "74", "applies_in_karnataka": true }
+      "input": {
+        "id": "ICA-74"
+      },
+      "output": {
+        "id": "ICA-74",
+        "act": "Indian Contract Act, 1872",
+        "section": "74",
+        "applies_in_karnataka": true
+      },
+      "summary": "ICA-74 found; applies in Karnataka."
     },
     {
       "index": 5,
       "type": "tool_call",
-      "at": "2026-10-24T11:43:33+05:30",
+      "at": "2026-10-24T11:42:11+05:30",
       "tool": "lookup_section",
-      "summary": "TPA-108 found; applies in Karnataka.",
-      "input": { "id": "TPA-108" },
-      "output": { "id": "TPA-108", "act": "Transfer of Property Act, 1882", "section": "108", "applies_in_karnataka": true }
+      "input": {
+        "id": "MTA-11(1)"
+      },
+      "output": {
+        "id": "MTA-11(1)",
+        "act": "Model Tenancy Act, 2021",
+        "section": "11(1)",
+        "applies_in_karnataka": false
+      },
+      "summary": "MTA-11(1) found; applies_in_karnataka is false: Karnataka has not adopted the Model Tenancy Act."
     },
     {
       "index": 6,
       "type": "tool_call",
-      "at": "2026-10-24T11:43:34+05:30",
-      "tool": "lookup_section",
-      "summary": "MTA-11 found, but applies_in_karnataka is false: Karnataka has not adopted the Model Tenancy Act.",
-      "input": { "id": "MTA-11" },
-      "output": { "id": "MTA-11", "act": "Model Tenancy Act, 2021", "section": "11", "applies_in_karnataka": false }
+      "at": "2026-10-24T11:42:12+05:30",
+      "tool": "compute_money",
+      "input": {
+        "finding_type": "deposit_forfeiture",
+        "inputs": {
+          "deposit": 150000,
+          "on_any_breach": true,
+          "on_early_exit": true
+        }
+      },
+      "output": 150000,
+      "summary": "C2 deposit forfeiture: Rs 150,000."
     },
     {
       "index": 7,
       "type": "tool_call",
-      "at": "2026-10-24T11:43:35+05:30",
+      "at": "2026-10-24T11:42:13+05:30",
       "tool": "compute_money",
-      "summary": "Clause 6 deposit forfeiture: Rs 2,50,000 at risk.",
-      "input": { "finding_type": "deposit_forfeiture", "inputs": { "deposit_inr": 250000, "forfeit_on": "early_exit" } },
-      "output": 250000
+      "input": {
+        "finding_type": "lock_in",
+        "inputs": {
+          "monthly_rent": 25000,
+          "remaining_months": 6
+        }
+      },
+      "output": 150000,
+      "summary": "C3 lock in: Rs 150,000."
     },
     {
       "index": 8,
       "type": "tool_call",
-      "at": "2026-10-24T11:43:35+05:30",
+      "at": "2026-10-24T11:42:14+05:30",
       "tool": "compute_money",
-      "summary": "Clause 5 lock-in: 6 months x Rs 25,000 = Rs 1,50,000.",
-      "input": { "finding_type": "lock_in", "inputs": { "monthly_rent": 25000, "remaining_lock_in_months": 6 } },
-      "output": 150000
+      "input": {
+        "finding_type": "painting_or_cleaning_fixed",
+        "inputs": {
+          "amount": 15000
+        }
+      },
+      "output": 15000,
+      "summary": "C4 painting or cleaning fixed: Rs 15,000."
     },
     {
       "index": 9,
       "type": "tool_call",
-      "at": "2026-10-24T11:43:36+05:30",
+      "at": "2026-10-24T11:42:15+05:30",
       "tool": "compute_money",
-      "summary": "Clause 8 fixed painting charge: Rs 25,000.",
-      "input": { "finding_type": "painting_or_cleaning_fixed", "inputs": { "fixed_amount_inr": 25000 } },
-      "output": 25000
+      "input": {
+        "finding_type": "rent_escalation_excess",
+        "inputs": {
+          "monthly_rent": 25000,
+          "escalation_percent": 15
+        }
+      },
+      "output": 15000,
+      "summary": "C5 rent escalation excess: Rs 15,000."
     },
     {
       "index": 10,
       "type": "tool_call",
-      "at": "2026-10-24T11:43:36+05:30",
+      "at": "2026-10-24T11:42:16+05:30",
       "tool": "compute_money",
-      "summary": "Clause 4 escalation 15%: (15 - 10)% of Rs 3,00,000 annual rent = Rs 15,000.",
-      "input": { "finding_type": "rent_escalation_excess", "inputs": { "monthly_rent": 25000, "escalation_percent": 15 } },
-      "output": 15000
+      "input": {
+        "finding_type": "notice_shortfall",
+        "inputs": {
+          "monthly_rent": 25000,
+          "required_months": 2,
+          "given_months": 1
+        }
+      },
+      "output": 25000,
+      "summary": "C6 notice shortfall: Rs 25,000."
     },
     {
       "index": 11,
       "type": "verifier",
-      "at": "2026-10-24T11:43:38+05:30",
-      "claim": "The Karnataka Rent Act does not apply because the rent is above Rs 3,500 a month in a Part A area.",
-      "section_id": "KRA-2(3)(e)",
+      "at": "2026-10-24T11:42:17+05:30",
+      "claim": "The Karnataka Rent Act does not apply because the building was constructed in 2019, within the 15-year exemption.",
+      "section_id": "KRA-2(3)(f)",
       "verdict": "cited",
-      "reason": "Section exists in law/karnataka.json and applies in Karnataka."
+      "reason": "Section exists; claim meaning and property coverage still require review"
     },
     {
       "index": 12,
       "type": "verifier",
-      "at": "2026-10-24T11:43:38+05:30",
-      "claim": "A building constructed in 2019 is within the 15-year exemption.",
-      "section_id": "KRA-2(3)(f)",
+      "at": "2026-10-24T11:42:18+05:30",
+      "claim": "The Rs 3,500 Part A ceiling depends on the statutory standard rent, which has not been confirmed, so it is not relied on.",
+      "section_id": "KRA-2(3)(e)",
       "verdict": "cited",
-      "reason": "Section exists in law/karnataka.json and applies in Karnataka."
+      "reason": "Section exists; claim meaning and property coverage still require review"
     },
     {
       "index": 13,
       "type": "verifier",
-      "at": "2026-10-24T11:43:39+05:30",
-      "claim": "Forfeiting the whole deposit on early exit is a penalty; the landlord can recover only reasonable compensation for actual loss.",
+      "at": "2026-10-24T11:42:19+05:30",
+      "claim": "Forfeiting the whole deposit on any breach or early exit is a penalty; only reasonable compensation for actual loss is recoverable.",
       "section_id": "ICA-74",
       "verdict": "cited",
-      "reason": "Section exists in law/karnataka.json and applies in Karnataka."
+      "reason": "Section exists; claim meaning and property coverage still require review"
     },
     {
       "index": 14,
       "type": "verifier",
-      "at": "2026-10-24T11:43:39+05:30",
-      "claim": "At the end of the lease the tenant must return the flat in the condition received, subject to reasonable wear and tear.",
-      "section_id": "TPA-108",
+      "at": "2026-10-24T11:42:20+05:30",
+      "claim": "A fixed painting charge ignores the exception for reasonable wear and tear.",
+      "section_id": "TPA-108(m)",
       "verdict": "cited",
-      "reason": "Section exists in law/karnataka.json and applies in Karnataka."
+      "reason": "Section exists; claim meaning and property coverage still require review"
     },
     {
       "index": 15,
       "type": "verifier",
-      "at": "2026-10-24T11:43:40+05:30",
-      "claim": "Karnataka law caps the security deposit at two months' rent.",
-      "section_id": "MTA-11",
-      "verdict": "blocked",
-      "reason": "Wrong law: MTA-11 is from the Model Tenancy Act, 2021, which Karnataka has not adopted (applies_in_karnataka: false). The Karnataka Rent Act has no deposit cap. Claim removed from the draft."
+      "at": "2026-10-24T11:42:21+05:30",
+      "claim": "Notice is set by the agreement here; the Transfer of Property Act supplies the default only where the agreement is silent.",
+      "section_id": "TPA-106",
+      "verdict": "cited",
+      "reason": "Section exists; claim meaning and property coverage still require review"
     },
     {
       "index": 16,
       "type": "verifier",
-      "at": "2026-10-24T11:43:40+05:30",
-      "claim": "The landlord must refund the deposit within 30 days of the tenant vacating.",
-      "section_id": null,
+      "at": "2026-10-24T11:42:22+05:30",
+      "claim": "Karnataka law caps the security deposit at two months' rent.",
+      "section_id": "MTA-11(1)",
       "verdict": "blocked",
-      "reason": "Legal claim with no section id. No source supports a statutory 30-day deadline; claim removed from the draft."
+      "reason": "This model provision is not applicable Karnataka law"
     },
     {
       "index": 17,
       "type": "verifier",
-      "at": "2026-10-24T11:43:41+05:30",
-      "claim": "A 15% yearly increase is above Dhara's 10% fairness threshold.",
+      "at": "2026-10-24T11:42:23+05:30",
+      "claim": "The landlord must refund the deposit within 30 days of the tenant vacating.",
       "section_id": null,
-      "verdict": "unverified",
-      "reason": "Not a legal claim: the 10% figure is a product threshold, not a legal limit. Shown with that label."
+      "verdict": "blocked",
+      "reason": "Legal claim requires a known applicable section id"
     },
     {
       "index": 18,
-      "type": "tool_call",
-      "at": "2026-10-24T11:43:44+05:30",
-      "tool": "draft_message",
-      "summary": "Counter-proposal drafted in English and Kannada (tone: request), using only cited claims.",
-      "input": { "findings": 4, "tone": "request", "language": ["en", "kn"] },
-      "output": { "draft_id": "d1", "characters": { "en": 1186, "kn": 1094 } }
+      "type": "verifier",
+      "at": "2026-10-24T11:42:24+05:30",
+      "claim": "A 15% yearly increase is above Dhara's 10% fairness threshold.",
+      "section_id": null,
+      "verdict": "unverified",
+      "reason": "Non-legal statement; no legal source verified"
     },
     {
       "index": 19,
+      "type": "tool_call",
+      "at": "2026-10-24T11:42:25+05:30",
+      "tool": "draft_message",
+      "input": {
+        "findings": 5,
+        "tone": "request",
+        "language": [
+          "en",
+          "kn"
+        ]
+      },
+      "output": {
+        "draft_id": "d1",
+        "characters": {
+          "en": 677,
+          "kn": 700
+        }
+      },
+      "summary": "Counter-proposal drafted in English and Kannada (tone: request) from the findings."
+    },
+    {
+      "index": 20,
       "type": "draft",
-      "at": "2026-10-24T11:43:45+05:30",
+      "at": "2026-10-24T11:42:26+05:30",
       "draft_id": "d1",
       "tone": "request"
     }
   ],
   "findings": [
     {
-      "clause_ref": "Clause 6",
-      "clause_text": "If the Tenant vacates the premises before the expiry of the lock-in period, the entire security deposit of Rs 2,50,000 shall stand forfeited to the Owner.",
+      "clause_ref": "C2",
+      "clause_text": "The entire deposit is forfeited on any breach or early exit.",
       "category": "deposit_forfeiture",
-      "issue": "The whole deposit is forfeited on early exit, whatever the landlord's actual loss. Excessive forfeiture is a penalty; only reasonable compensation is recoverable.",
+      "issue": "The whole deposit is forfeited on any breach or early exit, whatever the landlord's actual loss. Excessive forfeiture is a penalty; only reasonable compensation is recoverable.",
       "ask": "Replace forfeiture with deduction of actual, itemised loss.",
-      "section_ids": ["ICA-74"],
-      "money_at_risk_inr": 250000,
+      "section_ids": [
+        "ICA-74"
+      ],
+      "money_at_risk_inr": 150000,
       "money_note": null,
       "severity": "high"
     },
     {
-      "clause_ref": "Clause 5",
-      "clause_text": "The agreement carries a lock-in of six (6) months. If the Tenant leaves within the lock-in, the Tenant shall pay rent for the balance of the lock-in period.",
+      "clause_ref": "C3",
+      "clause_text": "Six lock-in months remain, payable at the monthly rent on early exit.",
       "category": "lock_in",
-      "issue": "Leaving in month one costs up to six months' rent, on top of the deposit forfeiture in Clause 6.",
+      "issue": "Leaving early costs the rent for all six remaining lock-in months, on top of the deposit forfeiture in C2.",
       "ask": "Cap the early-exit payment at one month's rent, or waive it if a replacement tenant is found.",
-      "section_ids": ["ICA-74"],
+      "section_ids": [
+        "ICA-74"
+      ],
       "money_at_risk_inr": 150000,
       "money_note": "Rs 25,000 x 6 remaining lock-in months.",
       "severity": "medium"
     },
     {
-      "clause_ref": "Clause 8",
-      "clause_text": "At the time of vacating, a sum of Rs 25,000 shall be deducted from the deposit towards painting charges, irrespective of the condition of the premises.",
+      "clause_ref": "C4",
+      "clause_text": "A fixed painting charge of INR 15000 is deducted on exit.",
       "category": "painting_or_cleaning_fixed",
-      "issue": "A fixed painting charge applies even if the walls are in the condition received. The tenant answers only for damage beyond reasonable wear and tear.",
+      "issue": "A fixed painting charge applies even if the walls are in the condition received. Restoration excludes reasonable wear and tear.",
       "ask": "Charge painting only for damage beyond reasonable wear and tear, judged against the dated move-in checklist.",
-      "section_ids": ["TPA-108", "ICA-74"],
-      "money_at_risk_inr": 25000,
+      "section_ids": [
+        "TPA-108(m)",
+        "ICA-74"
+      ],
+      "money_at_risk_inr": 15000,
       "money_note": null,
       "severity": "medium"
     },
     {
-      "clause_ref": "Clause 4",
-      "clause_text": "The monthly rent shall stand enhanced by fifteen percent (15%) on every renewal.",
+      "clause_ref": "C5",
+      "clause_text": "Annual rent escalation is 15 percent.",
       "category": "rent_escalation_excess",
-      "issue": "A 15% increase at each renewal is above Dhara's 10% fairness threshold.",
-      "ask": "Revise the increase to 10% at renewal.",
+      "issue": "A 15% yearly increase is above Dhara's 10% fairness threshold.",
+      "ask": "Revise the increase to 10% a year.",
       "section_ids": [],
       "money_at_risk_inr": 15000,
       "money_note": "(15 - 10)% of Rs 3,00,000 annual rent. The 10% is a product threshold, not a legal limit.",
       "severity": "low"
+    },
+    {
+      "clause_ref": "C6",
+      "clause_text": "Two months' notice is required; one month has been given.",
+      "category": "notice_shortfall",
+      "issue": "Two months' notice is required and one has been given, so one month's rent is exposed.",
+      "ask": "Agree that the notice already given counts, or reduce the notice period to one month.",
+      "section_ids": [
+        "TPA-106"
+      ],
+      "money_at_risk_inr": 25000,
+      "money_note": "Rs 25,000 x (2 required - 1 given) months.",
+      "severity": "medium"
     }
   ],
   "drafts": [
@@ -273,17 +407,26 @@
       "tone": "request",
       "to": "Landlord",
       "text": {
-        "en": "Dear Sir/Madam,\n\nThank you for sharing the draft rental agreement for the flat. Before I sign, I request the following changes:\n\n1. Clause 6 (deposit forfeiture): please replace forfeiture of the full deposit with deduction of actual, itemised loss. Under Section 74 of the Indian Contract Act, 1872, only reasonable compensation is recoverable.\n\n2. Clause 5 (lock-in): please cap the early-exit payment at one month's rent, or waive it if I find a replacement tenant.\n\n3. Clause 8 (painting): please charge painting only for damage beyond reasonable wear and tear, against the dated move-in checklist we both sign (Transfer of Property Act, 1882, Section 108).\n\n4. Clause 4 (rent increase): please revise the increase at renewal from 15% to 10%.\n\nI am happy to sign once these changes are made.\n\nRegards,\n[Tenant]",
-        "kn": "ಮಾನ್ಯರೇ,\n\nಫ್ಲ್ಯಾಟ್‌ನ ಬಾಡಿಗೆ ಒಪ್ಪಂದದ ಕರಡನ್ನು ಹಂಚಿಕೊಂಡಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು. ಸಹಿ ಮಾಡುವ ಮೊದಲು ಈ ಬದಲಾವಣೆಗಳನ್ನು ಕೋರುತ್ತೇನೆ:\n\n1. ಷರತ್ತು 6 (ಠೇವಣಿ ಮುಟ್ಟುಗೋಲು): ಸಂಪೂರ್ಣ ಠೇವಣಿ ಮುಟ್ಟುಗೋಲಿನ ಬದಲು, ನಿಜವಾದ ಮತ್ತು ವಿವರವಾದ ನಷ್ಟವನ್ನು ಮಾತ್ರ ಕಡಿತಗೊಳಿಸಿ. ಭಾರತೀಯ ಒಪ್ಪಂದ ಕಾಯ್ದೆ, 1872ರ ಸೆಕ್ಷನ್ 74ರ ಪ್ರಕಾರ ಸಮಂಜಸ ಪರಿಹಾರವನ್ನು ಮಾತ್ರ ವಸೂಲಿ ಮಾಡಬಹುದು.\n\n2. ಷರತ್ತು 5 (ಲಾಕ್-ಇನ್): ಬೇಗ ಖಾಲಿ ಮಾಡಿದರೆ ಪಾವತಿಯನ್ನು ಒಂದು ತಿಂಗಳ ಬಾಡಿಗೆಗೆ ಮಿತಿಗೊಳಿಸಿ, ಅಥವಾ ಬದಲಿ ಬಾಡಿಗೆದಾರರನ್ನು ಹುಡುಕಿದರೆ ಮನ್ನಾ ಮಾಡಿ.\n\n3. ಷರತ್ತು 8 (ಬಣ್ಣ): ಸಮಂಜಸ ಸವಕಳಿಗಿಂತ ಹೆಚ್ಚಿನ ಹಾನಿಗೆ ಮಾತ್ರ, ಇಬ್ಬರೂ ಸಹಿ ಮಾಡಿದ ದಿನಾಂಕದ ಪ್ರವೇಶ ಪಟ್ಟಿಯ ಆಧಾರದ ಮೇಲೆ, ಬಣ್ಣದ ವೆಚ್ಚ ವಿಧಿಸಿ (ಆಸ್ತಿ ವರ್ಗಾವಣೆ ಕಾಯ್ದೆ, 1882, ಸೆಕ್ಷನ್ 108).\n\n4. ಷರತ್ತು 4 (ಬಾಡಿಗೆ ಹೆಚ್ಚಳ): ನವೀಕರಣದ ಹೆಚ್ಚಳವನ್ನು 15% ರಿಂದ 10% ಕ್ಕೆ ಇಳಿಸಿ.\n\nಈ ಬದಲಾವಣೆಗಳನ್ನು ಸೇರಿಸಿದ ನಂತರ ಒಪ್ಪಂದಕ್ಕೆ ಸಹಿ ಮಾಡುತ್ತೇನೆ.\n\nವಂದನೆಗಳು,\n[ಬಾಡಿಗೆದಾರ]"
-      }
+        "en": "Hello, before signing the agreement, please consider the following requests:\n- C2: Please clarify the conditions, amounts, deadlines and responsibilities in writing before we agree.\n- C3: Please clarify the conditions, amounts, deadlines and responsibilities in writing before we agree.\n- C4: Please clarify the conditions, amounts, deadlines and responsibilities in writing before we agree.\n- C5: Please clarify the conditions, amounts, deadlines and responsibilities in writing before we agree.\n- C6: Please clarify the conditions, amounts, deadlines and responsibilities in writing before we agree.\nThese are requests for discussion, subject to agreement and applicable law.",
+        "kn": "ನಮಸ್ಕಾರ, ಒಪ್ಪಂದಕ್ಕೆ ಸಹಿ ಮಾಡುವ ಮೊದಲು ದಯವಿಟ್ಟು ಕೆಳಗಿನ ವಿನಂತಿಗಳನ್ನು ಪರಿಗಣಿಸಿ:\n- C2: ಒಪ್ಪಿಕೊಳ್ಳುವ ಮೊದಲು ಷರತ್ತುಗಳು, ಮೊತ್ತಗಳು, ಗಡುವುಗಳು ಮತ್ತು ಜವಾಬ್ದಾರಿಗಳನ್ನು ದಯವಿಟ್ಟು ಲಿಖಿತವಾಗಿ ಸ್ಪಷ್ಟಪಡಿಸಿ.\n- C3: ಒಪ್ಪಿಕೊಳ್ಳುವ ಮೊದಲು ಷರತ್ತುಗಳು, ಮೊತ್ತಗಳು, ಗಡುವುಗಳು ಮತ್ತು ಜವಾಬ್ದಾರಿಗಳನ್ನು ದಯವಿಟ್ಟು ಲಿಖಿತವಾಗಿ ಸ್ಪಷ್ಟಪಡಿಸಿ.\n- C4: ಒಪ್ಪಿಕೊಳ್ಳುವ ಮೊದಲು ಷರತ್ತುಗಳು, ಮೊತ್ತಗಳು, ಗಡುವುಗಳು ಮತ್ತು ಜವಾಬ್ದಾರಿಗಳನ್ನು ದಯವಿಟ್ಟು ಲಿಖಿತವಾಗಿ ಸ್ಪಷ್ಟಪಡಿಸಿ.\n- C5: ಒಪ್ಪಿಕೊಳ್ಳುವ ಮೊದಲು ಷರತ್ತುಗಳು, ಮೊತ್ತಗಳು, ಗಡುವುಗಳು ಮತ್ತು ಜವಾಬ್ದಾರಿಗಳನ್ನು ದಯವಿಟ್ಟು ಲಿಖಿತವಾಗಿ ಸ್ಪಷ್ಟಪಡಿಸಿ.\n- C6: ಒಪ್ಪಿಕೊಳ್ಳುವ ಮೊದಲು ಷರತ್ತುಗಳು, ಮೊತ್ತಗಳು, ಗಡುವುಗಳು ಮತ್ತು ಜವಾಬ್ದಾರಿಗಳನ್ನು ದಯವಿಟ್ಟು ಲಿಖಿತವಾಗಿ ಸ್ಪಷ್ಟಪಡಿಸಿ.\nಇವು ಚರ್ಚೆಗಾಗಿ ವಿನಂತಿಗಳು; ಪರಸ್ಪರ ಒಪ್ಪಿಗೆ ಮತ್ತು ಅನ್ವಯಿಸುವ ಕಾನೂನಿಗೆ ಒಳಪಟ್ಟಿರುತ್ತವೆ."
+      },
+      "note": "Deterministic language templates for structured requests, not free-form translation. Generic clarification replaces unstructured findings. Native-language review is recommended. Negotiated text is provided separately in its original language."
     }
   ],
   "sections": {
+    "ICA-74": {
+      "id": "ICA-74",
+      "act": "Indian Contract Act, 1872",
+      "section": "74",
+      "title": "Penalty and compensation",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/2187/2/A187209.pdf",
+      "applies_in_karnataka": true
+    },
     "KRA-2(3)(e)": {
       "id": "KRA-2(3)(e)",
       "act": "Karnataka Rent Act, 1999",
       "section": "2(3)(e)",
-      "title": "Act does not apply above Rs 3,500/month rent (Part A) or Rs 2,000/month (elsewhere)",
+      "title": "Statutory rent exclusion",
       "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
       "applies_in_karnataka": true
     },
@@ -291,41 +434,33 @@
       "id": "KRA-2(3)(f)",
       "act": "Karnataka Rent Act, 1999",
       "section": "2(3)(f)",
-      "title": "Act does not apply for 15 years after construction or substantial renovation",
+      "title": "Construction exclusion",
       "source_url": "https://www.indiacode.nic.in/bitstream/123456789/7810/1/34_of_2001_e.pdf",
       "applies_in_karnataka": true
     },
-    "ICA-74": {
-      "id": "ICA-74",
-      "act": "Indian Contract Act, 1872",
-      "section": "74",
-      "title": "Compensation for breach of contract where penalty stipulated for",
-      "source_url": "https://www.indiacode.nic.in/",
-      "applies_in_karnataka": true
+    "MTA-11(1)": {
+      "id": "MTA-11(1)",
+      "act": "Model Tenancy Act, 2021",
+      "section": "11(1)",
+      "title": "Model residential deposit cap",
+      "source_url": "https://prsindia.org/billtrack/the-model-tenancy-act-2021",
+      "applies_in_karnataka": false
     },
     "TPA-106": {
       "id": "TPA-106",
       "act": "Transfer of Property Act, 1882",
       "section": "106",
-      "title": "Duration of certain leases in absence of written contract or local usage (notice to quit)",
-      "source_url": "https://www.indiacode.nic.in/",
+      "title": "Default notice",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
       "applies_in_karnataka": true
     },
-    "TPA-108": {
-      "id": "TPA-108",
+    "TPA-108(m)": {
+      "id": "TPA-108(m)",
       "act": "Transfer of Property Act, 1882",
-      "section": "108",
-      "title": "Rights and liabilities of lessor and lessee",
-      "source_url": "https://www.indiacode.nic.in/",
+      "section": "108(m)",
+      "title": "Wear and tear",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
       "applies_in_karnataka": true
-    },
-    "MTA-11": {
-      "id": "MTA-11",
-      "act": "Model Tenancy Act, 2021",
-      "section": "11",
-      "title": "Security deposit capped at two months' rent (residential)",
-      "source_url": "https://prsindia.org/billtrack/the-model-tenancy-act-2021",
-      "applies_in_karnataka": false
     }
   },
   "max_tool_calls": 12,

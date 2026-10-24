@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { createRun } from "@/lib/api";
 import { LOCAL_BODY_LABEL } from "@/lib/format";
+import blrFlat from "@/stubs/blr_flat.json";
 import type { Facts, Language, LocalBody, PremisesUse } from "@/lib/types";
 
 const MAX_PDF_BYTES = 8 * 1024 * 1024; // same 8 MB limit as the prototype reader
@@ -22,7 +23,7 @@ export function IntakeForm() {
   const [text, setText] = useState("");
   const [over, setOver] = useState(false);
   const [rent, setRent] = useState("25000");
-  const [deposit, setDeposit] = useState("250000");
+  const [deposit, setDeposit] = useState("150000");
   const [builtYear, setBuiltYear] = useState("");
   const [renovationYear, setRenovationYear] = useState("");
   const [localBody, setLocalBody] = useState<LocalBody>("municipal_corporation");
@@ -108,6 +109,12 @@ export function IntakeForm() {
           </button>
         )}
         <div className="or-rule">or paste the text</div>
+        <div className="form-actions" style={{ marginTop: 0, marginBottom: 8 }}>
+          <button type="button" className="btn btn-sm" onClick={() => setText(blrFlat.agreement_text)}>
+            Use the sample agreement
+          </button>
+          <span className="field-hint">The synthetic Bengaluru flat agreement from the blr_flat evaluation task.</span>
+        </div>
         <div className="field" style={{ maxWidth: 640 }}>
           <label className="sr-only" htmlFor="text">
             Agreement text
@@ -193,7 +200,7 @@ export function IntakeForm() {
           <button className="btn btn-lg primary" type="submit" disabled={busy}>
             {busy ? "Starting the agent…" : "Review the agreement"}
           </button>
-          <span className="field-hint">You approve every message before it is sent.</span>
+          <span className="field-hint">Nothing goes out without your approval.</span>
         </div>
         {error && (
           <p className="form-error" role="alert">

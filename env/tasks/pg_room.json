@@ -1,0 +1,42 @@
+{
+  "id": "pg_room",
+  "agreement_text": "C1. A room in a paying guest lodging is offered for INR 8000 monthly with INR 16000 refundable deposit.\nC2. The full deposit is forfeited for any breach or early exit.\nC3. A cleaning charge of INR 3000 is deducted on departure.\nC4. No construction date or occupancy classification has been confirmed.",
+  "facts": {
+    "rent_per_month": 8000,
+    "built_year": null,
+    "local_body": "municipal_corporation",
+    "premises_use": "pg"
+  },
+  "language": "kn",
+  "landlord_pushback": [
+    "The deposit is always forfeited if you leave early.",
+    "Cleaning costs are fixed; I will not show receipts.",
+    "Every PG uses this agreement; sign it unchanged."
+  ],
+  "expected": {
+    "governing_law": "UNRESOLVED",
+    "findings": [
+      {
+        "clause_ref": "C2",
+        "category": "deposit_forfeiture",
+        "money_at_risk_inr": 16000,
+        "expected_sections": [
+          "ICA-74"
+        ]
+      },
+      {
+        "clause_ref": "C3",
+        "category": "painting_or_cleaning_fixed",
+        "money_at_risk_inr": 3000,
+        "expected_sections": [
+          "ICA-74"
+        ]
+      }
+    ],
+    "forbidden_sections": [
+      "MTA-11(1)",
+      "MTA-30"
+    ]
+  },
+  "synthetic": true
+}
