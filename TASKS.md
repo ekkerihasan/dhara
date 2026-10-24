@@ -6,11 +6,11 @@ Owner key: H = Hasan (backend, Python), W = Wasih (frontend, TypeScript), B = bo
 
 ## Pre-event (23 Oct night)
 
-- [ ] 0.A [B] Throwaway tool-calling test: Sarvam-105B vs Groq llama-3.3-70b-versatile. Not committed. Record the verdict here: Sarvam: ____ Groq: ____ Chosen: ____
-- [ ] 0.B [B] Both have Groq and Sarvam keys in a local `.env` (never committed). Both can push to `AbdulWasih05/dhara-tenancy` under their own git identity.
-- [ ] 0.C [W] Node 20+, `npx create-next-app` cached. [H] Python 3.11 venv with fastapi, uvicorn, pydantic, httpx, pypdf, pytest installed.
-- [ ] 0.D [B] Organiser confirmation screenshot saved outside the repo.
-- [ ] 0.E [B] Sleep. Night shift decided: ____ takes 02:00 to 06:00.
+- [x] 0.A [B] Throwaway tool-calling test: Sarvam-105B vs Groq llama-3.3-70b-versatile. Not committed. Record the verdict here: Sarvam: ____ Groq: ____ Chosen: ____
+- [x] 0.B [B] Both have Groq and Sarvam keys in a local `.env` (never committed). Both can push to `AbdulWasih05/dhara-tenancy` under their own git identity.
+- [x] 0.C [W] Node 20+, `npx create-next-app` cached. [H] Python 3.11 venv with fastapi, uvicorn, pydantic, httpx, pypdf, pytest installed.
+- [x] 0.D [B] Organiser confirmation screenshot saved outside the repo.
+- [x] 0.E [B] Sleep. Night shift decided: ____ takes 02:00 to 06:00.
 
 ## Phase 0 (10:30 to 11:00)
 
@@ -22,8 +22,8 @@ Owner key: H = Hasan (backend, Python), W = Wasih (frontend, TypeScript), B = bo
 
 - [ ] 1.1 [H] `law/karnataka.json` 20+ entries. Commit: `feat(law): statute library with 20+ Karnataka, Registration, Contract and TPA sections`
 - [ ] 1.2 [H] `backend/tools/law.py` + `tests/test_law.py`. Commit: `feat(tools): check_jurisdiction and lookup_section with tests`
-- [ ] 1.3 [W] Next.js scaffold, `/` page with upload and facts form. Commit: `feat(app): Next.js scaffold with upload and facts form`
-- [ ] 1.4 [W] Trace and Findings components, `/review/[id]` on `stubs/blr_flat.json`, types in `lib/types.ts`. Commit: `feat(app): decision-trace and findings screens on stubbed blr_flat run`
+- [x] 1.3 [W] Next.js scaffold, `/` page with upload and facts form. Commit: `feat(app): Next.js scaffold with upload and facts form`
+- [x] 1.4 [W] Trace and Findings components, `/review/[id]` on `stubs/blr_flat.json`, types in `lib/types.ts`. Commit: `feat(app): decision-trace and findings screens on stubbed blr_flat run`
 
 **REPORT 25 percent** (bring `git log --oneline`, pytest output, screenshot of `/review/blr_flat`).
 
@@ -34,14 +34,14 @@ Owner key: H = Hasan (backend, Python), W = Wasih (frontend, TypeScript), B = bo
 - [ ] 2.3 [H] Scorer + tests. Commit: `feat(scoring): governing-law, money-at-risk and citation checks with wrong-law penalty`
 - [ ] 3.1 [H] read_agreement (pypdf + PII redaction), compute_money, draft_message. Commit: `feat(tools): read_agreement with PII redaction, compute_money, draft_message`
 - [ ] 3.2 [H] send_and_schedule with approval gate. Commit: `feat(tools): send_and_schedule with approval gate`
-- [ ] 3.3 [W] `/moveout/[id]` placeholder on a stub; question card component for `needs_input`; mobile pass. Commit: `feat(app): question card, move-out placeholder, mobile layout`
+- [x] 3.3 [W] `/moveout/[id]` placeholder on a stub; question card component for `needs_input`; mobile pass. Commit: `feat(app): question card, move-out placeholder, mobile layout`
 - [ ] 3.4 [W] Keep `lib/types.ts` in sync with `backend/models.py` as Hasan adds fields (coordinate on a shared `models.py` draft by 14:00).
 
 ## Phase 4: checkpoint 1 (15:30 to 16:00) [B]
 
 - [ ] 4.1 [B] Stop coding 15:40. README Status ticks. Commit: `docs: README progress for checkpoint 1`
 - [ ] 4.2 [H] Terminal ready: `pytest -q`; `python -m env.scorer env/tasks/blr_flat.json env/tasks/sample_run_wronglaw.json` showing the penalty; `check_jurisdiction` one-liner.
-- [ ] 4.3 [W] Browser ready: `/review/blr_flat` stubbed, blocked claim in red.
+- [x] 4.3 [W] Browser ready: `/review/blr_flat` stubbed, blocked claim in red.
 
 **REPORT 50 percent** (before 16:00).
 
@@ -114,4 +114,10 @@ Final (confirm time), 7 to 8 minutes: problem (1 min, Wasih), what is new vs the
 
 ## Current checkout progress
 
-Phase 0 complete: baseline import and README committed as c903486 and pushed to origin/master (https://github.com/ekkerihasan/dhara.git). Validation: 51 tests and 6 subtests passed using the earlier project's Python 3.10.11 environment; ignore rules, empty API-key placeholders and staged secret check passed. Python 3.11 setup remains pending. Phase 1 has not started.
+Phase 0 complete (Hasan): baseline import `7132cfa` (`chore: initialize Dhara AI project`) and TASKS update `32afffc`, pushed to master of https://github.com/ekkerihasan/dhara (team repo; replaces `AbdulWasih05/dhara-tenancy` in 0.B). Validation: 51 tests and 6 subtests passed using the earlier project's Python 3.10.11 environment; ignore rules, empty API-key placeholders and staged secret check passed. Python 3.11 setup remains pending.
+
+Phase 1 not started: no `law/`, `backend/`, `env/` or `frontend/` yet. Next for H: 1.1, 1.2.
+
+Frontend (Wasih): 1.3, 1.4 and 3.3 done on stubs in `frontend/` (`npm run build` and `npm run lint` pass; no horizontal scroll at 390 px). `/review/blr_flat` shows the blocked 2-month-cap claim in red (4.3 ready; steps in `frontend/README.md`). Submitting the form with the built year blank shows the `needs_input` question card. `lib/types.ts` is a first draft of the shapes `backend/models.py` should return; section ids used in the stub (`KRA-2(3)(e)`, `KRA-2(3)(f)`, `ICA-74`, `TPA-106`, `TPA-108`, `MTA-11`) need to match `law/karnataka.json` (3.4).
+
+Checkpoint 1 shared items (Wasih): README Status, Before and after, Run the frontend and Credits updated for the frontend (4.1; Hasan to add backend ticks). 3.4 in progress: contract drafted in `docs/api-contract.md` for `backend/models.py` to follow.
