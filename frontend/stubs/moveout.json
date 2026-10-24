@@ -1,0 +1,90 @@
+{
+  "id": "moveout",
+  "title": "Move-out, 2BHK flat, Bengaluru (BBMP area)",
+  "status": "awaiting_approval",
+  "facts": {
+    "rent_per_month": 25000,
+    "deposit_inr": 150000,
+    "built_year": 2019,
+    "substantial_renovation_year": null,
+    "local_body": "municipal_corporation",
+    "premises_use": "residential",
+    "language": "en"
+  },
+  "deposit_inr": 150000,
+  "checklist": [
+    {
+      "date": "2026-01-01",
+      "item": "E1 Paint",
+      "condition": "Scuffs and faded paint already present",
+      "evidence": "Synthetic dated checklist; no uploaded image"
+    },
+    {
+      "date": "2026-01-01",
+      "item": "E2 Floor",
+      "condition": "Ordinary surface wear recorded",
+      "evidence": "Synthetic dated checklist; no uploaded image"
+    }
+  ],
+  "deductions": [
+    {
+      "label": "C3 Painting",
+      "claimed_inr": 15000,
+      "verdict": "disputed",
+      "reason": "C3 allows painting only for tenant-caused damage with dated evidence, and the move-in checklist (E1) records scuffs and faded paint already present.",
+      "section_ids": [
+        "TPA-108(m)"
+      ]
+    },
+    {
+      "label": "C2 Cleaning",
+      "claimed_inr": 5000,
+      "verdict": "allowed",
+      "reason": "C2 fixes a Rs 5,000 cleaning charge at move-out, and the claim matches the agreed amount.",
+      "section_ids": []
+    },
+    {
+      "label": "C4 Wear and tear",
+      "claimed_inr": 8000,
+      "verdict": "disputed",
+      "reason": "C4 excludes reasonable wear and tear, and the move-in checklist (E2) records ordinary surface wear.",
+      "section_ids": [
+        "TPA-108(m)"
+      ]
+    }
+  ],
+  "next_steps": [
+    {
+      "title": "Written demand",
+      "detail": "Send the approved challenge. Dhara records a follow-up 7 days later.",
+      "certainty": "established"
+    },
+    {
+      "title": "Legal notice",
+      "detail": "If there is no refund, a firmer notice drafted from the same findings, preferably sent through an advocate.",
+      "certainty": "established"
+    },
+    {
+      "title": "Civil money-recovery suit",
+      "detail": "The Rent Act does not apply here, so not the Rent Controller: a recovery suit in the Court of Small Causes, Bengaluru, within its pecuniary limit (limit unverified).",
+      "certainty": "established"
+    },
+    {
+      "title": "Consumer forum (e-Daakhil)",
+      "detail": "Whether a tenancy deposit dispute is a consumer complaint is contested. Shown for completeness only.",
+      "certainty": "uncertain"
+    }
+  ],
+  "sections": {
+    "TPA-108(m)": {
+      "id": "TPA-108(m)",
+      "act": "Transfer of Property Act, 1882",
+      "section": "108(m)",
+      "title": "Wear and tear",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
+      "applies_in_karnataka": true
+    }
+  },
+  "not_a_lawyer": true,
+  "notice": "Dhara AI is not a lawyer and this is not legal advice. It explains the agreement against the cited sections so you can negotiate; for a dispute, consult an advocate."
+}

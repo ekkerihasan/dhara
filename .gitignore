@@ -11,3 +11,16 @@ node_modules/
 htmlcov/
 *.egg-info/
 setup_git.sh
+
+# Team planning and agent notes stay local; the README is the only project document in the repo
+CLAUDE.md
+AGENTS.md
+BUILD.md
+TASKS.md
+newplan.md
+IMPLEMENTATION_STATUS.md
+docs/api-contract.md
+docs/BACKEND_CONTRACT.md
+frontend/AGENTS.md
+frontend/CLAUDE.md
+*.local.md
