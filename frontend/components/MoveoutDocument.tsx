@@ -1,30 +1,43 @@
 "use client";
 
-import { Construction, TriangleAlert } from "lucide-react";
-import { useEffect, useState } from "react";
-import { getMoveout } from "@/lib/api";
+import { Construction, Info, TriangleAlert } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { approveMoveout, getMoveout } from "@/lib/api";
 import { date, inr, STATUS_LABEL } from "@/lib/format";
 import type { MoveoutRun } from "@/lib/types";
 import { DocFooter } from "./DocFooter";
+import { DraftPanel } from "./DraftPanel";
 import { SectionChips } from "./SectionChip";
 import { Toc } from "./Toc";
 
 const TOC = [
   { id: "checklist", title: "Move-in evidence" },
   { id: "deductions", title: "Claimed deductions" },
+  { id: "challenge", title: "Challenge" },
   { id: "next", title: "Next formal step" },
 ];
 
-/** Flow 2 placeholder on stubbed data. The live version arrives with backend/agent/moveout.py (TASKS.md 7.3, 7.4). */
+const POLL_MS = 1500;
+
+/** Flow 2 report: verdicts per deduction against the move-in checklist, the challenge to approve, the formal route. */
 export function MoveoutDocument({ id }: { id: string }) {
   const [run, setRun] = useState<MoveoutRun | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     getMoveout(id)
       .then(setRun)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : "Could not load the move-out."));
   }, [id]);
+
+  useEffect(load, [load]);
+
+  // Live mode: keep polling while the agent works.
+  useEffect(() => {
+    if (run?.status !== "running") return;
+    const timer = setInterval(load, POLL_MS);
+    return () => clearInterval(timer);
+  }, [run?.status, load]);
 
   if (error || !run) {
     return (
@@ -63,12 +76,21 @@ export function MoveoutDocument({ id }: { id: string }) {
           Each deduction the landlord claimed, checked against the agreement and the dated move-in evidence, with the formal route if the deposit is
           not returned.
         </p>
-        <div className="callout callout-warning">
-          <Construction size={16} aria-hidden />
-          <p>
-            <strong>Preview on stubbed data.</strong> The move-out agent is scheduled for Phase 7; this page shows the shape of its report.
-          </p>
-        </div>
+        {!run.live && (
+          <div className="callout callout-warning">
+            <Construction size={16} aria-hidden />
+            <p>
+              <strong>Sample data.</strong> This report is precomputed for the sample move-out; with the backend running, the agent checks your own
+              deductions.
+            </p>
+          </div>
+        )}
+        {run.status === "running" && (
+          <div className="callout">
+            <Info size={16} aria-hidden />
+            <p>The agent is checking each deduction against the agreement and the move-in checklist. This takes up to a minute.</p>
+          </div>
+        )}
 
         <div className="stats">
           <div className="stat">
@@ -102,7 +124,10 @@ export function MoveoutDocument({ id }: { id: string }) {
                 <tbody>
                   {run.checklist.map((c) => (
                     <tr key={`${c.date}-${c.item}`}>
-                      <td style={{ whiteSpace: "nowrap" }}>{date(c.date)}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        {c.id && <span className="mono">{c.id} · </span>}
+                        {date(c.date)}
+                      </td>
                       <td>{c.item}</td>
                       <td>{c.condition}</td>
                       <td className="dim">{c.evidence}</td>
@@ -135,11 +160,22 @@ export function MoveoutDocument({ id }: { id: string }) {
                         <div className="dim" style={{ fontSize: 13, margin: "4px 0 8px" }}>
                           {d.reason}
                         </div>
-                        <SectionChips ids={d.section_ids} sections={run.sections} />
+                        <span className="chips">
+                          <SectionChips ids={d.section_ids} sections={run.sections} />
+                          {(d.evidence_ids ?? []).map((e) => (
+                            <span key={e} className="chip">
+                              evidence {e}
+                            </span>
+                          ))}
+                        </span>
                       </td>
                       <td className="num">{inr(d.claimed_inr)}</td>
                       <td>
-                        <span className={`badge ${d.verdict === "allowed" ? "badge-green" : "badge-red"}`}>{d.verdict}</span>
+                        {d.verdict ? (
+                          <span className={`badge ${d.verdict === "allowed" ? "badge-green" : "badge-red"}`}>{d.verdict}</span>
+                        ) : (
+                          <span className="badge">checking</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -155,6 +191,26 @@ export function MoveoutDocument({ id }: { id: string }) {
             </div>
             <figcaption>Deductions claimed by the landlord and the agent&apos;s verdict on each.</figcaption>
           </figure>
+        </section>
+
+        <section className="section" id="challenge">
+          <h2>Challenge</h2>
+          {run.drafts?.[0] ? (
+            <>
+              <p>Written from the disputed deductions. Approving records a follow-up date; Dhara never sends anything itself.</p>
+              <DraftPanel
+                draft={run.drafts[0]}
+                initialLanguage={run.facts.language}
+                approval={run.follow_up_date ? { index: 0, at: "", type: "approval", draft_id: run.drafts[0].id, approved: true, follow_up_date: run.follow_up_date } : null}
+                onApprove={async () => {
+                  await approveMoveout(run.id);
+                  load();
+                }}
+              />
+            </>
+          ) : (
+            <p>{run.live ? "The challenge appears here when the agent finishes." : "In live mode, the agent drafts the challenge here in English and Kannada."}</p>
+          )}
         </section>
 
         <section className="section" id="next">

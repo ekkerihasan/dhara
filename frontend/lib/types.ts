@@ -102,7 +102,7 @@ export interface Draft {
   id: string;
   tone: DraftTone;
   to: string;
-  text: Record<Language, string>;
+  text: Partial<Record<Language, string>>; // the backend may return one language
   note: string | null; // draft_message's translation_note
 }
 
@@ -143,6 +143,7 @@ export interface Run {
   max_tool_calls: number;
   not_a_lawyer: true;
   notice: string;
+  sample_note?: string | null; // stub mode only: facts the tenant entered that differ from the sample flat
 }
 
 export interface RunInput {
@@ -151,10 +152,11 @@ export interface RunInput {
   facts: Facts;
 }
 
-// Flow 2 (move-out). Placeholder shapes until backend/agent/moveout.py lands (TASKS.md 7.3).
+// Flow 2 (move-out): mirrors backend/agent/moveout.py through lib/backend.ts.
 export type DeductionVerdict = "allowed" | "disputed";
 
 export interface ChecklistEntry {
+  id?: string; // E1, E2 ... referenced by a deduction's evidence_ids
   date: string;
   item: string;
   condition: string;
@@ -164,9 +166,10 @@ export interface ChecklistEntry {
 export interface Deduction {
   label: string;
   claimed_inr: number;
-  verdict: DeductionVerdict;
+  verdict: DeductionVerdict | null; // null while the agent is still working
   reason: string;
   section_ids: string[];
+  evidence_ids?: string[];
 }
 
 export interface MoveoutRun {
@@ -179,6 +182,19 @@ export interface MoveoutRun {
   deductions: Deduction[];
   next_steps: { title: string; detail: string; certainty: "established" | "uncertain" }[];
   sections: Record<string, Section>;
+  drafts?: Draft[]; // the challenge, EN and KN (live only)
+  follow_up_date?: string | null; // set once the tenant approves the challenge
+  live?: boolean;
   not_a_lawyer: true;
   notice: string;
+}
+
+/** POST /api/moveout body (backend/models.py MoveoutRequest). */
+export interface MoveoutInput {
+  agreement_text: string;
+  checklist: { id: string; date: string; item: string; condition: string; evidence: string }[];
+  deductions: { clause_ref: string; category: string; label: string; amount_inr: number; evidence_ids: string[] }[];
+  facts: Record<string, unknown>;
+  deposit_inr: number;
+  language: Language;
 }

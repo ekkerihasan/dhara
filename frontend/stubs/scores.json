@@ -1,0 +1,182 @@
+{
+  "task": {
+    "id": "blr_flat",
+    "findings": 5,
+    "money_max_inr": 150000,
+    "governing_law": "TPA_CONTRACT",
+    "forbidden_sections": [
+      "MTA-11(1)",
+      "MTA-30"
+    ]
+  },
+  "max_total": 3,
+  "runs": [
+    {
+      "id": "sample_run",
+      "label": "Correct run",
+      "summary": "Right governing law, money within Rs 500, only sections from the law pack.",
+      "score": {
+        "governing_law_correct": 1,
+        "money_within_500": 1.0,
+        "citations_exist": 1.0,
+        "wrong_law_penalty": 0,
+        "total": 3.0
+      },
+      "claims": [],
+      "forbidden_cited": []
+    },
+    {
+      "id": "sample_run_wronglaw",
+      "label": "Wrong-law run",
+      "summary": "Same findings, plus the claim that the law caps deposits at two months.",
+      "score": {
+        "governing_law_correct": 1,
+        "money_within_500": 1.0,
+        "citations_exist": 1.0,
+        "wrong_law_penalty": -1,
+        "total": 2.0
+      },
+      "claims": [
+        {
+          "text": "The law caps residential deposits at two months.",
+          "section_id": "MTA-11(1)"
+        }
+      ],
+      "forbidden_cited": [
+        "MTA-11(1)"
+      ]
+    }
+  ],
+  "sections": {
+    "ICA-74": {
+      "id": "ICA-74",
+      "act": "Indian Contract Act, 1872",
+      "section": "74",
+      "title": "Penalty and compensation",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/2187/2/A187209.pdf",
+      "applies_in_karnataka": true
+    },
+    "MTA-11(1)": {
+      "id": "MTA-11(1)",
+      "act": "Model Tenancy Act, 2021",
+      "section": "11(1)",
+      "title": "Model residential deposit cap",
+      "source_url": "https://prsindia.org/billtrack/the-model-tenancy-act-2021",
+      "applies_in_karnataka": false
+    },
+    "MTA-30": {
+      "id": "MTA-30",
+      "act": "Model Tenancy Act, 2021",
+      "section": "30",
+      "title": "Model Rent Authority",
+      "source_url": "https://prsindia.org/billtrack/the-model-tenancy-act-2021",
+      "applies_in_karnataka": false
+    },
+    "TPA-106": {
+      "id": "TPA-106",
+      "act": "Transfer of Property Act, 1882",
+      "section": "106",
+      "title": "Default notice",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
+      "applies_in_karnataka": true
+    },
+    "TPA-108(m)": {
+      "id": "TPA-108(m)",
+      "act": "Transfer of Property Act, 1882",
+      "section": "108(m)",
+      "title": "Wear and tear",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
+      "applies_in_karnataka": true
+    }
+  },
+  "eval": {
+    "date": "2026-10-24",
+    "rows": [
+      {
+        "task": "blr_flat",
+        "mode": "baseline",
+        "score": {
+          "governing_law_correct": 0,
+          "money_within_500": 1.0,
+          "citations_exist": 0.7777777777777778,
+          "wrong_law_penalty": 0,
+          "total": 1.7777777777777777
+        },
+        "error": null,
+        "findings": 5,
+        "governing_law": "KARNATAKA_RENT_ACT"
+      },
+      {
+        "task": "blr_flat",
+        "mode": "agent",
+        "score": {
+          "governing_law_correct": 1,
+          "money_within_500": 1.0,
+          "citations_exist": 1.0,
+          "wrong_law_penalty": 0,
+          "total": 3.0
+        },
+        "error": null,
+        "findings": 5,
+        "governing_law": "TPA_CONTRACT"
+      },
+      {
+        "task": "pg_room",
+        "mode": "baseline",
+        "score": {
+          "governing_law_correct": 0,
+          "money_within_500": 1.0,
+          "citations_exist": 1.0,
+          "wrong_law_penalty": 0,
+          "total": 2.0
+        },
+        "error": null,
+        "findings": 2,
+        "governing_law": "KARNATAKA_RENT_ACT"
+      },
+      {
+        "task": "pg_room",
+        "mode": "agent",
+        "score": {
+          "governing_law_correct": 1,
+          "money_within_500": 1.0,
+          "citations_exist": 1.0,
+          "wrong_law_penalty": 0,
+          "total": 3.0
+        },
+        "error": null,
+        "findings": 2,
+        "governing_law": "UNRESOLVED"
+      },
+      {
+        "task": "moveout",
+        "mode": "baseline",
+        "score": {
+          "governing_law_correct": 0,
+          "money_within_500": 1.0,
+          "citations_exist": 1.0,
+          "wrong_law_penalty": 0,
+          "total": 2.0
+        },
+        "error": null,
+        "findings": 3,
+        "governing_law": "KARNATAKA_RENT_ACT"
+      },
+      {
+        "task": "moveout",
+        "mode": "agent",
+        "score": {
+          "governing_law_correct": 1,
+          "money_within_500": 1.0,
+          "citations_exist": 0.6666666666666666,
+          "wrong_law_penalty": 0,
+          "total": 2.6666666666666665
+        },
+        "error": null,
+        "findings": 3,
+        "governing_law": "TPA_CONTRACT"
+      }
+    ],
+    "model": "openai/gpt-oss-120b"
+  }
+}
