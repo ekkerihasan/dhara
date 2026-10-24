@@ -6,6 +6,16 @@ English and Kannada | Karnataka law pack | Web app
 
 > **ChronoForge 2026, NITK Surathkal** | Track: Agentic AI | Theme: Cities of the Future | Team StrawHats
 
+Latest successful live evaluation (24 October, Groq `openai/gpt-oss-120b`; scores out of 3):
+
+| Task | Plain model | Dhara agent |
+| --- | ---: | ---: |
+| Bengaluru flat | 1.80 | 2.52 |
+| PG room | 2.00 | 3.00 |
+| Move-out | 2.00 | 3.00 |
+
+The 25 October coverage fix passes its five-clause regression; a fresh live comparison is pending provider availability. [Results and limitations](env/results/scores.md).
+
 ![Dhara review report](docs/screenshots/review-report.jpg)
 
 ---
@@ -51,7 +61,7 @@ At move-out, the same pattern checks each deduction the landlord claims against 
 | Redaction, drafts, approval gate | Code | [`backend/tools/agreement.py`](backend/tools/agreement.py), [`backend/tools/messages.py`](backend/tools/messages.py) |
 | Scoring | Code, no model | [`env/scorer.py`](env/scorer.py) |
 
-Each tool result goes back to the AI before its next step, up to 12 tool calls. If the model is unreachable, a rule-based pass runs instead and the trace says so.
+Each tool result goes back to the AI before its next step, up to 12 tool calls. A bounded rule-based coverage check also catches explicitly priced clauses the model omits, labeling additions in the trace. If the model is unreachable, the same rules provide a fallback and the trace says so.
 
 ### The Verifier
 
@@ -73,6 +83,8 @@ The same model reviews each test agreement twice: once with no tools and no veri
 
 The live rerun after the move-out citation fix used `openai/gpt-oss-120b` through Groq: 14 model requests with no provider failures. The agent scored 3/3 on PG and move-out; on the flat it returned only three of five expected findings, earning 60% money coverage and 2.52/3 overall. The plain model selected the wrong governing-law label on all three tasks. These are single-run results on synthetic agreements, not an accuracy estimate; both baseline and agent outputs can vary between runs. Reproduce with `python -m env.run_eval` after loading the provider environment variables.
 
+On 25 October, a coverage check was added for explicitly priced clauses omitted by the model. A regression using a fake provider that stops after three flat findings now produces all five findings and scores 3/3. A fresh Groq attempt encountered provider failures (a separate live negotiation probe returned HTTP 429), so the earlier live scores above are preserved. The runner now refuses to replace scores after provider failures and records failed attempts separately; a deterministic fallback is not counted as a successful live-model evaluation.
+
 ![Evaluation page](docs/screenshots/evaluation.jpg)
 
 ### Ten-question public chatbot side test
@@ -87,13 +99,19 @@ The [test protocol and ten questions](docs/PUBLIC_CHATBOT_TEST.md) cover model-l
 
 The [generated comparison](env/results/public_chatbot_report.md) keeps missing responses as **Not run**. Task 8.3's public-product comparison remains incomplete; these reference answers are not an independent ChatGPT/Gemini benchmark.
 
+### Negotiation practice and agreement photos
+
+Open `/negotiate` to practice with a model-driven PG landlord. It responds to the tenant's actual proposals for up to three rounds, checks each response through the citation verifier, allows one correction after blocked claims, and requires approval for each proposal. A live two-turn smoke test passed with Groq `openai/gpt-oss-20b`; the default 120B model was rate-limited. This is a simulation; no message goes to a real landlord. See [the negotiation API and limits](docs/LANDLORD_NEGOTIATION.md).
+
+Open `/scan` to extract a JPEG or PNG agreement photo with Sarvam Vision. Remove personal identifiers from the image first and explicitly agree to remote OCR. The app strips metadata, redacts detected identifiers in extracted text, and asks you to check the wording and amounts before starting a review. Sarvam receives the image and may retain its processing job; Dhara does not control provider retention. See [photo OCR setup and limits](docs/PHOTO_OCR.md).
+
 ### Simple, scalable, secure
 
 | | How |
 | --- | --- |
 | **Simple** | Rules do the work wherever rules are enough: the Rent Act test, the money formulas, the citation check and the scorer are plain Python over one JSON file. The AI only reads the clauses and decides what to check. No database, no queue. |
 | **Scalable** | Law is data. Each state is one law pack with a source link per section; the agent, verifier and screens stay the same. |
-| **Secure** | Documents stay in memory, personal numbers are redacted before any model call, keys come only from the environment, and nothing is sent without the tenant's approval. |
+| **Secure** | Local uploads stay in memory; extracted text is redacted before tenancy-model calls. Optional remote photo OCR requires prior image redaction and consent. Keys come from the environment; outbound drafts require approval. |
 
 ## Architecture
 
@@ -140,7 +158,7 @@ Copy `.env.example` to `.env` and set `GROQ_API_KEY`. Never commit real keys; `.
 
 ```bash
 python -m pip install -r backend/requirements.txt
-uvicorn backend.main:app --port 8000
+uvicorn backend.main:app --port 8000 --env-file .env
 ```
 
 ### Frontend
@@ -153,6 +171,16 @@ NEXT_PUBLIC_USE_STUBS=false NEXT_PUBLIC_API_URL=http://localhost:8000 npm run de
 
 Open http://localhost:3000, press **Use the sample agreement**, leave **Year built** blank and press **Review the agreement**. Without the backend, leave out `NEXT_PUBLIC_USE_STUBS=false`: the screens then show a run built from the real tools. More in [frontend/README.md](frontend/README.md).
 
+On Windows, create an environment for Windows rather than reusing a Linux `.venv`:
+
+```powershell
+python -m venv .venv-win
+.\.venv-win\Scripts\python.exe -m pip install -r backend/requirements.txt -e ".[dev]"
+.\.venv-win\Scripts\python.exe -m uvicorn backend.main:app --port 8000 --env-file .env
+```
+
+For a plain-model API comparison, use `POST /api/runs?mode=baseline`. Its raw output is explicitly unverified and cannot be approved as a draft. See [baseline API behavior](docs/BASELINE_API.md).
+
 ### Tests and evaluation
 
 ```bash
@@ -160,6 +188,8 @@ python -m pytest -q                                                  # tools, ve
 python -m env.scorer env/tasks/blr_flat.json env/tasks/sample_run.json   # 3/3
 python -m env.run_eval                                               # plain model vs agent, needs GROQ_API_KEY
 ```
+
+Validation on 25 October: **223 tests and 6 subtests passed** in the Windows Python 3.10.11 environment, `pip check` found no broken dependencies, and the frontend production build and ESLint passed. The plan's Python 3.11 environment target has not been independently validated on this Windows checkout.
 
 ## Project Structure
 
@@ -187,12 +217,14 @@ dhara/
 
 ## Security & Privacy
 
-- **No stored documents:** uploaded agreements are read in memory for the request and never written to disk.
-- **Redaction first:** Aadhaar, PAN and phone numbers are redacted before any model call ([`backend/tools/agreement.py`](backend/tools/agreement.py)).
+- **No locally stored documents:** uploaded agreements are read in memory for the request and never written to disk. Opt-in photo OCR creates a remote Sarvam processing job; provider retention is outside Dhara's control.
+- **Redaction first:** Aadhaar, PAN and phone numbers in extracted text are redacted before tenancy-model calls ([`backend/tools/agreement.py`](backend/tools/agreement.py)).
+- **Photo privacy:** callers must remove identifiers from image pixels before remote OCR. The checkbox records that declaration; it does not inspect or redact pixels. OCR text is redacted again before tenancy review.
 - **No sending:** approval records a follow-up date; Dhara has no delivery integration and never sends a message itself.
 - **Keys:** only from environment variables; `.env` is ignored, `.env.example` holds empty placeholders.
 - **No personal data in the repo:** team planning notes are kept out of version control.
 - **Not a lawyer:** every report carries a not-a-lawyer notice.
+- **Verification limits:** citation checks establish source identity and supported applicability rules, not that a model's legal interpretation is correct. The three synthetic evaluation tasks and one clean English OCR image do not establish general accuracy.
 
 ## Impact
 
@@ -210,7 +242,9 @@ It scales because law is data: bringing Dhara to another state means sourcing it
 - [x] **Live end to end:** the agent loop, the API and the screens tested with the real model: question, answer, five findings with the scorer's amounts, English and Kannada drafts, a blocked claim, approval.
 - [x] **Plain model vs agent scores** on all three tasks.
 - [x] **Move-out:** claimed deductions checked against the move-in checklist, the challenge drafted, next formal step; live screen at `/moveout`.
-- [ ] Stretch: a landlord agent that pushes back, Hindi drafts, a test of public chatbots.
+- [x] Stretch: model-driven simulated landlord, three rounds, approval and verified replies (`/negotiate`).
+- [x] Stretch: opt-in Sarvam Vision photo OCR with text review (`/scan`); live provider status is documented in [PHOTO_OCR.md](docs/PHOTO_OCR.md).
+- [ ] Stretch: Hindi drafts and the public-chatbot test. The capture tool is ready; authentic public-product answers remain missing.
 
 ## Before and after
 
