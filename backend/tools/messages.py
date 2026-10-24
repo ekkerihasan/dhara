@@ -1,12 +1,15 @@
 """Deterministic EN/KN requests built on the prototype templates."""
 from __future__ import annotations
 
+from datetime import date, timedelta
 import logging
 from typing import Any
+from uuid import uuid4
 
 from housing.messages import draft_messages
 
 LOGGER = logging.getLogger(__name__)
+SCHEDULED: dict[str, dict[str, str]] = {}
 HEADERS = {
     "challenge": {"en": "Please reconsider the proposed deductions and provide an itemised explanation with supporting evidence.",
                   "kn": "ಪ್ರಸ್ತಾಪಿತ ಕಡಿತಗಳನ್ನು ದಯವಿಟ್ಟು ಮರುಪರಿಶೀಲಿಸಿ ಮತ್ತು ಪುರಾವೆಗಳೊಂದಿಗೆ ವಿವರವಾದ ಲೆಕ್ಕವನ್ನು ನೀಡಿ."},
@@ -32,3 +35,17 @@ def draft_message(findings: list[dict[str, Any]], tone: str = "request", languag
         text = HEADERS[tone][language] + "\n\n" + text
     LOGGER.info("draft_message tone=%s language=%s findings=%s", tone, language, len(findings))
     return {"text": text, "language": language, "tone": tone, "translation_note": messages["translation_note"]}
+
+
+def send_and_schedule(message: str, approved: bool, *, today: date | None = None) -> dict[str, str]:
+    """Record an approved draft and follow-up; no external delivery is configured."""
+    if approved is not True:
+        raise PermissionError("Explicit tenant approval is required")
+    if not isinstance(message, str) or not message.strip() or len(message) > 20000:
+        raise ValueError("Provide a nonempty message of at most 20,000 characters")
+    id = str(uuid4())
+    record = {"id": id, "message": message, "status": "scheduled", "delivery_status": "not_sent",
+              "follow_up_date": ((today or date.today()) + timedelta(days=7)).isoformat()}
+    SCHEDULED[id] = record.copy()
+    LOGGER.info("send_and_schedule id=%s approved=true", id)
+    return record
