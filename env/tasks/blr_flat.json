@@ -1,0 +1,62 @@
+{
+  "id": "blr_flat",
+  "agreement_text": "C1. Monthly rent is INR 25000 and the refundable security deposit is INR 150000.\nC2. The entire deposit is forfeited on any breach or early exit.\nC3. Six lock-in months remain, payable at the monthly rent on early exit.\nC4. A fixed painting charge of INR 15000 is deducted on exit.\nC5. Annual rent escalation is 15 percent.\nC6. Two months' notice is required; one month has been given.",
+  "facts": {
+    "rent_per_month": 25000,
+    "built_year": 2019,
+    "local_body": "municipal_corporation",
+    "premises_use": "residential",
+    "substantial_renovation_year": null
+  },
+  "language": "en",
+  "expected": {
+    "governing_law": "TPA_CONTRACT",
+    "findings": [
+      {
+        "clause_ref": "C2",
+        "category": "deposit_forfeiture",
+        "money_at_risk_inr": 150000,
+        "expected_sections": [
+          "ICA-74"
+        ]
+      },
+      {
+        "clause_ref": "C3",
+        "category": "lock_in",
+        "money_at_risk_inr": 150000,
+        "expected_sections": [
+          "ICA-74"
+        ]
+      },
+      {
+        "clause_ref": "C4",
+        "category": "painting_or_cleaning_fixed",
+        "money_at_risk_inr": 15000,
+        "expected_sections": [
+          "TPA-108(m)",
+          "ICA-74"
+        ]
+      },
+      {
+        "clause_ref": "C5",
+        "category": "rent_escalation_excess",
+        "money_at_risk_inr": 15000,
+        "expected_sections": [],
+        "notes": "Ten percent is a product threshold, not a statutory cap."
+      },
+      {
+        "clause_ref": "C6",
+        "category": "notice_shortfall",
+        "money_at_risk_inr": 25000,
+        "expected_sections": [
+          "TPA-106"
+        ]
+      }
+    ],
+    "forbidden_sections": [
+      "MTA-11(1)",
+      "MTA-30"
+    ]
+  },
+  "synthetic": true
+}
