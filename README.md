@@ -51,7 +51,7 @@ Open http://127.0.0.1:7861. The offline housing interface needs no model key. `.
 - Earlier Dhara AI prototype: imported from the team's Dhara-Ai repository; its existing source notices are preserved.
 - Meta OpenEnv / openenv-core: environment interfaces and runtime, including FastAPI, Uvicorn, Pydantic, Gradio and websockets.
 - Python dependencies: OpenAI Python SDK, python-dotenv, pytest, pytest-cov, httpx, setuptools and wheel.
-- Local document tools: PyMuPDF, Pillow, RapidOCR, ONNX Runtime and NumPy.
+- Local document tools: PyMuPDF, Pillow, RapidOCR, ONNX Runtime and NumPy. Event PDF extraction: [pypdf](https://pypdf.readthedocs.io/).
 - [India Code](https://www.indiacode.nic.in/) and [PRS Legislative Research](https://prsindia.org/billtrack/the-model-tenancy-act-2021): planned statute and legislative references.
 - [Groq](https://groq.com/) and [Sarvam](https://www.sarvam.ai/): planned model providers; event integration and provider selection remain pending.
 
