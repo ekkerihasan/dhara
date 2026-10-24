@@ -20,8 +20,8 @@ Owner key: H = Hasan (backend, Python), W = Wasih (frontend, TypeScript), B = bo
 
 ## Phase 1 (11:00 to 13:00)
 
-- [ ] 1.1 [H] `law/karnataka.json` 20+ entries. Commit: `feat(law): statute library with 20+ Karnataka, Registration, Contract and TPA sections`
-- [ ] 1.2 [H] `backend/tools/law.py` + `tests/test_law.py`. Commit: `feat(tools): check_jurisdiction and lookup_section with tests`
+- [x] 1.1 [H] `law/karnataka.json` 20+ entries. Commit: `feat(law): statute library with 20+ Karnataka, Registration, Contract and TPA sections`
+- [x] 1.2 [H] `backend/tools/law.py` + `tests/test_law.py`. Commit: `feat(tools): check_jurisdiction and lookup_section with tests`
 - [ ] 1.3 [W] Next.js scaffold, `/` page with upload and facts form. Commit: `feat(app): Next.js scaffold with upload and facts form`
 - [ ] 1.4 [W] Trace and Findings components, `/review/[id]` on `stubs/blr_flat.json`, types in `lib/types.ts`. Commit: `feat(app): decision-trace and findings screens on stubbed blr_flat run`
 
@@ -29,11 +29,11 @@ Owner key: H = Hasan (backend, Python), W = Wasih (frontend, TypeScript), B = bo
 
 ## Phase 2 and 3 (13:00 to 15:45)
 
-- [ ] 2.1 [H] Verifier + tests. Commit: `feat(verifier): block uncited and wrong-law claims`
-- [ ] 2.2 [H] Three task files. Commit: `feat(env): blr_flat, pg_room and moveout tasks`
-- [ ] 2.3 [H] Scorer + tests. Commit: `feat(scoring): governing-law, money-at-risk and citation checks with wrong-law penalty`
-- [ ] 3.1 [H] read_agreement (pypdf + PII redaction), compute_money, draft_message. Commit: `feat(tools): read_agreement with PII redaction, compute_money, draft_message`
-- [ ] 3.2 [H] send_and_schedule with approval gate. Commit: `feat(tools): send_and_schedule with approval gate`
+- [x] 2.1 [H] Verifier + tests. Commit: `feat(verifier): block uncited and wrong-law claims`
+- [x] 2.2 [H] Three task files. Commit: `feat(env): blr_flat, pg_room and moveout tasks`
+- [x] 2.3 [H] Scorer + tests. Commit: `feat(scoring): governing-law, money-at-risk and citation checks with wrong-law penalty`
+- [x] 3.1 [H] read_agreement (pypdf + PII redaction), compute_money, draft_message. Commit: `feat(tools): read_agreement with PII redaction, compute_money, draft_message`
+- [x] 3.2 [H] send_and_schedule with approval gate. Commit: `feat(tools): send_and_schedule with approval gate`
 - [ ] 3.3 [W] `/moveout/[id]` placeholder on a stub; question card component for `needs_input`; mobile pass. Commit: `feat(app): question card, move-out placeholder, mobile layout`
 - [ ] 3.4 [W] Keep `lib/types.ts` in sync with `backend/models.py` as Hasan adds fields (coordinate on a shared `models.py` draft by 14:00).
 
@@ -114,4 +114,4 @@ Final (confirm time), 7 to 8 minutes: problem (1 min, Wasih), what is new vs the
 
 ## Current checkout progress
 
-Phase 0 complete: baseline import and README committed as c903486 and pushed to origin/master (https://github.com/ekkerihasan/dhara.git). Validation: 51 tests and 6 subtests passed using the earlier project's Python 3.10.11 environment; ignore rules, empty API-key placeholders and staged secret check passed. Python 3.11 setup remains pending. Phase 1 has not started.
+Phase 0 is pushed to origin/master. H tasks for Phases 1–3 are implemented and pushed on hasan/backend through 254d064. Validation: 132 tests and 6 subtests passed using the earlier project's Python 3.10.11 environment. Phase 4 backend demonstrations pass: scorer 3/3 on the perfect sample and 2/3 with a -1 wrong-law penalty; jurisdiction output is documented in docs/BACKEND_CONTRACT.md. The planned CMC example is corrected to respect statutory rent and the INR 2000 Part B threshold. Python 3.11 setup remains pending. W tasks remain owned by the teammate. Phase 5 has not started.

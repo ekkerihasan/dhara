@@ -6,7 +6,9 @@ Built for ChronoForge 2026, NITK Surathkal. **Track:** Agentic AI. **Theme:** Ci
 
 ## Status
 
-Phase 0: the earlier prototype has been imported without its Git history, local environment, credentials, or caches. The ChronoForge agent and frontend are still to be built.
+Backend Phases 1–3 are implemented on `hasan/backend`: sourced law lookup, conservative jurisdiction screening, citation verification, three synthetic evaluation tasks, deterministic scoring, in-memory PDF extraction with PII redaction, money calculations, English/Kannada drafts, and approval-gated follow-up records. The planning agent, live API and teammate's frontend remain pending.
+
+Current validation: **132 passed, 6 subtests passed**. The sample perfect run scores **3/3**; citing the model deposit cap incurs **−1**, producing **2/3**. These are deterministic scorer checks on synthetic outputs, not live model evaluation results. Approved drafts are recorded in memory; external delivery is not configured.
 
 Baseline test result: **51 passed, 6 subtests passed** (`python -m pytest -q`). A root package import guard was added so pytest can collect tests from this checkout; `housing/` and `server/` are unchanged. Validation currently uses the earlier project's Python 3.10.11 environment; the event backend targets Python 3.11.
 
@@ -23,10 +25,10 @@ Baseline test result: **51 passed, 6 subtests passed** (`python -m pytest -q`). 
 
 ## Built at ChronoForge
 
-- [ ] Sourced law library and jurisdiction tools
-- [ ] Citation verifier and wrong-law blocking
-- [ ] Three tenancy evaluation tasks and deterministic scorer
-- [ ] Agreement redaction, money calculations and approval-gated messages
+- [x] Sourced law library and jurisdiction tools
+- [x] Citation verifier and wrong-law blocking
+- [x] Three tenancy evaluation tasks and deterministic scorer
+- [x] Agreement redaction, money calculations and approval-gated messages
 - [ ] Model provider, planning agent and decision trace
 - [ ] FastAPI run, answer and approval endpoints
 - [ ] Next.js review and move-out screens with English and Kannada drafts
