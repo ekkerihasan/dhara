@@ -19,6 +19,7 @@ from backend.tools.agreement import read_agreement
 from backend.tools.law import check_jurisdiction, lookup_section
 from backend.tools.messages import draft_message
 from backend.tools.money import compute_money
+from env.scorer import score
 
 ROOT = Path(__file__).resolve().parents[1]
 TASKS = ROOT / "env" / "tasks"
@@ -234,6 +235,33 @@ def build_moveout() -> dict[str, Any]:
     }
 
 
+# Synthetic runs shipped with the scorer: one correct, one that cites the Model Tenancy Act cap.
+SCORED_RUNS = [
+    ("sample_run", "Correct run", "Right governing law, money within Rs 500, only sections from the law pack."),
+    ("sample_run_wronglaw", "Wrong-law run", "Same findings, plus the claim that the law caps deposits at two months."),
+]
+
+
+def build_scores() -> dict[str, Any]:
+    task = json.loads((TASKS / "blr_flat.json").read_text(encoding="utf-8"))
+    forbidden = set(task["expected"]["forbidden_sections"])
+    runs = []
+    for name, label, summary in SCORED_RUNS:
+        run = json.loads((TASKS / f"{name}.json").read_text(encoding="utf-8"))
+        cited = [c["section_id"] for c in run.get("claims", []) if c.get("section_id")]
+        cited += [s for f in run["findings"] for s in f["section_ids"]]
+        runs.append({"id": name, "label": label, "summary": summary, "score": score(task, run),
+                     "claims": run.get("claims", []), "forbidden_cited": sorted(set(cited) & forbidden)})
+    return {
+        "task": {"id": task["id"], "findings": len(task["expected"]["findings"]),
+                 "money_total_inr": sum(f["money_at_risk_inr"] for f in task["expected"]["findings"]),
+                 "governing_law": task["expected"]["governing_law"], "forbidden_sections": sorted(forbidden)},
+        "max_total": 3,
+        "runs": runs,
+        "sections": section_meta(forbidden | {"ICA-74", "TPA-106", "TPA-108(m)"}),
+    }
+
+
 def write(name: str, data: dict[str, Any]) -> None:
     path = STUBS / name
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
@@ -243,3 +271,4 @@ def write(name: str, data: dict[str, Any]) -> None:
 if __name__ == "__main__":
     write("blr_flat.json", build_blr_flat())
     write("moveout.json", build_moveout())
+    write("scores.json", build_scores())
