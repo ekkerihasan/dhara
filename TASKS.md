@@ -14,9 +14,9 @@ Owner key: H = Hasan (backend, Python), W = Wasih (frontend, TypeScript), B = bo
 
 ## Phase 0 (10:30 to 11:00)
 
-- [ ] 0.1 [W] New repo, baseline import, `.gitignore`, `.env.example`, CLAUDE.md, BUILD.md, TASKS.md. Commit: `chore: baseline import of Dhara AI offline prototype (April 2026, permitted by organisers)`
-- [ ] 0.2 [H] README rewrite: title, one-liner, track and theme line, "Before and after" two-column section (existed before: offline rules-based Karnataka screening, clause extraction, EN/KN/HI templates, scripted counterparty, local OCR, OpenEnv tasks, tests, no model; built at ChronoForge: empty checklist), old notes moved under "Original prototype notes", and "Note on prior work" as the last section stating organiser permission and that every checklist item was written during the event. Included in 0.1's commit or `docs: README before/after and note on prior work`.
-- [ ] 0.3 [H] Existing tests run; count recorded in README Status.
+- [x] 0.1 [W] New repo, baseline import, `.gitignore`, `.env.example`, CLAUDE.md, BUILD.md, TASKS.md. Commit: `chore: baseline import of Dhara AI offline prototype (April 2026, permitted by organisers)`
+- [x] 0.2 [H] README rewrite: title, one-liner, track and theme line, "Before and after" two-column section (existed before: offline rules-based Karnataka screening, clause extraction, EN/KN/HI templates, scripted counterparty, local OCR, OpenEnv tasks, tests, no model; built at ChronoForge: empty checklist), old notes moved under "Original prototype notes", and "Note on prior work" as the last section stating organiser permission and that every checklist item was written during the event. Included in 0.1's commit or `docs: README before/after and note on prior work`.
+- [x] 0.3 [H] Existing tests run; count recorded in README Status.
 
 ## Phase 1 (11:00 to 13:00)
 
@@ -114,4 +114,4 @@ Final (confirm time), 7 to 8 minutes: problem (1 min, Wasih), what is new vs the
 
 ## Current checkout progress
 
-Task 0.1 baseline files are prepared, including the README rewrite (0.2) and baseline validation (0.3): 51 tests and 6 subtests passed using the earlier project's Python 3.10.11 environment. Python 3.11 setup remains pending. Tasks remain unchecked until the baseline commit is pushed, as required above. Configured origin: https://github.com/ekkerihasan/dhara.git. Git access verified; Phase 0 validation rerun: 51 tests and 6 subtests passed.
+Phase 0 complete: baseline import and README committed as c903486 and pushed to origin/master (https://github.com/ekkerihasan/dhara.git). Validation: 51 tests and 6 subtests passed using the earlier project's Python 3.10.11 environment; ignore rules, empty API-key placeholders and staged secret check passed. Python 3.11 setup remains pending. Phase 1 has not started.
