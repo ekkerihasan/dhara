@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from backend.agent.tenant import AgentState, start_agent
 from backend.llm.provider import ProviderError, ToolCall, ToolCallOrText
 from backend.tools.agreement import read_agreement
@@ -88,6 +90,56 @@ def test_rule_based_fallback_when_model_is_unavailable() -> None:
     assert len(result.findings) == 5
     assert all(f.clause_text and f.ask for f in result.findings)
     assert any(step.label == "Model unavailable: rule-based fallback" for step in result.trace)
+
+
+def test_coverage_check_recovers_clauses_omitted_by_successful_model() -> None:
+    model = scripted_model(BLR_FINDINGS[:3], [])
+    state = AgentState("partial", read_agreement(TASK["agreement_text"])["clauses"], TASK["facts"], "en", model)
+
+    result = start_agent(state)
+
+    assert result.status == "ready"
+    assert [(f.clause_ref, f.money_at_risk_inr) for f in result.findings] == [
+        ("C2", 150000), ("C3", 150000), ("C4", 15000), ("C5", 15000), ("C6", 25000)]
+    assert result.findings[3].model_extra["source"] == "rule_based_coverage"
+    assert result.findings[0].issue == "C2 is unfair to the tenant."
+    assert result.findings[3].section_ids == []
+    assert "product" in result.findings[3].issue
+    assert any(step.label == "Rule-based coverage check" for step in result.trace)
+    assert not any("Model unavailable" in step.label for step in result.trace)
+    assert state.tool_calls <= 12
+
+
+def test_coverage_check_does_not_invent_charges_for_an_unpriced_clause() -> None:
+    text = "C1. Monthly rent is INR 25000.\nC2. Painting costs will be discussed after inspection."
+    state = AgentState("unpriced", read_agreement(text)["clauses"], TASK["facts"], "en", scripted_model([], []))
+    assert start_agent(state).findings == []
+
+
+@pytest.mark.parametrize("clause", [
+    "The full deposit is not forfeited for any breach or early exit.",
+    "There is no deposit forfeiture for early exit.",
+    "The deposit is returned after inspection on early exit.",
+    "Rent is INR 25000; painting costs will be discussed after inspection.",
+    "Monthly escalation is 15 percent.",
+    "Two months' notice is required; three month has been given.",
+])
+def test_coverage_check_requires_an_explicit_adverse_priced_term(clause) -> None:
+    text = f"C1. Monthly rent is INR 25000 and the security deposit is INR 150000.\nC2. {clause}"
+    state = AgentState("noncharge", read_agreement(text)["clauses"], TASK["facts"], "en", scripted_model([], []))
+    result = start_agent(state)
+    assert result.status == "ready"
+    assert result.findings == []
+
+
+def test_invalid_coverage_number_does_not_discard_model_findings() -> None:
+    text = TASK["agreement_text"] + "\nC7. Annual escalation is 1.2.3 percent.\nC8. A fixed cleaning charge of INR 9999999999999999999 is deducted on exit."
+    model = scripted_model(BLR_FINDINGS[:3], [])
+    state = AgentState("invalid-number", read_agreement(text)["clauses"], TASK["facts"], "en", model)
+    result = start_agent(state)
+    assert result.status == "ready"
+    assert len(result.findings) == 5
+    assert all(f.clause_ref not in {"C7", "C8"} for f in result.findings)
 
 
 def test_agent_pauses_for_built_year_only_then_resumes() -> None:

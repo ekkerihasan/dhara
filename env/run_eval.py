@@ -109,18 +109,35 @@ def agent_run(task: dict[str, Any], model: ProviderChat) -> dict[str, Any]:
 
 def evaluate(model: ProviderChat = chat, tasks: tuple[str, ...] = TASKS) -> dict[str, Any]:
     rows = []
+    requests = failures = 0
+
+    def measured_model(messages: list[dict[str, Any]], tools: list[dict[str, Any]]):
+        nonlocal requests, failures
+        requests += 1
+        try:
+            return model(messages, tools)
+        except ProviderError:
+            failures += 1
+            raise
+
     for name in tasks:
         task = json.loads((ROOT / "env" / "tasks" / f"{name}.json").read_text(encoding="utf-8"))
         for mode, runner in (("baseline", baseline_run), ("agent", agent_run)):
+            failures_before = failures
             try:
-                run = runner(task, model)
+                run = runner(task, measured_model)
                 result = score(task, run)
                 error = None
+                if failures > failures_before:
+                    error = "Provider failed; fallback output is not a live-model evaluation"
+                elif run.get("status", "ready") != "ready":
+                    error = "Agent did not complete a ready review"
             except (ProviderError, ValueError) as exc:
                 run, result, error = {}, {"total": 0.0}, str(exc)
             rows.append({"task": name, "mode": mode, "score": result, "error": error,
                          "findings": len(run.get("findings", [])), "governing_law": run.get("governing_law")})
-    return {"date": date.today().isoformat(), "rows": rows}
+    return {"date": date.today().isoformat(), "rows": rows,
+            "model_requests": requests, "provider_failures": failures}
 
 
 def markdown(results: dict[str, Any], model_name: str) -> str:
@@ -141,9 +158,15 @@ def markdown(results: dict[str, Any], model_name: str) -> str:
 def main() -> None:
     import os
     results = evaluate()
-    model_name = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+    provider = os.getenv("MODEL_PROVIDER", "groq").strip().casefold()
+    model_name = (os.getenv("SARVAM_MODEL", "sarvam-105b") if provider == "sarvam"
+                  else os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"))
     RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / "scores.json").write_text(json.dumps({**results, "model": model_name}, indent=2) + "\n", encoding="utf-8")
+    if any(row["error"] for row in results["rows"]):
+        (RESULTS / "last_failed_attempt.json").write_text(
+            json.dumps({**results, "model": model_name, "provider": provider}, indent=2) + "\n", encoding="utf-8")
+        raise SystemExit("Evaluation incomplete; previous scores preserved. See env/results/last_failed_attempt.json.")
+    (RESULTS / "scores.json").write_text(json.dumps({**results, "model": model_name, "provider": provider}, indent=2) + "\n", encoding="utf-8")
     (RESULTS / "scores.md").write_text(markdown(results, model_name), encoding="utf-8")
     print(markdown(results, model_name))
 

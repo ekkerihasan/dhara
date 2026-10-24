@@ -12,12 +12,13 @@ import base64
 import binascii
 import logging
 import uuid
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.agent.moveout import MoveoutState, approve_moveout, start_moveout
+from backend.agent.baseline import start_baseline
 from backend.agent.tenant import AgentState, approve_agent, start_agent
 from backend.llm.provider import chat
 from backend.models import AnswerRequest, ApprovalRequest, MoveoutRequest, RunRequest, RunResponse
@@ -59,14 +60,19 @@ def _run(run_id: str) -> AgentState:
 
 def _advance(state: AgentState) -> None:
     """Run the agent until it needs the tenant again (background task)."""
-    start_agent(state)
+    if state.mode == "baseline":
+        start_baseline(state)
+    else:
+        start_agent(state)
     LOGGER.info("run %s status=%s tool_calls=%s", state.id, state.status, state.tool_calls)
 
 
 @app.post("/api/runs", response_model=RunResponse)
-def create_run(request: RunRequest, background: BackgroundTasks) -> RunResponse:
+def create_run(request: RunRequest, background: BackgroundTasks,
+               mode: Literal["agent", "baseline"] = "agent") -> RunResponse:
     agreement = _agreement(request)
     state = AgentState(str(uuid.uuid4()), agreement["clauses"], request.facts.model_dump(), request.language, provider_chat)
+    state.mode = mode
     state.add_trace("tool_call", "read_agreement", tool="read_agreement",
                     inputs={"source": "pdf" if request.pdf_base64 else "text"},
                     output={"clauses": len(agreement["clauses"]), "redactions": agreement["redactions"]})
