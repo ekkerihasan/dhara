@@ -39,7 +39,7 @@ def test_full_flow_question_answer_approve(client) -> None:
     ready = client.get(f"/api/runs/{run_id}").json()
     assert ready["status"] == "ready"
     assert len(ready["findings"]) == 5
-    assert [d["language"] for d in ready["drafts"]] == ["en", "kn"]
+    assert [d["language"] for d in ready["drafts"]] == ["en", "kn", "hi"]
     assert any(v["verdict"] == "blocked" and v["section_id"] == "MTA-11(1)" for v in ready["verdicts"])
 
     approved = client.post(f"/api/runs/{run_id}/approve", json={"approved": True}).json()

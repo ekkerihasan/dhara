@@ -7,6 +7,7 @@ import { createRun } from "@/lib/api";
 import { LOCAL_BODY_LABEL } from "@/lib/format";
 import blrFlat from "@/stubs/blr_flat.json";
 import type { Facts, Language, LocalBody, PremisesUse } from "@/lib/types";
+import { VoiceFacts } from "./VoiceFacts";
 
 const MAX_PDF_BYTES = 8 * 1024 * 1024; // same 8 MB limit as the prototype reader
 
@@ -38,6 +39,16 @@ export function IntakeForm() {
     if (f.size > MAX_PDF_BYTES) return setError("The PDF is over 8 MB.");
     setError(null);
     setFile(f);
+  };
+
+  /** Fill only the fields the tenant actually mentioned; the rest keep what is already typed. */
+  const fillFromVoice = (spoken: Partial<Facts>) => {
+    if (spoken.rent_per_month) setRent(String(spoken.rent_per_month));
+    if (spoken.deposit_inr) setDeposit(String(spoken.deposit_inr));
+    if (spoken.built_year) setBuiltYear(String(spoken.built_year));
+    if (spoken.substantial_renovation_year) setRenovationYear(String(spoken.substantial_renovation_year));
+    if (spoken.local_body) setLocalBody(spoken.local_body);
+    if (spoken.premises_use) setUse(spoken.premises_use);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -126,6 +137,7 @@ export function IntakeForm() {
       <section className="section" id="facts">
         <h2>Facts about the rental</h2>
         <p>These decide whether the Karnataka Rent Act applies. Leave the built year blank if you do not know it: the agent will ask.</p>
+        <VoiceFacts language={language} onFacts={fillFromVoice} />
         <div className="form-grid">
           <div className="field">
             <label className="field-label" htmlFor="rent">
@@ -192,6 +204,10 @@ export function IntakeForm() {
               <label lang="kn">
                 <input type="radio" name="lang" value="kn" checked={language === "kn"} onChange={() => setLanguage("kn")} />
                 ಕನ್ನಡ
+              </label>
+              <label lang="hi">
+                <input type="radio" name="lang" value="hi" checked={language === "hi"} onChange={() => setLanguage("hi")} />
+                हिन्दी
               </label>
             </div>
           </div>

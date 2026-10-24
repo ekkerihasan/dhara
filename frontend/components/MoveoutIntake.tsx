@@ -117,6 +117,10 @@ export function MoveoutIntake() {
                   <input type="radio" name="moveout-lang" checked={language === "kn"} onChange={() => setLanguage("kn")} />
                   ಕನ್ನಡ
                 </label>
+                <label lang="hi">
+                  <input type="radio" name="moveout-lang" checked={language === "hi"} onChange={() => setLanguage("hi")} />
+                  हिन्दी
+                </label>
               </div>
             </div>
             <div className="form-actions">

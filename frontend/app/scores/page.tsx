@@ -1,3 +1,4 @@
+import { ClauseTypesChart, type ClauseTypeRow } from "@/components/ClauseTypesChart";
 import { DocFooter } from "@/components/DocFooter";
 import { SectionChip } from "@/components/SectionChip";
 import { Toc } from "@/components/Toc";
@@ -10,6 +11,7 @@ const TOC = [
   { id: "compare", title: "With and without tools" },
   { id: "result", title: "How wrong law is scored" },
   { id: "checks", title: "What the scorer checks" },
+  { id: "clauses", title: "Which clauses go wrong" },
   { id: "reproduce", title: "Reproduce it" },
 ];
 
@@ -200,6 +202,19 @@ export default function ScoresPage() {
                 from a live model.
               </figcaption>
             </figure>
+          </section>
+
+          <section className="section" id="clauses">
+            <h2>Which clauses go wrong</h2>
+            <p>
+              Fixed painting or cleaning charges and whole-deposit forfeiture come up most often in the test agreements. These are synthetic
+              agreements, so the counts show the shape of the analysis, not market data.
+            </p>
+            <ClauseTypesChart rows={scores.clause_types as ClauseTypeRow[]} />
+            <p>
+              With real use and the tenant&apos;s consent, the same chart would show anonymised counts by locality, so city housing teams can see
+              where unfair clauses cluster. Dhara stores no agreements today, so this is the next step, not a feature.
+            </p>
           </section>
 
           <section className="section" id="reproduce">

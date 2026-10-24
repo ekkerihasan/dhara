@@ -11,6 +11,18 @@ export function QuestionCard({ step, onAnswer }: { step: QuestionStep; onAnswer:
   const [error, setError] = useState<string | null>(null);
   const numeric = step.field === "built_year" || step.field === "substantial_renovation_year";
 
+  /** An empty value means "I don't know": the agent continues with the law marked unresolved. */
+  const send = async (answer: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await onAnswer(answer);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send the answer.");
+      setBusy(false);
+    }
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const year = Number(value);
@@ -18,14 +30,7 @@ export function QuestionCard({ step, onAnswer }: { step: QuestionStep; onAnswer:
       setError("Enter a year between 1900 and this year.");
       return;
     }
-    setBusy(true);
-    setError(null);
-    try {
-      await onAnswer(value.trim());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send the answer.");
-      setBusy(false);
-    }
+    await send(value.trim());
   };
 
   return (
@@ -52,6 +57,9 @@ export function QuestionCard({ step, onAnswer }: { step: QuestionStep; onAnswer:
         />
         <button className="btn primary" type="submit" disabled={busy || !value}>
           {busy ? "Resuming…" : "Answer and continue"}
+        </button>
+        <button className="btn" type="button" disabled={busy} onClick={() => send("")}>
+          I don&apos;t know
         </button>
       </form>
       {error && <p className="form-error">{error}</p>}

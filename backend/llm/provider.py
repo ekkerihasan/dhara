@@ -142,3 +142,34 @@ def chat(messages: list[dict[str, Any]], tools: list[dict[str, Any]]) -> ToolCal
     if isinstance(last_error, ProviderError):
         raise last_error
     raise ProviderError("Model request failed after one retry") from last_error
+
+
+def transcribe(audio: bytes, filename: str, language: str | None = None) -> str:
+    """Speech to text with Groq Whisper. The audio is sent once and never stored; returns the transcript."""
+    if not audio or len(audio) > 5 * 1024 * 1024:
+        raise ValueError("Provide a recording of at most 5 MB")
+    key = os.getenv("GROQ_API_KEY", "")
+    if not key:
+        raise ProviderError("No API key configured for groq")
+    url = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1").rstrip("/") + "/audio/transcriptions"
+    data = {"model": os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo"), "response_format": "json", "temperature": "0"}
+    if language:
+        data["language"] = language
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            with httpx.Client(timeout=httpx.Timeout(30.0)) as client:
+                response = client.post(url, headers={"Authorization": f"Bearer {key}"}, data=data, files={"file": (filename, audio)})
+            if (response.status_code == 429 or response.status_code >= 500) and attempt < 2:
+                time.sleep(_retry_after(response))
+                continue
+            if response.status_code >= 400:
+                raise ProviderError(f"Transcription failed with HTTP {response.status_code}")
+            text = response.json().get("text")
+            if not isinstance(text, str):
+                raise ProviderError("Transcription response had no text")
+            return text.strip()
+        except (httpx.HTTPError, ValueError) as exc:
+            last_error = exc
+            break
+    raise ProviderError("Transcription failed") from last_error

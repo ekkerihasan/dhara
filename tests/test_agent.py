@@ -55,7 +55,7 @@ def test_model_drives_findings_and_sees_each_tool_result() -> None:
     tool_results = [m for m in second_turn if m["role"] == "tool"]
     assert len(tool_results) == 5 and '"money_at_risk_inr": 150000' in tool_results[0]["content"]
     assert any(v["verdict"] == "blocked" and v["section_id"] == "MTA-11(1)" for v in result.verdicts)
-    assert [d.language for d in result.drafts] == ["en", "kn"]
+    assert [d.language for d in result.drafts] == ["en", "kn", "hi"]
     assert result.findings[0].clause_text.startswith("C2.")
 
 

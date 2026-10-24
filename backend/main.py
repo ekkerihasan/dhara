@@ -14,14 +14,15 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.agent.moveout import MoveoutState, approve_moveout, start_moveout
 from backend.agent.tenant import AgentState, approve_agent, start_agent
-from backend.llm.provider import chat
+from backend.llm.provider import ProviderError, chat, transcribe
 from backend.models import AnswerRequest, ApprovalRequest, MoveoutRequest, RunRequest, RunResponse
 from backend.tools.agreement import read_agreement
+from backend.tools.voice import facts_from_speech
 
 LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allo
 RUNS: dict[str, AgentState] = {}
 MOVEOUTS: dict[str, MoveoutState] = {}
 provider_chat = chat  # replaced by a fake model in tests
+speech_to_text = transcribe  # replaced in tests
 
 
 def _agreement(request: RunRequest) -> dict[str, Any]:
@@ -141,3 +143,18 @@ def approve_moveout_review(review_id: str, request: ApprovalRequest) -> dict[str
         return approve_moveout(state)
     except ValueError as exc:
         raise HTTPException(409, str(exc)) from exc
+
+
+# ---------- voice: speak the terms ----------
+
+@app.post("/api/voice")
+async def voice(audio: UploadFile = File(...), language: str = Form("")) -> dict[str, Any]:
+    """A spoken description of the rental becomes the facts form. The audio is held in memory only."""
+    data = await audio.read()
+    try:
+        text = speech_to_text(data, audio.filename or "speech.webm", language or None)
+        return facts_from_speech(text, provider_chat)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except ProviderError as exc:
+        raise HTTPException(502, "Speech service unavailable; type the facts instead") from exc

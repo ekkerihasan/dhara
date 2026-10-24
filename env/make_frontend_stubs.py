@@ -161,10 +161,10 @@ def build_blr_flat() -> dict[str, Any]:
     for verdict in verify_claims(BLR_CLAIMS):
         trace.add("verifier", claim=verdict.text, section_id=verdict.section_id, verdict=verdict.verdict, reason=verdict.reason)
 
-    drafts = {lang: draft_message(findings, "request", lang) for lang in ("en", "kn")}
-    trace.tool("draft_message", {"findings": len(findings), "tone": "request", "language": ["en", "kn"]},
+    drafts = {lang: draft_message(findings, "request", lang) for lang in ("en", "kn", "hi")}
+    trace.tool("draft_message", {"findings": len(findings), "tone": "request", "language": ["en", "kn", "hi"]},
                {"draft_id": "d1", "characters": {lang: len(d["text"]) for lang, d in drafts.items()}},
-               "Counter-proposal drafted in English and Kannada (tone: request) from the findings.")
+               "Counter-proposal drafted in English, Kannada and Hindi (tone: request) from the findings.")
     trace.add("draft", draft_id="d1", tone="request")
 
     governing_law = {
@@ -246,6 +246,23 @@ SCORED_RUNS = [
 ]
 
 
+TASK_LABEL = {"blr_flat": "Bengaluru flat", "pg_room": "PG room", "moveout": "Move-out"}
+
+
+def clause_types() -> list[dict[str, Any]]:
+    """Unfair or disputed clauses per category across the three test agreements (move-out: disputed deductions only)."""
+    rows: dict[str, list[dict[str, Any]]] = {}
+    for name in ("blr_flat", "pg_room", "moveout"):
+        task = json.loads((TASKS / f"{name}.json").read_text(encoding="utf-8"))
+        if "claimed_deductions" in task:
+            items = [(d["clause_ref"], d["category"], d["amount_inr"]) for d in task["claimed_deductions"] if d["expected_verdict"] == "disputed"]
+        else:
+            items = [(f["clause_ref"], f["category"], f["money_at_risk_inr"]) for f in task["expected"]["findings"]]
+        for ref, category, amount in items:
+            rows.setdefault(category, []).append({"task": TASK_LABEL[name], "clause_ref": ref, "amount_inr": amount})
+    return sorted(({"category": c, "count": len(v), "clauses": v} for c, v in rows.items()), key=lambda r: (-r["count"], r["category"]))
+
+
 def build_scores() -> dict[str, Any]:
     task = json.loads((TASKS / "blr_flat.json").read_text(encoding="utf-8"))
     forbidden = set(task["expected"]["forbidden_sections"])
@@ -263,6 +280,7 @@ def build_scores() -> dict[str, Any]:
         "max_total": 3,
         "runs": runs,
         "sections": section_meta(forbidden | {"ICA-74", "TPA-106", "TPA-108(m)"}),
+        "clause_types": clause_types(),
         # Live baseline-vs-agent results from python -m env.run_eval, when they exist
         "eval": json.loads((ROOT / "env" / "results" / "scores.json").read_text(encoding="utf-8"))
         if (ROOT / "env" / "results" / "scores.json").exists() else None,

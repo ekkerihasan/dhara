@@ -11,6 +11,10 @@ export const USE_STUBS = process.env.NEXT_PUBLIC_USE_STUBS !== "false";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 const STUB_RUN_ID = "blr_flat";
+const STUB_MOVEOUT_ID = "moveout";
+
+/** The sample runs (top-bar links) always come from the stubs, even when the live API is on. */
+const isSample = (id: string) => USE_STUBS || id === STUB_RUN_ID || id === STUB_MOVEOUT_ID;
 const FOLLOW_UP_DAYS = 7;
 
 // ---------- live API (BUILD.md Phase 5 endpoints) ----------
@@ -60,6 +64,7 @@ interface StubState {
   approvedAt: string | null;
   language: Language;
   entered: Facts | null; // what the tenant typed, compared with the sample flat
+  unknown?: string[]; // facts answered "I don't know"
 }
 
 const DEFAULT_STATE: StubState = { answer: null, needsAnswer: false, approvedAt: null, language: "en", entered: null };
@@ -90,8 +95,9 @@ function addDays(iso: string, days: number): string {
 }
 
 /** The stub is precomputed for one sample flat. Name every fact the tenant entered that differs from it. */
-function sampleNote(entered: Facts | null, sample: Facts): string | null {
+function sampleNote(entered: Facts | null, sample: Facts, unknown: string[] = []): string | null {
   if (!entered) return null;
+  if (unknown.includes("built_year")) return `You answered "I don't know" for the built year; the sample was computed for a building from ${sample.built_year}, and the live agent would mark the Rent Act result unresolved.`;
   const show = {
     rent_per_month: (v: number | null) => (v === null ? "blank" : `${inr(v)}/month`),
     deposit_inr: (v: number | null) => (v === null ? "blank" : inr(v)),
@@ -124,7 +130,7 @@ function stubRun(id: string): Run {
     return { ...run, facts: { ...run.facts, built_year: null }, status: "needs_input", trace: run.trace.slice(0, qIndex + 1), governing_law: null, findings: [], drafts: [] };
   }
   // The trace keeps the sample's own answer so it matches the tool calls below it; sample_note names the difference.
-  run.sample_note = sampleNote(state.entered, run.facts);
+  run.sample_note = sampleNote(state.entered, run.facts, state.unknown);
 
   if (state.approvedAt) {
     const approval: ApprovalStep = {
@@ -160,7 +166,7 @@ export async function createRun(input: RunInput): Promise<string> {
 }
 
 export async function getRun(id: string): Promise<Run> {
-  if (USE_STUBS) {
+  if (isSample(id)) {
     await delay(250);
     return stubRun(id);
   }
@@ -169,20 +175,21 @@ export async function getRun(id: string): Promise<Run> {
 }
 
 export async function answerQuestion(id: string, field: keyof Facts, value: string): Promise<void> {
-  if (USE_STUBS) {
+  if (isSample(id)) {
     await delay(600);
     const state = readState(id);
     const entered = state.entered ? { ...state.entered, [field]: Number(value) || null } : null;
-    writeState(id, { ...state, answer: value, entered });
+    const unknown = value === "" ? [...(state.unknown ?? []), field] : state.unknown; // "" = I don't know
+    writeState(id, { ...state, answer: value || "unknown", entered, unknown });
     return;
   }
-  const facts = { ...loadFacts(id), [field]: Number(value) || value };
+  const facts = { ...loadFacts(id), [field]: value === "" ? null : Number(value) || value }; // "" = I don't know
   saveFacts(id, facts);
   await postJson(`/api/runs/${encodeURIComponent(id)}/answer`, { facts: { [field]: facts[field] } });
 }
 
 export async function approveDraft(id: string, draftId: string): Promise<void> {
-  if (USE_STUBS) {
+  if (isSample(id)) {
     await delay(400);
     writeState(id, { ...readState(id), approvedAt: new Date().toISOString() });
     return;
@@ -203,15 +210,23 @@ export async function createMoveout(input: MoveoutInput): Promise<string> {
 }
 
 export async function getMoveout(id: string): Promise<MoveoutRun> {
-  if (USE_STUBS) {
+  if (isSample(id)) {
     await delay(250);
-    if (id !== "moveout") throw new Error(`No stubbed move-out "${id}". Try /moveout/moveout.`);
+    if (id !== STUB_MOVEOUT_ID) throw new Error(`No stubbed move-out "${id}". Try /moveout/moveout.`);
     return structuredClone(moveout) as unknown as MoveoutRun;
   }
   return fromBackendMoveout(await request<BackendMoveout>(`/api/moveout/${encodeURIComponent(id)}`), loadFacts(id));
 }
 
 export async function approveMoveout(id: string): Promise<void> {
-  if (USE_STUBS) return;
+  if (isSample(id)) return;
   await postJson(`/api/moveout/${encodeURIComponent(id)}/approve`, { approved: true });
+}
+
+/** Speech to facts (live only): the backend transcribes the recording and returns checked form fields. */
+export async function voiceFacts(audio: Blob, language: Language): Promise<{ transcript: string; facts: Partial<Facts> }> {
+  const form = new FormData();
+  form.append("audio", audio, "speech.webm");
+  form.append("language", language);
+  return request<{ transcript: string; facts: Partial<Facts> }>("/api/voice", { method: "POST", body: form });
 }

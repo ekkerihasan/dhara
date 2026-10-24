@@ -330,7 +330,7 @@ def _finish_analysis(state: AgentState) -> None:
     draft_input = [finding.model_dump() for finding in state.findings]
     # Both languages, the tenant's choice first, so the screen can switch between them.
     state.drafts = []
-    for language in dict.fromkeys([state.language, "en", "kn"]):
+    for language in dict.fromkeys([state.language, "en", "kn", "hi"]):
         draft_result = _dispatch(state, "draft_message", {"findings": draft_input, "tone": "request", "language": language}, counted=False)
         if "error" not in draft_result:
             state.drafts.append(Draft(**draft_result))

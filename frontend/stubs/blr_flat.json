@@ -315,17 +315,19 @@
         "tone": "request",
         "language": [
           "en",
-          "kn"
+          "kn",
+          "hi"
         ]
       },
       "output": {
         "draft_id": "d1",
         "characters": {
           "en": 747,
-          "kn": 733
+          "kn": 733,
+          "hi": 761
         }
       },
-      "summary": "Counter-proposal drafted in English and Kannada (tone: request) from the findings."
+      "summary": "Counter-proposal drafted in English, Kannada and Hindi (tone: request) from the findings."
     },
     {
       "index": 20,
@@ -408,9 +410,10 @@
       "to": "Landlord",
       "text": {
         "en": "Hello, before I sign the agreement, I request the following changes:\n- C2: please replace forfeiture of the whole deposit with deduction of actual, itemised loss (Indian Contract Act, 1872, s.74).\n- C3: please cap the early-exit payment at one month's rent, or waive it if I find a replacement tenant.\n- C4: please charge painting or cleaning only for damage beyond reasonable wear and tear, judged against the dated move-in checklist (Transfer of Property Act, 1882, s.108(m)).\n- C5: please revise the yearly rent increase to 10%.\n- C6: please agree that notice already given counts, or set the notice period to one month.\nI am happy to sign once these changes are made. These are requests for discussion, subject to agreement and applicable law.",
-        "kn": "ನಮಸ್ಕಾರ, ಒಪ್ಪಂದಕ್ಕೆ ಸಹಿ ಮಾಡುವ ಮೊದಲು ಈ ಬದಲಾವಣೆಗಳನ್ನು ಕೋರುತ್ತೇನೆ:\n- C2: ಸಂಪೂರ್ಣ ಠೇವಣಿ ಮುಟ್ಟುಗೋಲಿನ ಬದಲು, ನಿಜವಾದ ಮತ್ತು ವಿವರವಾದ ನಷ್ಟವನ್ನು ಮಾತ್ರ ಕಡಿತಗೊಳಿಸಿ (ಭಾರತೀಯ ಒಪ್ಪಂದ ಕಾಯ್ದೆ, 1872, ಸೆಕ್ಷನ್ 74).\n- C3: ಬೇಗ ಖಾಲಿ ಮಾಡಿದರೆ ಪಾವತಿಯನ್ನು ಒಂದು ತಿಂಗಳ ಬಾಡಿಗೆಗೆ ಮಿತಿಗೊಳಿಸಿ, ಅಥವಾ ನಾನು ಬದಲಿ ಬಾಡಿಗೆದಾರರನ್ನು ಹುಡುಕಿದರೆ ಮನ್ನಾ ಮಾಡಿ.\n- C4: ಸಮಂಜಸ ಸವಕಳಿಗಿಂತ ಹೆಚ್ಚಿನ ಹಾನಿಗೆ ಮಾತ್ರ, ದಿನಾಂಕದ ಪ್ರವೇಶ ಪಟ್ಟಿಯ ಆಧಾರದ ಮೇಲೆ, ಬಣ್ಣ ಅಥವಾ ಸ್ವಚ್ಛತೆಯ ವೆಚ್ಚ ವಿಧಿಸಿ (ಆಸ್ತಿ ವರ್ಗಾವಣೆ ಕಾಯ್ದೆ, 1882, ಸೆಕ್ಷನ್ 108(m)).\n- C5: ವಾರ್ಷಿಕ ಬಾಡಿಗೆ ಹೆಚ್ಚಳವನ್ನು 10% ಕ್ಕೆ ಇಳಿಸಿ.\n- C6: ಈಗಾಗಲೇ ನೀಡಿದ ಸೂಚನೆಯನ್ನು ಪರಿಗಣಿಸಿ, ಅಥವಾ ಸೂಚನಾ ಅವಧಿಯನ್ನು ಒಂದು ತಿಂಗಳಿಗೆ ನಿಗದಿಪಡಿಸಿ.\nಈ ಬದಲಾವಣೆಗಳನ್ನು ಸೇರಿಸಿದ ನಂತರ ಒಪ್ಪಂದಕ್ಕೆ ಸಹಿ ಮಾಡುತ್ತೇನೆ. ಇವು ಚರ್ಚೆಗಾಗಿ ಇರುವ ವಿನಂತಿಗಳು, ಒಪ್ಪಂದ ಮತ್ತು ಅನ್ವಯವಾಗುವ ಕಾನೂನಿಗೆ ಒಳಪಟ್ಟಿವೆ."
+        "kn": "ನಮಸ್ಕಾರ, ಒಪ್ಪಂದಕ್ಕೆ ಸಹಿ ಮಾಡುವ ಮೊದಲು ಈ ಬದಲಾವಣೆಗಳನ್ನು ಕೋರುತ್ತೇನೆ:\n- C2: ಸಂಪೂರ್ಣ ಠೇವಣಿ ಮುಟ್ಟುಗೋಲಿನ ಬದಲು, ನಿಜವಾದ ಮತ್ತು ವಿವರವಾದ ನಷ್ಟವನ್ನು ಮಾತ್ರ ಕಡಿತಗೊಳಿಸಿ (ಭಾರತೀಯ ಒಪ್ಪಂದ ಕಾಯ್ದೆ, 1872, ಸೆಕ್ಷನ್ 74).\n- C3: ಬೇಗ ಖಾಲಿ ಮಾಡಿದರೆ ಪಾವತಿಯನ್ನು ಒಂದು ತಿಂಗಳ ಬಾಡಿಗೆಗೆ ಮಿತಿಗೊಳಿಸಿ, ಅಥವಾ ನಾನು ಬದಲಿ ಬಾಡಿಗೆದಾರರನ್ನು ಹುಡುಕಿದರೆ ಮನ್ನಾ ಮಾಡಿ.\n- C4: ಸಮಂಜಸ ಸವಕಳಿಗಿಂತ ಹೆಚ್ಚಿನ ಹಾನಿಗೆ ಮಾತ್ರ, ದಿನಾಂಕದ ಪ್ರವೇಶ ಪಟ್ಟಿಯ ಆಧಾರದ ಮೇಲೆ, ಬಣ್ಣ ಅಥವಾ ಸ್ವಚ್ಛತೆಯ ವೆಚ್ಚ ವಿಧಿಸಿ (ಆಸ್ತಿ ವರ್ಗಾವಣೆ ಕಾಯ್ದೆ, 1882, ಸೆಕ್ಷನ್ 108(m)).\n- C5: ವಾರ್ಷಿಕ ಬಾಡಿಗೆ ಹೆಚ್ಚಳವನ್ನು 10% ಕ್ಕೆ ಇಳಿಸಿ.\n- C6: ಈಗಾಗಲೇ ನೀಡಿದ ಸೂಚನೆಯನ್ನು ಪರಿಗಣಿಸಿ, ಅಥವಾ ಸೂಚನಾ ಅವಧಿಯನ್ನು ಒಂದು ತಿಂಗಳಿಗೆ ನಿಗದಿಪಡಿಸಿ.\nಈ ಬದಲಾವಣೆಗಳನ್ನು ಸೇರಿಸಿದ ನಂತರ ಒಪ್ಪಂದಕ್ಕೆ ಸಹಿ ಮಾಡುತ್ತೇನೆ. ಇವು ಚರ್ಚೆಗಾಗಿ ಇರುವ ವಿನಂತಿಗಳು, ಒಪ್ಪಂದ ಮತ್ತು ಅನ್ವಯವಾಗುವ ಕಾನೂನಿಗೆ ಒಳಪಟ್ಟಿವೆ.",
+        "hi": "नमस्ते, समझौते पर हस्ताक्षर करने से पहले मेरा अनुरोध है कि ये बदलाव किए जाएँ:\n- C2: कृपया पूरी जमा राशि ज़ब्त करने के बजाय केवल वास्तविक, मदवार नुकसान की कटौती करें (भारतीय संविदा अधिनियम, 1872, धारा 74)।\n- C3: कृपया समय से पहले घर छोड़ने पर भुगतान को एक महीने के किराए तक सीमित करें, या दूसरा किरायेदार मिलने पर इसे माफ़ करें।\n- C4: कृपया पेंटिंग या सफ़ाई का शुल्क केवल सामान्य टूट-फूट से अधिक नुकसान के लिए लें, और उसे दिनांकित मूव-इन चेकलिस्ट से मिलाएँ (संपत्ति अंतरण अधिनियम, 1882, धारा 108(m))।\n- C5: कृपया सालाना किराया बढ़ोतरी 10% तक सीमित करें।\n- C6: कृपया मान लें कि पहले दिया गया नोटिस गिना जाएगा, या नोटिस अवधि एक महीना तय करें।\nये बदलाव हो जाने पर समझौते पर हस्ताक्षर किए जा सकते हैं। ये चर्चा के लिए अनुरोध हैं, जो समझौते और लागू कानून के अधीन हैं।"
       },
-      "note": "Fixed, reviewed sentences per clause type in English and Kannada; the model's own wording is not translated. Native-language review is recommended."
+      "note": "Fixed, reviewed sentences per clause type in English, Kannada and Hindi; the model's own wording is not translated. Native-language review is recommended."
     }
   ],
   "sections": {

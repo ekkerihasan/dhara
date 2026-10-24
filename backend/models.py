@@ -6,7 +6,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 
-Language = Literal["en", "kn"]
+Language = Literal["en", "kn", "hi"]
 RunStatus = Literal["running", "needs_input", "ready", "approved", "failed"]
 TraceType = Literal["plan", "question", "tool_call", "verifier", "draft", "approval"]
 

@@ -1,12 +1,13 @@
 "use client";
 
-import { CalendarClock, Copy, Send } from "lucide-react";
+import { CalendarClock, Copy, MessageCircle, Send } from "lucide-react";
 import { useState } from "react";
 import type { ApprovalStep, Draft, Language } from "@/lib/types";
 
 const LANGUAGES: { code: Language; label: string }[] = [
   { code: "en", label: "English" },
   { code: "kn", label: "ಕನ್ನಡ" },
+  { code: "hi", label: "हिन्दी" },
 ];
 
 /** The outgoing message. send_and_schedule refuses anything not approved, and it records a follow-up; it does not deliver. */
@@ -45,6 +46,9 @@ export function DraftPanel({
     }
   };
 
+  // WhatsApp opens with the letter filled in; the tenant picks the contact and presses send there.
+  const whatsapp = `https://wa.me/?text=${encodeURIComponent(draft.text[language] ?? "")}`;
+
   return (
     <div className="panel">
       <div className="panel-head">
@@ -67,7 +71,7 @@ export function DraftPanel({
         {approval ? (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--safe)" }}>
             <CalendarClock size={15} aria-hidden />
-            Approved. Follow-up on {approval.follow_up_date}. Copy the text and send it yourself.
+            Approved. Follow-up on {approval.follow_up_date}. Copy it or share it on WhatsApp; you send it yourself.
           </span>
         ) : (
           <span>Review the text, then approve it. Dhara never sends anything on its own.</span>
@@ -77,6 +81,12 @@ export function DraftPanel({
           <Copy size={14} aria-hidden />
           {copied ? "Copied" : "Copy"}
         </button>
+        {approval && (
+          <a className="btn btn-sm" href={whatsapp} target="_blank" rel="noopener noreferrer">
+            <MessageCircle size={14} aria-hidden />
+            Share on WhatsApp
+          </a>
+        )}
         {!approval && (
           <button className="btn btn-sm primary" type="button" onClick={approve} disabled={busy}>
             <Send size={14} aria-hidden />

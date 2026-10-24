@@ -89,6 +89,89 @@
       "applies_in_karnataka": true
     }
   },
+  "clause_types": [
+    {
+      "category": "painting_or_cleaning_fixed",
+      "count": 3,
+      "clauses": [
+        {
+          "task": "Bengaluru flat",
+          "clause_ref": "C4",
+          "amount_inr": 15000
+        },
+        {
+          "task": "PG room",
+          "clause_ref": "C3",
+          "amount_inr": 3000
+        },
+        {
+          "task": "Move-out",
+          "clause_ref": "C3",
+          "amount_inr": 15000
+        }
+      ]
+    },
+    {
+      "category": "deposit_forfeiture",
+      "count": 2,
+      "clauses": [
+        {
+          "task": "Bengaluru flat",
+          "clause_ref": "C2",
+          "amount_inr": 150000
+        },
+        {
+          "task": "PG room",
+          "clause_ref": "C2",
+          "amount_inr": 16000
+        }
+      ]
+    },
+    {
+      "category": "lock_in",
+      "count": 1,
+      "clauses": [
+        {
+          "task": "Bengaluru flat",
+          "clause_ref": "C3",
+          "amount_inr": 150000
+        }
+      ]
+    },
+    {
+      "category": "notice_shortfall",
+      "count": 1,
+      "clauses": [
+        {
+          "task": "Bengaluru flat",
+          "clause_ref": "C6",
+          "amount_inr": 25000
+        }
+      ]
+    },
+    {
+      "category": "rent_escalation_excess",
+      "count": 1,
+      "clauses": [
+        {
+          "task": "Bengaluru flat",
+          "clause_ref": "C5",
+          "amount_inr": 15000
+        }
+      ]
+    },
+    {
+      "category": "wear_and_tear",
+      "count": 1,
+      "clauses": [
+        {
+          "task": "Move-out",
+          "clause_ref": "C4",
+          "amount_inr": 8000
+        }
+      ]
+    }
+  ],
   "eval": {
     "date": "2026-10-24",
     "rows": [

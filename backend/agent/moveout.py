@@ -168,7 +168,7 @@ def start_moveout(state: MoveoutState) -> dict[str, Any]:
         _rule_verdicts(state)  # fills only deductions the model left without a verdict
         disputed = [{"clause_ref": d["clause_ref"], "category": d["category"]} for d in state.deductions if state.verdicts[d["id"]]["verdict"] == "disputed"]
         state.drafts = []
-        for language in dict.fromkeys([state.language, "en", "kn"]):
+        for language in dict.fromkeys([state.language, "en", "kn", "hi"]):
             draft = draft_message(disputed, "challenge", language)
             state.drafts.append(Draft(**draft))
             state.add_trace("draft", "Challenge drafted", draft=draft)

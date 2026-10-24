@@ -2,11 +2,23 @@
 
 **Which law governs your rental, what each unfair clause costs, and the counter-proposal you approve, before you sign**
 
-English and Kannada | Karnataka law pack | Web app
+English, Kannada and Hindi | Karnataka law pack | Web app
 
 > **ChronoForge 2026, NITK Surathkal** | Track: Agentic AI | Theme: Cities of the Future | Team StrawHats
 
 ![Dhara review report](docs/screenshots/review-report.jpg)
+
+## Results
+
+The same model reviews each test agreement twice: once with no tools and no verifier, once as the full Dhara agent. Scores are out of 3, from the deterministic scorer [`env/scorer.py`](env/scorer.py) ([`env/results/scores.md`](env/results/scores.md)) [[R13]](docs/REFERENCES.md#evaluation):
+
+| Task | Plain model | Dhara agent |
+| --- | --- | --- |
+| `blr_flat`: Bengaluru flat, five unfair clauses | **1.78**, said the Rent Act applies | **3.00** |
+| `pg_room`: PG room, building age unknown | **2.00**, said the Rent Act applies | **3.00** |
+| `moveout`: three claimed deductions against the move-in checklist | **2.00**, said the Rent Act applies | **2.67**, gave no section for the cleaning charge it allowed |
+
+Both got the rupee amounts right. Without the rent-law test, the plain model assumed the Karnataka Rent Act protects the tenant on every task. One live run each with `openai/gpt-oss-120b`, so the plain model's score varies a little between runs; reproduce with `python -m env.run_eval`.
 
 ---
 
@@ -32,7 +44,7 @@ Dhara (धारा) is what Indian law calls a section, as in "Dhara 302". Our 
 2. **Ask:** if a fact decides which law applies, such as the building's age, it stops and asks instead of guessing. "I don't know" is a valid answer.
 3. **Act:** the AI records each unfair clause with the facts it reads from it; our tools decide which law applies and compute the rupees at risk.
 4. **Verify:** every legal claim must cite a section that exists, applies in Karnataka and covers this flat; anything else is blocked.
-5. **Draft and wait:** a counter-proposal in English and Kannada. Nothing goes out until the tenant approves, and approval records a follow-up; Dhara never sends anything itself.
+5. **Draft and wait:** a counter-proposal in English, Kannada and Hindi, each clause asking for a specific change with the section it rests on. Nothing goes out until the tenant approves, and approval records a follow-up; Dhara never sends anything itself.
 
 At move-out, the same pattern checks each deduction the landlord claims against the agreement and the dated move-in checklist: the AI records allowed or disputed with the evidence it relied on, code checks the sections, drafts the challenge and gives the next formal step (written demand, legal notice, then the Rent Controller only where the Act applies, otherwise a civil recovery suit; never a police complaint).
 
@@ -63,15 +75,7 @@ Each tool result goes back to the AI before its next step, up to 12 tool calls. 
 
 ### Measured, not just prompted
 
-The same model reviews each test agreement twice: once with no tools and no verifier, once as the full agent. Scores are out of 3, from [`env/scorer.py`](env/scorer.py) [[R13]](docs/REFERENCES.md#evaluation):
-
-| Task | Plain model | Dhara agent |
-| --- | --- | --- |
-| `blr_flat`: Bengaluru flat, five unfair clauses | **1.78**, said the Rent Act applies | **3.00** |
-| `pg_room`: PG room, building age unknown | **2.00**, said the Rent Act applies | **3.00** |
-| `moveout`: three claimed deductions against the move-in checklist | **2.00**, said the Rent Act applies | **2.67**, gave no section for the cleaning charge it allowed |
-
-Both got the rupee amounts right. Without the rent-law test, the plain model assumed the Karnataka Rent Act protects the tenant on every task. One live run each with `openai/gpt-oss-120b`, so the plain model's score varies a little between runs; reproduce with `python -m env.run_eval`.
+The scores are at the [top of this page](#results); the Evaluation page shows them per task.
 
 ![Evaluation page](docs/screenshots/evaluation.jpg)
 
@@ -198,7 +202,12 @@ It scales because law is data: bringing Dhara to another state means sourcing it
 - [x] **Live end to end:** the agent loop, the API and the screens tested with the real model: question, answer, five findings with the scorer's amounts, English and Kannada drafts, a blocked claim, approval.
 - [x] **Plain model vs agent scores** on all three tasks.
 - [x] **Move-out:** claimed deductions checked against the move-in checklist, the challenge drafted, next formal step; live screen at `/moveout`.
-- [ ] Stretch: a landlord agent that pushes back, Hindi drafts, a test of public chatbots.
+- [x] **Hindi drafts** alongside English and Kannada, for the counter-proposal and the move-out challenge.
+- [x] **"I don't know"** answer to the agent's question; the run continues with the Rent Act result unresolved.
+- [x] **Speak the terms:** the facts form can be filled by voice; Groq Whisper transcribes, the transcript is redacted, and the model fills only fields the tenant mentioned, which they check before submitting.
+- [x] **Share on WhatsApp:** once the tenant approves a letter, WhatsApp opens with it filled in; the tenant picks the contact and sends it. Dhara never sends anything itself.
+- [x] **Clause-type chart** on the Evaluation page: which unfair clauses appear across the test agreements; with consent, the same view by locality is the next step.
+- [ ] Stretch: a landlord agent that pushes back, a test of public chatbots.
 
 ## Before and after
 
@@ -209,7 +218,7 @@ It scales because law is data: bringing Dhara to another state means sourcing it
 | Scripted counterparty negotiation | Three scored tasks, the deterministic scorer and the plain-model vs agent runner |
 | Local PDF extraction and OCR | In-memory agreement reading with PII redaction, money formulas and the approval gate |
 | OpenEnv tasks, deterministic grading and tests | FastAPI endpoints for runs, answers and approvals |
-| Offline housing review without a model; a separate legacy model inference script | Next.js review report, decision trace, Kannada drafts, move-out preview and evaluation page |
+| Offline housing review without a model; a separate legacy model inference script | Next.js review report, decision trace, Kannada and Hindi drafts, move-out flow and evaluation page |
 
 ## Built at ChronoForge
 
@@ -219,7 +228,7 @@ It scales because law is data: bringing Dhara to another state means sourcing it
 - [x] Agreement redaction, money calculations and approval-gated messages
 - [x] Model provider, planning agent and decision trace
 - [x] FastAPI run, answer and approval endpoints
-- [x] Next.js review and move-out screens with English and Kannada drafts
+- [x] Next.js review and move-out screens with English, Kannada and Hindi drafts
 - [x] Baseline versus agent evaluation results
 - [x] Move-out deduction challenges and next formal step
 
@@ -240,8 +249,8 @@ Open http://127.0.0.1:7861. The offline housing interface needs no model key.
 - Python dependencies: OpenAI Python SDK, python-dotenv, pytest, pytest-cov, httpx, setuptools and wheel. Event PDF extraction: [pypdf](https://pypdf.readthedocs.io/).
 - Local document tools in the prototype: PyMuPDF, Pillow, RapidOCR, ONNX Runtime and NumPy.
 - Law sources: [India Code](https://www.indiacode.nic.in/) and [PRS Legislative Research](https://prsindia.org/billtrack/the-model-tenancy-act-2021). Statistics: see [docs/REFERENCES.md](docs/REFERENCES.md).
-- Model: [Groq](https://groq.com/) serving `openai/gpt-oss-120b`. [Sarvam](https://www.sarvam.ai/) is supported as an alternative provider.
-- Frontend: [Next.js](https://nextjs.org/), React and [Tailwind CSS](https://tailwindcss.com/) (MIT); [Lucide](https://lucide.dev/) icons (ISC); Geist and Geist Mono (Vercel, OFL-1.1) and Noto Sans Kannada (Google, OFL-1.1) via `next/font`.
+- Model: [Groq](https://groq.com/) serving `openai/gpt-oss-120b`, and Whisper (`whisper-large-v3-turbo`) for speech to text. [Sarvam](https://www.sarvam.ai/) is supported as an alternative provider.
+- Frontend: [Next.js](https://nextjs.org/), React and [Tailwind CSS](https://tailwindcss.com/) (MIT); [Lucide](https://lucide.dev/) icons (ISC); Geist and Geist Mono (Vercel, OFL-1.1) and Noto Sans Kannada and Noto Sans Devanagari (Google, OFL-1.1) via `next/font`.
 
 The imported README refers to a BSD-style LICENSE file, but the source checkout does not include that file. Upstream licensing information needs verification before distribution.
 

@@ -1,6 +1,6 @@
 // Mirrors backend/models.py. Keep the two in sync (TASKS.md 3.4): same field names, same literals.
 
-export type Language = "en" | "kn";
+export type Language = "en" | "kn" | "hi";
 export type LocalBody = "municipal_corporation" | "city_municipal_council" | "other";
 export type PremisesUse = "residential" | "non_residential";
 

@@ -141,7 +141,7 @@ function toolSummary(tool: string, data: Record<string, unknown>): string {
   }
 }
 
-function toStep(step: BackendStep, index: number, facts: Facts, seenPlan: boolean): TraceStep | null {
+function toStep(step: BackendStep, index: number, facts: Facts, seenPlan: boolean, pending: boolean): TraceStep | null {
   const base = { index, at: "" };
   const data = step.data;
   switch (step.type) {
@@ -157,7 +157,9 @@ function toStep(step: BackendStep, index: number, facts: Facts, seenPlan: boolea
       const field = (((data.missing as string[]) ?? [])[0] ?? "built_year") as keyof Facts;
       const text = QUESTION[field] ?? { question: String(data.question ?? step.label), why: "" };
       const value = facts[field];
-      return { ...base, type: "question", field, ...text, answer: value === null || value === undefined ? null : String(value) };
+      // Only the question the run is waiting on is unanswered; an earlier one with no value was "I don't know".
+      const answer = value === null || value === undefined ? (pending ? null : "I don't know") : String(value);
+      return { ...base, type: "question", field, ...text, answer };
     }
     case "tool_call": {
       const tool = String(data.tool ?? "");
@@ -182,7 +184,8 @@ export function fromBackend(b: BackendRun, facts: Facts, title: string): Run {
   const trace: TraceStep[] = [];
   let seenPlan = false;
   for (const step of b.trace) {
-    const converted = toStep(step, trace.length, facts, seenPlan);
+    const pending = b.status === "needs_input" && step === b.trace.filter((s) => s.type === "question").at(-1);
+    const converted = toStep(step, trace.length, facts, seenPlan, pending);
     if (step.type === "plan") seenPlan = true;
     if (converted) trace.push(converted);
   }

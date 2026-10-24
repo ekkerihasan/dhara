@@ -191,9 +191,11 @@ export function ReviewDocument({ id }: { id: string }) {
                 <Scale size={16} aria-hidden />
                 <div>
                   <p>{run.governing_law.summary}</p>
-                  <p style={{ marginTop: 10 }}>
-                    <SectionChips ids={run.governing_law.section_ids} sections={run.sections} />
-                  </p>
+                  {run.governing_law.section_ids.length > 0 && (
+                    <p style={{ marginTop: 10 }}>
+                      <SectionChips ids={run.governing_law.section_ids} sections={run.sections} />
+                    </p>
+                  )}
                 </div>
               </div>
               <Jurisdiction law={run.governing_law} sections={run.sections} />

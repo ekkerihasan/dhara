@@ -49,7 +49,7 @@ def test_model_verdicts_drafts_and_next_steps() -> None:
     assert [(d["id"], d["verdict"]) for d in result["deductions"]] == [("D1", "disputed"), ("D2", "allowed"), ("D3", "disputed")]
     assert result["disputed_inr"] == 15000 + 8000
     assert result["deductions"][0]["section_ids"] == ["TPA-108(m)"]  # the Rent Act does not cover this flat
-    assert [d["language"] for d in result["drafts"]] == ["en", "kn"] and all(d["tone"] == "challenge" for d in result["drafts"])
+    assert [d["language"] for d in result["drafts"]] == ["en", "kn", "hi"] and all(d["tone"] == "challenge" for d in result["drafts"])
     assert [s["title"] for s in result["next_steps"]][2] == "Civil money-recovery suit"
     assert any(m["role"] == "tool" for m in model.turns[1])
 
