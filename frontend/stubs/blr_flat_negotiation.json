@@ -1,0 +1,178 @@
+{
+  "persona": "strict_owner",
+  "limits": {
+    "max_lock_in_months": 3,
+    "refund_within_days": 30,
+    "max_exit_painting_inr": 10000
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "offers": [
+        {
+          "clause_id": "C2",
+          "move_id": "blr-C2-strict-1",
+          "text": "The deposit stays forfeited if you break any term or leave early. I return the rest within 60 days.",
+          "terms": {
+            "refund_within_days": 60,
+            "forfeit_on_any_breach": true
+          }
+        },
+        {
+          "clause_id": "C3",
+          "move_id": "blr-C3-strict-1",
+          "text": "Six months lock-in is standard in this area. I can't reduce it.",
+          "terms": {
+            "lock_in_months": 6
+          }
+        },
+        {
+          "clause_id": "C4",
+          "move_id": "blr-C4-strict-1",
+          "text": "Painting is Rs 15,000 flat. Every tenant pays it.",
+          "terms": {
+            "painting_inr": 15000
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "clause_id": "C2",
+          "decision": "reject",
+          "counter_terms": null,
+          "reason": "Forfeiting the whole deposit on any breach is a penalty; only reasonable compensation for actual loss is recoverable.",
+          "section_id": "ICA-74",
+          "verdict": "cited",
+          "limit_override": false
+        },
+        {
+          "clause_id": "C3",
+          "decision": "counter",
+          "counter_terms": {
+            "lock_in_months": 3
+          },
+          "reason": "Six months' rent on early exit is far above the likely loss; the tenant can accept a 3-month lock-in.",
+          "section_id": "ICA-74",
+          "verdict": "cited",
+          "limit_override": false
+        },
+        {
+          "clause_id": "C4",
+          "decision": "reject",
+          "counter_terms": null,
+          "reason": "A flat Rs 15,000 ignores the exception for reasonable wear and tear.",
+          "section_id": "TPA-108(m)",
+          "verdict": "cited",
+          "limit_override": false
+        }
+      ],
+      "model_ms": 2140,
+      "fallback": false
+    },
+    {
+      "round": 2,
+      "offers": [
+        {
+          "clause_id": "C2",
+          "move_id": "blr-C2-strict-2",
+          "text": "Fine, I'll drop the forfeiture line. Refund within 30 days, minus actual damage with bills.",
+          "terms": {
+            "refund_within_days": 30,
+            "forfeit_on_any_breach": false
+          }
+        },
+        {
+          "clause_id": "C3",
+          "move_id": "blr-C3-strict-2",
+          "text": "I can do 4 months lock-in, not less.",
+          "terms": {
+            "lock_in_months": 4
+          }
+        },
+        {
+          "clause_id": "C4",
+          "move_id": "blr-C4-strict-2",
+          "text": "Alright, Rs 8,000 for painting, and that is my last offer.",
+          "terms": {
+            "painting_inr": 8000
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "clause_id": "C2",
+          "decision": "accept",
+          "counter_terms": null,
+          "reason": "No forfeiture, and the refund within 30 days is within the tenant's limit.",
+          "section_id": null,
+          "verdict": "unverified",
+          "limit_override": false
+        },
+        {
+          "clause_id": "C3",
+          "decision": "reject",
+          "counter_terms": null,
+          "reason": "exceeds tenant limit: max_lock_in_months",
+          "section_id": null,
+          "verdict": "unverified",
+          "limit_override": true
+        },
+        {
+          "clause_id": "C4",
+          "decision": "accept",
+          "counter_terms": null,
+          "reason": "Rs 8,000 is within the tenant's Rs 10,000 limit for exit painting.",
+          "section_id": null,
+          "verdict": "unverified",
+          "limit_override": false
+        }
+      ],
+      "model_ms": 1870,
+      "fallback": false
+    }
+  ],
+  "status": "stalled",
+  "agreed_terms": {
+    "C2": {
+      "refund_within_days": 30,
+      "forfeit_on_any_breach": false
+    },
+    "C3": {
+      "lock_in_months": 3,
+      "ask": "Cap the early-exit payment at one month's rent, or waive it if a replacement tenant is found."
+    },
+    "C4": {
+      "painting_inr": 8000
+    }
+  },
+  "settled_clauses": [
+    "C2",
+    "C4"
+  ],
+  "open_clauses": [
+    "C3"
+  ],
+  "agreed_letter": {
+    "en": "Hello, thank you for agreeing to these terms. Please write them into the agreement before I sign:\n- C2 (agreed): the deposit refunded within 30 days of handover, with deductions only for actual, itemised loss.\n- C4 (agreed): an exit painting or cleaning charge of at most Rs 8,000.\nStill open; I continue to request:\n- C3: please cap the early-exit payment at one month's rent, or waive it if I find a replacement tenant.\nI am happy to sign once these changes are made. These are requests for discussion, subject to agreement and applicable law.",
+    "kn": "ನಮಸ್ಕಾರ, ಈ ಷರತ್ತುಗಳಿಗೆ ಒಪ್ಪಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು. ನಾನು ಸಹಿ ಮಾಡುವ ಮೊದಲು ಇವನ್ನು ಒಪ್ಪಂದದಲ್ಲಿ ಸೇರಿಸಿ:\n- C2 (ಒಪ್ಪಲಾಗಿದೆ): ಮನೆ ಹಸ್ತಾಂತರಿಸಿದ 30 ದಿನಗಳೊಳಗೆ ಠೇವಣಿ ಹಿಂತಿರುಗಿಸುವುದು; ನಿಜವಾದ ಮತ್ತು ವಿವರವಾದ ನಷ್ಟಕ್ಕೆ ಮಾತ್ರ ಕಡಿತ.\n- C4 (ಒಪ್ಪಲಾಗಿದೆ): ಖಾಲಿ ಮಾಡುವಾಗ ಬಣ್ಣ ಅಥವಾ ಸ್ವಚ್ಛತೆಯ ಶುಲ್ಕ ಗರಿಷ್ಠ ರೂ 8,000.\nಇನ್ನೂ ಬಾಕಿ ಇರುವವು; ನಾನು ಮತ್ತೆ ಕೋರುತ್ತೇನೆ:\n- C3: ಬೇಗ ಖಾಲಿ ಮಾಡಿದರೆ ಪಾವತಿಯನ್ನು ಒಂದು ತಿಂಗಳ ಬಾಡಿಗೆಗೆ ಮಿತಿಗೊಳಿಸಿ, ಅಥವಾ ನಾನು ಬದಲಿ ಬಾಡಿಗೆದಾರರನ್ನು ಹುಡುಕಿದರೆ ಮನ್ನಾ ಮಾಡಿ.\nಈ ಬದಲಾವಣೆಗಳನ್ನು ಸೇರಿಸಿದ ನಂತರ ಒಪ್ಪಂದಕ್ಕೆ ಸಹಿ ಮಾಡುತ್ತೇನೆ. ಇವು ಚರ್ಚೆಗಾಗಿ ಇರುವ ವಿನಂತಿಗಳು, ಒಪ್ಪಂದ ಮತ್ತು ಅನ್ವಯವಾಗುವ ಕಾನೂನಿಗೆ ಒಳಪಟ್ಟಿವೆ.",
+    "hi": "नमस्ते, इन शर्तों पर सहमति के लिए धन्यवाद। मेरे हस्ताक्षर से पहले कृपया इन्हें समझौते में लिखें:\n- C2 (सहमति): घर सौंपने के 30 दिनों के भीतर जमा राशि की वापसी; कटौती केवल वास्तविक, मदवार नुकसान के लिए।\n- C4 (सहमति): घर छोड़ते समय पेंटिंग या सफ़ाई का शुल्क अधिकतम Rs 8,000।\nअभी तय नहीं हुआ; मेरा अनुरोध बना हुआ है:\n- C3: कृपया समय से पहले घर छोड़ने पर भुगतान को एक महीने के किराए तक सीमित करें, या दूसरा किरायेदार मिलने पर इसे माफ़ करें।\nये बदलाव हो जाने पर समझौते पर हस्ताक्षर किए जा सकते हैं। ये चर्चा के लिए अनुरोध हैं, जो समझौते और लागू कानून के अधीन हैं।"
+  },
+  "sections": {
+    "ICA-74": {
+      "id": "ICA-74",
+      "act": "Indian Contract Act, 1872",
+      "section": "74",
+      "title": "Penalty and compensation",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/2187/2/A187209.pdf",
+      "applies_in_karnataka": true
+    },
+    "TPA-108(m)": {
+      "id": "TPA-108(m)",
+      "act": "Transfer of Property Act, 1882",
+      "section": "108(m)",
+      "title": "Wear and tear",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/14648/1/tpa.pdf",
+      "applies_in_karnataka": true
+    }
+  }
+}

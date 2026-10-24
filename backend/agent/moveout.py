@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -16,7 +17,7 @@ from backend.agent.tenant import ProviderChat, _law_index, _safe_model_value
 from backend.llm.provider import ProviderError
 from backend.models import Draft, TraceStep
 from backend.tools.law import check_jurisdiction, lookup_section
-from backend.tools.messages import draft_message, send_and_schedule
+from backend.tools.messages import draft_message, itemisation_letter, send_and_schedule
 
 LOGGER = logging.getLogger(__name__)
 MAX_MODEL_TURNS = 6
@@ -70,6 +71,9 @@ class MoveoutState:
     approval: dict[str, Any] | None = None
     rent_act_applies: bool | None = None
     error: str | None = None
+    claimed_text: str | None = None  # the landlord's message as sent, when not itemised by the tenant
+    deposit_inr: int | None = None
+    letter: dict[str, str] | None = None  # needs_itemisation: the request for an itemised list, EN/KN/HI
 
     def add_trace(self, trace_type: str, label: str, **data: Any) -> None:
         self.trace.append(TraceStep(type=trace_type, label=label, data=data))
@@ -80,7 +84,8 @@ class MoveoutState:
         return {"id": self.id, "status": self.status, "trace": [s.model_dump() for s in self.trace],
                 "deductions": deductions, "disputed_inr": disputed, "checklist": self.checklist,
                 "drafts": [d.model_dump() for d in self.drafts], "next_steps": self.next_steps,
-                "approval": self.approval, "error": self.error, "not_a_lawyer": True, "notice": NOT_A_LAWYER_NOTICE}
+                "approval": self.approval, "error": self.error, "not_a_lawyer": True, "notice": NOT_A_LAWYER_NOTICE,
+                "claimed_text": self.claimed_text, "deposit_inr": self.deposit_inr, "letter": self.letter}
 
 
 def _citable(state: MoveoutState, section_id: str) -> bool:
@@ -161,7 +166,76 @@ def next_formal_steps(rent_act_applies: bool | None) -> list[dict[str, str]]:
     ]
 
 
+AMOUNT = re.compile(r"(?:rs\.?|inr|₹)?\s*(\d[\d,]*)\s*(?:/-)?\s*$", re.IGNORECASE)
+CATEGORY_WORDS = (("paint", "painting_or_cleaning_fixed"), ("clean", "painting_or_cleaning_fixed"), ("wear", "wear_and_tear"))
+
+
+def _claimed_lines(text: str) -> list[tuple[str, int | None]]:
+    """Each line of the landlord's message as (label, amount or None)."""
+    lines = []
+    for line in (part.strip().strip("-•").strip() for part in text.splitlines()):
+        if not line:
+            continue
+        match = AMOUNT.search(line)
+        amount = int(match.group(1).replace(",", "")) if match else None
+        label = line[:match.start()].strip(" :-") if match else line
+        lines.append((label or line, amount))
+    return lines
+
+
+def itemisation_gap(claimed_text: str | None) -> str | None:
+    """Why the claimed deductions cannot be checked item by item yet, or None."""
+    if not claimed_text or not claimed_text.strip():
+        return None
+    lines = _claimed_lines(claimed_text)
+    items = [line for line in lines if not line[0].casefold().startswith("total")]
+    if not items:
+        return "a total is given without items"
+    if len(items) == 1:
+        return "the deductions are a single line"
+    if any(amount is None for _, amount in items):
+        return "a line has no amount"
+    return None
+
+
+def _deductions_from_text(state: MoveoutState) -> list[dict[str, Any]]:
+    """An itemised message becomes claimed deductions, each tied to the clause that mentions it."""
+    deductions = []
+    for i, (label, amount) in enumerate((line for line in _claimed_lines(state.claimed_text or "")
+                                         if not line[0].casefold().startswith("total")), start=1):
+        lowered = label.casefold()
+        word, category = next(((w, c) for w, c in CATEGORY_WORDS if w in lowered), ("damage", "damage"))
+        clause = next((c for c in state.clauses if word in c["text"].casefold()), None)
+        deductions.append({"id": f"D{i}", "clause_ref": clause["id"] if clause else "", "category": category,
+                           "label": label, "amount_inr": amount or 0, "evidence_ids": []})
+    return deductions
+
+
+def request_itemisation(state: MoveoutState) -> bool:
+    """Itemisation first: a lump sum gets a letter asking for the itemised list, not a dispute of a number."""
+    gap = itemisation_gap(state.claimed_text) if not state.deductions else None
+    if gap is None:
+        if not state.deductions and state.claimed_text:
+            state.deductions = _deductions_from_text(state)
+        return False
+    lines = _claimed_lines(state.claimed_text or "")
+    totals = [amount for label, amount in lines if label.casefold().startswith("total") and amount is not None]
+    withheld = totals[-1] if totals else sum(amount or 0 for _, amount in lines)
+    clause = next((c["id"] for c in state.clauses if "deduct" in c["text"].casefold()), None)
+    claim = " ".join((state.claimed_text or "").split())[:200]
+    drafts = [itemisation_letter(state.deposit_inr, withheld, claim, clause, language)
+              for language in dict.fromkeys([state.language, "en", "kn", "hi"])]
+    state.drafts = [Draft(**d) for d in drafts]
+    state.letter = {d["language"]: d["text"] for d in drafts}
+    state.status = "needs_itemisation"
+    state.add_trace("needs_itemisation", "Itemised list requested first", reason=gap, withheld_inr=withheld,
+                    deposit_inr=state.deposit_inr, deduction_clause=clause, section_ids=["ICA-74"])
+    return True
+
+
 def start_moveout(state: MoveoutState) -> dict[str, Any]:
+    if request_itemisation(state):
+        return state.response()
     state.add_trace("plan", "Review move-out deductions", intended_tools=["check_jurisdiction", "record_verdict", "draft_message"])
     facts = state.facts
     jurisdiction = check_jurisdiction(facts.get("rent_per_month"), facts.get("built_year"), facts.get("local_body"), facts.get("premises_use"))
@@ -175,7 +249,7 @@ def start_moveout(state: MoveoutState) -> dict[str, Any]:
         _rule_verdicts(state)  # fills only deductions the model left without a verdict
         disputed = [{"clause_ref": d["clause_ref"], "category": d["category"]} for d in state.deductions if state.verdicts[d["id"]]["verdict"] == "disputed"]
         state.drafts = []
-        for language in dict.fromkeys([state.language, "en", "kn"]):
+        for language in dict.fromkeys([state.language, "en", "kn", "hi"]):
             draft = draft_message(disputed, "challenge", language)
             state.drafts.append(Draft(**draft))
             state.add_trace("draft", "Challenge drafted", draft=draft)

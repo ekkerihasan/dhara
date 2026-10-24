@@ -9,6 +9,168 @@
     "substantial_renovation_year": null
   },
   "language": "en",
+  "landlord_moves": {
+    "C2": {
+      "strict_owner": [
+        {
+          "move_id": "blr-C2-strict-1",
+          "text": "The deposit stays forfeited if you break any term or leave early. I return the rest within 60 days.",
+          "terms": {
+            "refund_within_days": 60,
+            "forfeit_on_any_breach": true
+          },
+          "acceptable": false
+        },
+        {
+          "move_id": "blr-C2-strict-2",
+          "text": "Fine, I'll drop the forfeiture line. Refund within 30 days, minus actual damage with bills.",
+          "terms": {
+            "refund_within_days": 30,
+            "forfeit_on_any_breach": false
+          },
+          "acceptable": true
+        }
+      ],
+      "reasonable_broker": [
+        {
+          "move_id": "blr-C2-broker-1",
+          "text": "Owner agrees to drop the forfeiture line. Refund within 45 days after handover.",
+          "terms": {
+            "refund_within_days": 45,
+            "forfeit_on_any_breach": false
+          },
+          "acceptable": false
+        },
+        {
+          "move_id": "blr-C2-broker-2",
+          "text": "Okay, refund within 30 days, deductions only for actual damage with bills.",
+          "terms": {
+            "refund_within_days": 30,
+            "forfeit_on_any_breach": false
+          },
+          "acceptable": true
+        }
+      ]
+    },
+    "C3": {
+      "strict_owner": [
+        {
+          "move_id": "blr-C3-strict-1",
+          "text": "Six months lock-in is standard in this area. I can't reduce it.",
+          "terms": {
+            "lock_in_months": 6
+          },
+          "acceptable": false
+        },
+        {
+          "move_id": "blr-C3-strict-2",
+          "text": "I can do 4 months lock-in, not less.",
+          "terms": {
+            "lock_in_months": 4
+          },
+          "acceptable": false
+        }
+      ],
+      "reasonable_broker": [
+        {
+          "move_id": "blr-C3-broker-1",
+          "text": "Owner can come down to a 4-month lock-in.",
+          "terms": {
+            "lock_in_months": 4
+          },
+          "acceptable": false
+        },
+        {
+          "move_id": "blr-C3-broker-2",
+          "text": "Final: 3 months lock-in.",
+          "terms": {
+            "lock_in_months": 3
+          },
+          "acceptable": true
+        }
+      ]
+    },
+    "C4": {
+      "strict_owner": [
+        {
+          "move_id": "blr-C4-strict-1",
+          "text": "Painting is Rs 15,000 flat. Every tenant pays it.",
+          "terms": {
+            "painting_inr": 15000
+          },
+          "acceptable": false
+        },
+        {
+          "move_id": "blr-C4-strict-2",
+          "text": "Alright, Rs 8,000 for painting, and that is my last offer.",
+          "terms": {
+            "painting_inr": 8000
+          },
+          "acceptable": true
+        }
+      ],
+      "reasonable_broker": [
+        {
+          "move_id": "blr-C4-broker-1",
+          "text": "Owner will take Rs 12,000 for painting at exit.",
+          "terms": {
+            "painting_inr": 12000
+          },
+          "acceptable": false
+        },
+        {
+          "move_id": "blr-C4-broker-2",
+          "text": "Rs 7,500 for painting, only if the walls need it.",
+          "terms": {
+            "painting_inr": 7500
+          },
+          "acceptable": true
+        }
+      ]
+    },
+    "C6": {
+      "strict_owner": [
+        {
+          "move_id": "blr-C6-strict-1",
+          "text": "Two months' notice from you. From my side one month is enough.",
+          "terms": {
+            "tenant_notice_months": 2,
+            "landlord_notice_months": 1
+          },
+          "acceptable": false
+        },
+        {
+          "move_id": "blr-C6-strict-2",
+          "text": "Okay, two months' notice both ways.",
+          "terms": {
+            "tenant_notice_months": 2,
+            "landlord_notice_months": 2
+          },
+          "acceptable": true
+        }
+      ],
+      "reasonable_broker": [
+        {
+          "move_id": "blr-C6-broker-1",
+          "text": "One month notice for you, one month for the owner.",
+          "terms": {
+            "tenant_notice_months": 1,
+            "landlord_notice_months": 1
+          },
+          "acceptable": true
+        },
+        {
+          "move_id": "blr-C6-broker-2",
+          "text": "One month notice both sides, as said.",
+          "terms": {
+            "tenant_notice_months": 1,
+            "landlord_notice_months": 1
+          },
+          "acceptable": true
+        }
+      ]
+    }
+  },
   "expected": {
     "governing_law": "TPA_CONTRACT",
     "findings": [

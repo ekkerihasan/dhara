@@ -14,18 +14,19 @@ import logging
 import uuid
 from typing import Any, Literal
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.agent.moveout import MoveoutState, approve_moveout, start_moveout
+from backend.agent.moveout import MoveoutState, approve_moveout, request_itemisation, start_moveout
 from backend.agent.baseline import start_baseline
 from backend.agent.landlord import (NegotiationMessage, NegotiationRequest, NegotiationResponse,
     NegotiationState, advance_landlord, new_negotiation, prepare_message)
 from backend.agent.tenant import AgentState, approve_agent, start_agent
-from backend.llm.provider import chat
+from backend.llm.provider import ProviderError, chat, transcribe
 from backend.models import AnswerRequest, ApprovalRequest, MoveoutRequest, RunRequest, RunResponse
 from backend.tools.agreement import read_agreement
 from backend.ocr_api import router as ocr_router
+from backend.tools.voice import facts_from_speech
 
 LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +37,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allo
 RUNS: dict[str, AgentState] = {}
 MOVEOUTS: dict[str, MoveoutState] = {}
 provider_chat = chat  # replaced by a fake model in tests
+speech_to_text = transcribe  # replaced in tests
 
 
 def _agreement(request: RunRequest) -> dict[str, Any]:
@@ -75,7 +77,8 @@ def _advance(state: AgentState) -> None:
 def create_run(request: RunRequest, background: BackgroundTasks,
                mode: Literal["agent", "baseline"] = "agent") -> RunResponse:
     agreement = _agreement(request)
-    state = AgentState(str(uuid.uuid4()), agreement["clauses"], request.facts.model_dump(), request.language, provider_chat)
+    state = AgentState(str(uuid.uuid4()), agreement["clauses"], request.facts.model_dump(), request.language, provider_chat,
+                       limits=request.limits, persona=request.persona)
     state.mode = mode
     state.add_trace("tool_call", "read_agreement", tool="read_agreement",
                     inputs={"source": "pdf" if request.pdf_base64 else "text"},
@@ -109,7 +112,7 @@ def approve(run_id: str, request: ApprovalRequest) -> RunResponse:
     if not request.approved:
         raise HTTPException(400, "Approval must be explicit: send approved true")
     try:
-        return approve_agent(state)
+        return approve_agent(state, request.agreed_terms)
     except ValueError as exc:
         raise HTTPException(409, str(exc)) from exc
 
@@ -125,14 +128,19 @@ def _moveout(review_id: str) -> MoveoutState:
 
 @app.post("/api/moveout")
 def create_moveout(request: MoveoutRequest, background: BackgroundTasks) -> dict[str, Any]:
+    if not request.deductions and not (request.claimed_text or "").strip():
+        raise HTTPException(400, "Provide the claimed deductions or the landlord's message")
     try:
         clauses = read_agreement(request.agreement_text)["clauses"]
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     deductions = [{"id": f"D{i}", **d.model_dump()} for i, d in enumerate(request.deductions, start=1)]
     state = MoveoutState(str(uuid.uuid4()), clauses, [e.model_dump() for e in request.checklist], deductions,
-                         request.facts.model_dump(), request.language, provider_chat)
+                         request.facts.model_dump(), request.language, provider_chat,
+                         claimed_text=request.claimed_text, deposit_inr=request.deposit_inr)
     MOVEOUTS[state.id] = state
+    if request_itemisation(state):  # deterministic, no model: answered in this response
+        return state.response()
     background.add_task(start_moveout, state)
     return state.response()
 
@@ -151,6 +159,21 @@ def approve_moveout_review(review_id: str, request: ApprovalRequest) -> dict[str
         return approve_moveout(state)
     except ValueError as exc:
         raise HTTPException(409, str(exc)) from exc
+
+
+# ---------- voice: speak the terms ----------
+
+@app.post("/api/voice")
+async def voice(audio: UploadFile = File(...), language: str = Form("")) -> dict[str, Any]:
+    """A spoken description of the rental becomes the facts form. The audio is held in memory only."""
+    data = await audio.read()
+    try:
+        text = speech_to_text(data, audio.filename or "speech.webm", language or None)
+        return facts_from_speech(text, provider_chat)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except ProviderError as exc:
+        raise HTTPException(502, "Speech service unavailable; type the facts instead") from exc
 
 
 # ---------- Stretch: simulated landlord negotiation ----------

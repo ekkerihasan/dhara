@@ -43,7 +43,7 @@ def test_agent_coverage_scores_all_five_clauses_when_model_stops_after_three() -
 
     run = agent_run(TASK, scripted_model(BLR_FINDINGS[:3], []))
     assert len(run["findings"]) == 5
-    assert score(TASK, run)["total"] == 3
+    assert score(TASK, run)["total"] == 4  # out of 4: the rule fallback also settles the negotiation correctly
 
 
 def test_unknown_fact_lets_pg_room_finish_unresolved() -> None:
@@ -64,6 +64,11 @@ def test_evaluate_and_markdown() -> None:
     results = evaluate(model, tasks=("blr_flat",))
     assert {row["mode"] for row in results["rows"]} == {"baseline", "agent"}
     assert "| blr_flat | agent |" in markdown(results, "fake")
+    assert "Negotiation correct" in markdown(results, "fake")
+    agent = next(row for row in results["rows"] if row["mode"] == "agent")
+    assert agent["score"]["negotiation_correct"] == 1.0  # the fake model cannot decide offers: the rule fallback does
+    baseline = next(row for row in results["rows"] if row["mode"] == "baseline")
+    assert baseline["score"]["negotiation_correct"] == 0.0  # the baseline has no fallback
     assert governing_label(None) == "UNRESOLVED"
 
 
@@ -72,7 +77,7 @@ def test_provider_fallback_is_not_reported_as_a_successful_live_evaluation() -> 
         raise ProviderError("Model request failed with HTTP 429")
 
     results = evaluate(unavailable, tasks=("blr_flat",))
-    assert results["provider_failures"] == results["model_requests"] == 2
+    assert results["provider_failures"] == results["model_requests"] == 4  # review and negotiation, baseline and agent
     assert all(row["error"] for row in results["rows"])
     assert "fallback" in results["rows"][1]["error"]
 
@@ -83,7 +88,7 @@ def test_failed_evaluation_preserves_previous_score_artifacts(monkeypatch, tmp_p
     (tmp_path / "scores.json").write_text("previous JSON")
     (tmp_path / "scores.md").write_text("previous table")
     monkeypatch.setattr(runner, "RESULTS", tmp_path)
-    monkeypatch.setattr(runner, "evaluate", lambda: {
+    monkeypatch.setattr(runner, "evaluate", lambda **_: {
         "date": "2026-10-25", "rows": [{"error": "HTTP 429"}],
         "model_requests": 1, "provider_failures": 1})
     import pytest

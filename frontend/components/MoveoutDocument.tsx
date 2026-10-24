@@ -1,12 +1,13 @@
 "use client";
 
-import { Construction, Info, TriangleAlert } from "lucide-react";
+import { Construction, Info, Receipt, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { approveMoveout, getMoveout } from "@/lib/api";
 import { date, inr, STATUS_LABEL } from "@/lib/format";
 import type { MoveoutRun } from "@/lib/types";
 import { DocFooter } from "./DocFooter";
 import { DraftPanel } from "./DraftPanel";
+import { ItemiseForm } from "./ItemiseForm";
 import { SectionChips } from "./SectionChip";
 import { Toc } from "./Toc";
 
@@ -15,6 +16,12 @@ const TOC = [
   { id: "deductions", title: "Claimed deductions" },
   { id: "challenge", title: "Challenge" },
   { id: "next", title: "Next formal step" },
+];
+
+const ITEMISE_TOC = [
+  { id: "letter", title: "Ask for the itemised list" },
+  { id: "itemise", title: "Enter the itemised list" },
+  { id: "checklist", title: "Move-in evidence" },
 ];
 
 const POLL_MS = 1500;
@@ -62,10 +69,12 @@ export function MoveoutDocument({ id }: { id: string }) {
 
   const claimed = run.deductions.reduce((s, d) => s + d.claimed_inr, 0);
   const disputed = run.deductions.filter((d) => d.verdict === "disputed").reduce((s, d) => s + d.claimed_inr, 0);
+  const itemising = run.status === "needs_itemisation";
+  const withheld = run.itemisation?.withheld_inr ?? 0;
 
   return (
     <main className="doc">
-      <Toc items={TOC} />
+      <Toc items={itemising ? ITEMISE_TOC : TOC} />
       <article className="doc-main">
         <p className="kicker">
           Move-out report · <span className="mono">{run.id}</span>
@@ -92,6 +101,52 @@ export function MoveoutDocument({ id }: { id: string }) {
           </div>
         )}
 
+        {itemising && (
+          <>
+            <div className="callout callout-warning">
+              <Receipt size={16} aria-hidden />
+              <div>
+                <p>
+                  <strong>The landlord sent one number. Dhara asks for the itemised list first.</strong>
+                </p>
+                <p>
+                  {run.claimed_text && <>&ldquo;{run.claimed_text}&rdquo;: </>}
+                  {inr(withheld)} withheld from {inr(run.deposit_inr)}. A single amount cannot be checked against the agreement or the move-in
+                  evidence, so nothing is disputed yet. Under the Indian Contract Act s.74, only reasonable compensation for actual loss is recoverable.
+                </p>
+              </div>
+            </div>
+            <div className="stats">
+              <div className="stat">
+                <div className="stat-value">{inr(run.deposit_inr)}</div>
+                <div className="stat-label">Deposit paid</div>
+              </div>
+              <div className="stat is-danger">
+                <div className="stat-value">{inr(withheld)}</div>
+                <div className="stat-label">Withheld as one amount</div>
+              </div>
+            </div>
+            <section className="section" id="letter">
+              <h2>Ask for the itemised list</h2>
+              <p>A per-item breakdown with bills or quotes within 7 days. Copy it or send it yourself; Dhara never sends anything.</p>
+              {run.letter && (
+                <DraftPanel
+                  draft={{ id: "i1", tone: "challenge", to: "Landlord", text: run.letter, note: null }}
+                  initialLanguage={run.facts.language}
+                  approval={null}
+                  onApprove={null}
+                />
+              )}
+            </section>
+            <section className="section" id="itemise">
+              <h2>Enter the itemised list</h2>
+              <p>When the landlord replies with items and amounts, enter them here. Dhara then checks each one against the agreement and the move-in checklist.</p>
+              <ItemiseForm reviewId={run.id} withheld={withheld} />
+            </section>
+          </>
+        )}
+
+        {!itemising && (
         <div className="stats">
           <div className="stat">
             <div className="stat-value">{inr(run.deposit_inr)}</div>
@@ -106,6 +161,7 @@ export function MoveoutDocument({ id }: { id: string }) {
             <div className="stat-label">Disputed with a cited reason</div>
           </div>
         </div>
+        )}
 
         <section className="section" id="checklist">
           <h2>Move-in evidence</h2>
@@ -140,6 +196,8 @@ export function MoveoutDocument({ id }: { id: string }) {
           </figure>
         </section>
 
+        {!itemising && (
+        <>
         <section className="section" id="deductions">
           <h2>Claimed deductions</h2>
           <figure className="fig-table">
@@ -213,6 +271,10 @@ export function MoveoutDocument({ id }: { id: string }) {
           )}
         </section>
 
+        </>
+        )}
+
+        {!itemising && (
         <section className="section" id="next">
           <h2>Next formal step</h2>
           <p>In order. The agent never suggests a police complaint for a deposit dispute.</p>
@@ -231,6 +293,7 @@ export function MoveoutDocument({ id }: { id: string }) {
             ))}
           </ol>
         </section>
+        )}
 
         <DocFooter notice={run.notice} />
       </article>

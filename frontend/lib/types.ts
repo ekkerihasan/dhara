@@ -1,6 +1,6 @@
 // Mirrors backend/models.py. Keep the two in sync (TASKS.md 3.4): same field names, same literals.
 
-export type Language = "en" | "kn";
+export type Language = "en" | "kn" | "hi";
 export type LocalBody = "municipal_corporation" | "city_municipal_council" | "other";
 export type PremisesUse = "residential" | "non_residential";
 
@@ -9,6 +9,7 @@ export interface Facts {
   deposit_inr: number | null;
   built_year: number | null;
   substantial_renovation_year: number | null;
+  completion_month?: number | null; // asked only when the building turns 15 this year
   local_body: LocalBody | null;
   premises_use: PremisesUse;
   language: Language;
@@ -24,7 +25,65 @@ export interface Section {
 }
 
 export type Verdict = "cited" | "unverified" | "blocked";
-export type TraceStepType = "plan" | "question" | "tool_call" | "verifier" | "draft" | "approval";
+export type TraceStepType =
+  | "plan"
+  | "question"
+  | "tool_call"
+  | "verifier"
+  | "draft"
+  | "approval"
+  | "landlord_offer"
+  | "tenant_decision"
+  | "negotiation_settled"
+  | "needs_itemisation";
+
+// ---------- negotiation (identical to backend/models.py) ----------
+
+/** The tenant's own limits: preferences, not legal limits. */
+export interface TenantLimits {
+  max_lock_in_months: number; // default 3
+  refund_within_days: number; // default 30
+  max_exit_painting_inr: number; // default 10000
+}
+
+export type LandlordPersona = "strict_owner" | "reasonable_broker";
+
+export type Terms = Record<string, unknown>; // e.g. {"lock_in_months": 3}
+
+export interface Offer {
+  clause_id: string;
+  move_id: string;
+  text: string;
+  terms: Terms;
+}
+
+export interface Decision {
+  clause_id: string;
+  decision: "accept" | "reject" | "counter";
+  counter_terms: Terms | null;
+  reason: string;
+  section_id: string | null;
+  verdict: Verdict;
+  limit_override: boolean; // true when code flipped the model's accept to reject
+}
+
+export interface NegotiationRound {
+  round: number;
+  offers: Offer[];
+  decisions: Decision[];
+  model_ms: number;
+  fallback: boolean;
+}
+
+export interface Negotiation {
+  persona: LandlordPersona;
+  limits: TenantLimits;
+  rounds: NegotiationRound[];
+  status: "running" | "settled" | "stalled";
+  agreed_terms: Record<string, Terms>; // clause_id -> terms
+  settled_clauses: string[];
+  open_clauses: string[];
+}
 
 interface StepBase {
   index: number;
@@ -73,7 +132,47 @@ export interface ApprovalStep extends StepBase {
   follow_up_date: string | null;
 }
 
-export type TraceStep = PlanStep | QuestionStep | ToolCallStep | VerifierStep | DraftStep | ApprovalStep;
+export interface LandlordOfferStep extends StepBase {
+  type: "landlord_offer";
+  round: number;
+  persona: LandlordPersona;
+  offers: Offer[];
+}
+
+export interface TenantDecisionStep extends StepBase {
+  type: "tenant_decision";
+  round: number;
+  decisions: Decision[];
+  model_ms: number;
+  fallback: boolean;
+  error: string | null; // why the round fell back to rules
+}
+
+export interface NegotiationSettledStep extends StepBase {
+  type: "negotiation_settled";
+  agreed_terms: Record<string, Terms>;
+  settled_clauses: string[];
+  open_clauses: string[];
+}
+
+export interface NeedsItemisationStep extends StepBase {
+  type: "needs_itemisation";
+  reason: string;
+  withheld_inr: number;
+  deposit_inr: number | null;
+}
+
+export type TraceStep =
+  | PlanStep
+  | QuestionStep
+  | ToolCallStep
+  | VerifierStep
+  | DraftStep
+  | ApprovalStep
+  | LandlordOfferStep
+  | TenantDecisionStep
+  | NegotiationSettledStep
+  | NeedsItemisationStep;
 
 export type FindingCategory =
   | "deposit_forfeiture"
@@ -125,7 +224,7 @@ export interface GoverningLaw {
   governs: string[];
 }
 
-export type RunStatus = "running" | "needs_input" | "awaiting_approval" | "approved" | "failed";
+export type RunStatus = "running" | "needs_input" | "awaiting_approval" | "approved" | "failed" | "needs_itemisation";
 
 export interface Run {
   id: string;
@@ -144,12 +243,15 @@ export interface Run {
   not_a_lawyer: true;
   notice: string;
   sample_note?: string | null; // stub mode only: facts the tenant entered that differ from the sample flat
+  negotiation: Negotiation | null; // demo agreements only: the scripted landlord knows their clauses
 }
 
 export interface RunInput {
   text: string | null;
   file: File | null;
   facts: Facts;
+  limits: TenantLimits;
+  persona: LandlordPersona;
 }
 
 // Flow 2 (move-out): mirrors backend/agent/moveout.py through lib/backend.ts.
@@ -184,6 +286,9 @@ export interface MoveoutRun {
   sections: Record<string, Section>;
   drafts?: Draft[]; // the challenge, EN and KN (live only)
   follow_up_date?: string | null; // set once the tenant approves the challenge
+  claimed_text?: string | null; // the landlord's message, when it was one number
+  letter?: Partial<Record<Language, string>> | null; // needs_itemisation: the request for an itemised list
+  itemisation?: NeedsItemisationStep | null;
   live?: boolean;
   not_a_lawyer: true;
   notice: string;
@@ -194,6 +299,7 @@ export interface MoveoutInput {
   agreement_text: string;
   checklist: { id: string; date: string; item: string; condition: string; evidence: string }[];
   deductions: { clause_ref: string; category: string; label: string; amount_inr: number; evidence_ids: string[] }[];
+  claimed_text?: string | null; // the landlord's message as sent, e.g. "painting and repairs 80396"
   facts: Record<string, unknown>;
   deposit_inr: number;
   language: Language;

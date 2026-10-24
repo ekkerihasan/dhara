@@ -63,3 +63,16 @@ def test_chat_retries_once_after_transport_error(monkeypatch) -> None:
 
     assert result.text == "ok"
     assert attempts["count"] == 2
+
+
+def test_rate_limit_moves_to_the_next_key(monkeypatch) -> None:
+    monkeypatch.setenv("MODEL_PROVIDER", "groq")
+    monkeypatch.setenv("GROQ_API_KEY", "first-key, second-key")
+    monkeypatch.setattr(provider, "_key_turn", 0)
+    monkeypatch.setattr(provider.httpx, "Client", _Client)
+    monkeypatch.setattr(provider.time, "sleep", lambda _: (_ for _ in ()).throw(AssertionError("no wait with a spare key")))
+    _Client.requests = []
+    _Client.responses = [_Response(429, {}), _Response(200, {"choices": [{"message": {"content": "ok", "tool_calls": []}}]})]
+
+    assert provider.chat([{"role": "user", "content": "hello"}], []).text == "ok"
+    assert [r["headers"]["Authorization"] for r in _Client.requests] == ["Bearer first-key", "Bearer second-key"]

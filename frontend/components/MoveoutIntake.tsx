@@ -15,6 +15,9 @@ export function MoveoutIntake() {
   const router = useRouter();
   const [input, setInput] = useState<Omit<MoveoutInput, "language"> | null>(null);
   const [language, setLanguage] = useState<Language>("en");
+  const [lumpSum, setLumpSum] = useState(false); // the landlord sent one number, not a list
+  const [claimedText, setClaimedText] = useState("painting and repairs 80396");
+  const [lumpDeposit, setLumpDeposit] = useState("100000");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,10 +29,14 @@ export function MoveoutIntake() {
 
   const submit = async () => {
     if (!input) return;
+    if (lumpSum && !claimedText.trim()) return setError("Paste what the landlord sent.");
     setBusy(true);
     setError(null);
     try {
-      const id = await createMoveout({ ...input, language });
+      const body: MoveoutInput = lumpSum
+        ? { ...input, language, deductions: [], claimed_text: claimedText.trim(), deposit_inr: Math.max(0, Math.round(Number(lumpDeposit) || 0)) }
+        : { ...input, language };
+      const id = await createMoveout(body);
       router.push(`/moveout/${id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start the move-out review.");
@@ -76,6 +83,39 @@ export function MoveoutIntake() {
               </div>
               <figcaption>Move-in checklist.</figcaption>
             </figure>
+            <div className="field" style={{ marginBottom: 16 }}>
+              <span className="field-label">What the landlord sent</span>
+              <div className="segmented" role="radiogroup" aria-label="What the landlord sent">
+                <label>
+                  <input type="radio" name="moveout-claim" checked={!lumpSum} onChange={() => setLumpSum(false)} />
+                  An itemised list
+                </label>
+                <label>
+                  <input type="radio" name="moveout-claim" checked={lumpSum} onChange={() => setLumpSum(true)} />
+                  One amount
+                </label>
+              </div>
+            </div>
+            {lumpSum ? (
+              <div className="form-grid" style={{ marginBottom: 16 }}>
+                <div className="field span-2">
+                  <label className="field-label" htmlFor="claimed-text">
+                    The landlord&apos;s message
+                  </label>
+                  <textarea id="claimed-text" rows={2} value={claimedText} onChange={(e) => setClaimedText(e.target.value)} />
+                  <span className="field-hint">Paste it as sent. One line with one amount gets a request for the itemised list first.</span>
+                </div>
+                <div className="field">
+                  <label className="field-label" htmlFor="lump-deposit">
+                    Deposit paid
+                  </label>
+                  <div className="input-prefix">
+                    <span>₹</span>
+                    <input id="lump-deposit" type="number" inputMode="numeric" min={0} value={lumpDeposit} onChange={(e) => setLumpDeposit(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            ) : (
             <figure className="fig-table">
               <div className="table-wrap">
                 <table>
@@ -106,6 +146,7 @@ export function MoveoutIntake() {
                 Deductions the landlord claims from a deposit of {inr(input.deposit_inr)}. Amounts can be edited.
               </figcaption>
             </figure>
+            )}
             <div className="field" style={{ marginBottom: 16 }}>
               <span className="field-label">Draft the challenge in</span>
               <div className="segmented" role="radiogroup" aria-label="Language">
@@ -116,6 +157,10 @@ export function MoveoutIntake() {
                 <label lang="kn">
                   <input type="radio" name="moveout-lang" checked={language === "kn"} onChange={() => setLanguage("kn")} />
                   ಕನ್ನಡ
+                </label>
+                <label lang="hi">
+                  <input type="radio" name="moveout-lang" checked={language === "hi"} onChange={() => setLanguage("hi")} />
+                  हिन्दी
                 </label>
               </div>
             </div>

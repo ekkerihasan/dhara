@@ -12,6 +12,7 @@ import { DocFooter } from "./DocFooter";
 import { DraftPanel } from "./DraftPanel";
 import { Findings } from "./Findings";
 import { appliesLabel, Jurisdiction } from "./Jurisdiction";
+import { Negotiation } from "./Negotiation";
 import { QuestionCard } from "./QuestionCard";
 import { SectionChips } from "./SectionChip";
 import { Toc, type TocItem } from "./Toc";
@@ -22,6 +23,7 @@ const POLL_MS = 1500;
 const FULL_TOC: TocItem[] = [
   { id: "law", title: "Governing law" },
   { id: "findings", title: "Unfair clauses" },
+  { id: "negotiation", title: "Negotiation" },
   { id: "draft", title: "Counter-proposal" },
   { id: "citations", title: "Citation check" },
   { id: "trace", title: "Decision trace" },
@@ -51,12 +53,13 @@ export function ReviewDocument({ id }: { id: string }) {
     };
   }, [id]);
 
-  // Live mode: keep polling while the agent is working.
+  // Keep polling while the agent works, and after the report is ready while the negotiation still runs.
+  const working = run?.status === "running" || run?.negotiation?.status === "running";
   useEffect(() => {
-    if (run?.status !== "running") return;
+    if (!working) return;
     const timer = setInterval(load, POLL_MS);
     return () => clearInterval(timer);
-  }, [run?.status, load]);
+  }, [working, load]);
 
   if (error) {
     return (
@@ -102,8 +105,9 @@ export function ReviewDocument({ id }: { id: string }) {
     await answerQuestion(run.id, question.field, value);
     await load();
   };
+  const negotiation = run.negotiation;
   const onApprove = async () => {
-    await approveDraft(run.id, run.drafts[0].id);
+    await approveDraft(run.id, run.drafts[0].id, negotiation?.agreed_terms ?? null);
     await load();
   };
 
@@ -191,9 +195,11 @@ export function ReviewDocument({ id }: { id: string }) {
                 <Scale size={16} aria-hidden />
                 <div>
                   <p>{run.governing_law.summary}</p>
-                  <p style={{ marginTop: 10 }}>
-                    <SectionChips ids={run.governing_law.section_ids} sections={run.sections} />
-                  </p>
+                  {run.governing_law.section_ids.length > 0 && (
+                    <p style={{ marginTop: 10 }}>
+                      <SectionChips ids={run.governing_law.section_ids} sections={run.sections} />
+                    </p>
+                  )}
                 </div>
               </div>
               <Jurisdiction law={run.governing_law} sections={run.sections} />
@@ -208,14 +214,33 @@ export function ReviewDocument({ id }: { id: string }) {
               <Findings findings={run.findings} sections={run.sections} />
             </section>
 
+            {negotiation && (
+              <section className="section" id="negotiation">
+                <h2>Negotiation</h2>
+                <p>
+                  Dhara negotiated with a scripted landlord for up to two rounds, within your limits and the law. Code, not the model, holds your
+                  limits: an accept past a limit is turned into a reject. You approve the outcome once, below.
+                </p>
+                <Negotiation negotiation={negotiation} findings={run.findings} sections={run.sections} />
+              </section>
+            )}
+
             {run.drafts[0] && (
               <section className="section" id="draft">
                 <h2>Counter-proposal</h2>
                 <p>
                   Written only from cited claims.
                   {blocked > 0 && ` The ${blocked} blocked ${blocked === 1 ? "claim was" : "claims were"} removed before drafting.`}
+                  {negotiation && !approval && " Approving the agreed terms rewrites this letter from them: agreed clauses as agreed, open clauses with your ask."}
                 </p>
-                <DraftPanel draft={run.drafts[0]} initialLanguage={run.facts.language} approval={approval} onApprove={onApprove} />
+                <DraftPanel
+                  draft={run.drafts[0]}
+                  initialLanguage={run.facts.language}
+                  approval={approval}
+                  onApprove={onApprove}
+                  approveLabel={negotiation ? "Approve agreed terms" : "Approve"}
+                  waiting={negotiation?.status === "running" ? "Approval opens when the negotiation finishes." : null}
+                />
               </section>
             )}
 

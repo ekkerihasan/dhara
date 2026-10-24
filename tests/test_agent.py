@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -57,7 +58,7 @@ def test_model_drives_findings_and_sees_each_tool_result() -> None:
     tool_results = [m for m in second_turn if m["role"] == "tool"]
     assert len(tool_results) == 5 and '"money_at_risk_inr": 150000' in tool_results[0]["content"]
     assert any(v["verdict"] == "blocked" and v["section_id"] == "MTA-11(1)" for v in result.verdicts)
-    assert [d.language for d in result.drafts] == ["en", "kn"]
+    assert [d.language for d in result.drafts] == ["en", "kn", "hi"]
     assert result.findings[0].clause_text.startswith("C2.")
 
 
@@ -155,3 +156,16 @@ def test_agent_pauses_for_built_year_only_then_resumes() -> None:
     assert resumed.status == "ready"
     assert resumed.drafts
     assert any(step.type == "question" for step in resumed.trace)
+
+
+def test_agent_asks_for_completion_month_at_the_fifteen_year_boundary() -> None:
+    facts = {"rent_per_month": 25000, "built_year": date.today().year - 15, "local_body": "municipal_corporation", "premises_use": "residential"}
+    state = AgentState("run-boundary", read_agreement(TASK["agreement_text"])["clauses"], facts, "en", scripted_model(BLR_FINDINGS, []))
+
+    paused = start_agent(state)
+    assert paused.status == "needs_input"
+    assert paused.question == "Please provide the missing tenancy fact(s): completion_month."
+
+    state.unknown_facts.add("completion_month")  # the tenant answered "I don't know"
+    resumed = start_agent(state)
+    assert resumed.status == "ready"

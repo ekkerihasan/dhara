@@ -25,4 +25,5 @@ export const STATUS_LABEL: Record<RunStatus, string> = {
   awaiting_approval: "Awaiting your approval",
   approved: "Approved, follow-up recorded",
   failed: "Failed",
+  needs_itemisation: "Itemised list requested",
 };

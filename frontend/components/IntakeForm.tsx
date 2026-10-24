@@ -6,7 +6,8 @@ import { useRef, useState } from "react";
 import { createRun } from "@/lib/api";
 import { LOCAL_BODY_LABEL } from "@/lib/format";
 import blrFlat from "@/stubs/blr_flat.json";
-import type { Facts, Language, LocalBody, PremisesUse } from "@/lib/types";
+import type { Facts, LandlordPersona, Language, LocalBody, PremisesUse, TenantLimits } from "@/lib/types";
+import { VoiceFacts } from "./VoiceFacts";
 
 const MAX_PDF_BYTES = 8 * 1024 * 1024; // same 8 MB limit as the prototype reader
 
@@ -29,6 +30,10 @@ export function IntakeForm() {
   const [localBody, setLocalBody] = useState<LocalBody>("municipal_corporation");
   const [use, setUse] = useState<PremisesUse>("residential");
   const [language, setLanguage] = useState<Language>("en");
+  const [lockIn, setLockIn] = useState("3");
+  const [refundDays, setRefundDays] = useState("30");
+  const [painting, setPainting] = useState("10000");
+  const [persona, setPersona] = useState<LandlordPersona>("strict_owner");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,6 +43,16 @@ export function IntakeForm() {
     if (f.size > MAX_PDF_BYTES) return setError("The PDF is over 8 MB.");
     setError(null);
     setFile(f);
+  };
+
+  /** Fill only the fields the tenant actually mentioned; the rest keep what is already typed. */
+  const fillFromVoice = (spoken: Partial<Facts>) => {
+    if (spoken.rent_per_month) setRent(String(spoken.rent_per_month));
+    if (spoken.deposit_inr) setDeposit(String(spoken.deposit_inr));
+    if (spoken.built_year) setBuiltYear(String(spoken.built_year));
+    if (spoken.substantial_renovation_year) setRenovationYear(String(spoken.substantial_renovation_year));
+    if (spoken.local_body) setLocalBody(spoken.local_body);
+    if (spoken.premises_use) setUse(spoken.premises_use);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -53,10 +68,16 @@ export function IntakeForm() {
       premises_use: use,
       language,
     };
+    const limits: TenantLimits = {
+      max_lock_in_months: toNumber(lockIn) ?? 3,
+      refund_within_days: toNumber(refundDays) ?? 30,
+      max_exit_painting_inr: toNumber(painting) ?? 10000,
+    };
+    if (Object.values(limits).some((v) => v < 0 || !Number.isInteger(v))) return setError("Limits must be whole numbers, zero or more.");
     setBusy(true);
     setError(null);
     try {
-      const id = await createRun({ file, text: text.trim() || null, facts });
+      const id = await createRun({ file, text: text.trim() || null, facts, limits, persona });
       router.push(`/review/${id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start the review.");
@@ -126,6 +147,7 @@ export function IntakeForm() {
       <section className="section" id="facts">
         <h2>Facts about the rental</h2>
         <p>These decide whether the Karnataka Rent Act applies. Leave the built year blank if you do not know it: the agent will ask.</p>
+        <VoiceFacts language={language} onFacts={fillFromVoice} />
         <div className="form-grid">
           <div className="field">
             <label className="field-label" htmlFor="rent">
@@ -193,7 +215,65 @@ export function IntakeForm() {
                 <input type="radio" name="lang" value="kn" checked={language === "kn"} onChange={() => setLanguage("kn")} />
                 ಕನ್ನಡ
               </label>
+              <label lang="hi">
+                <input type="radio" name="lang" value="hi" checked={language === "hi"} onChange={() => setLanguage("hi")} />
+                हिन्दी
+              </label>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section" id="limits">
+        <h2>Your limits</h2>
+        <p>
+          After the review, Dhara negotiates with the landlord for up to two rounds. It never accepts past these limits: code holds them, not the model.
+          They are your preference, not a legal limit.
+        </p>
+        <div className="form-grid">
+          <div className="field">
+            <label className="field-label" htmlFor="limit-lock-in">
+              Longest lock-in
+            </label>
+            <div className="input-suffix">
+              <input id="limit-lock-in" type="number" inputMode="numeric" min={0} step={1} value={lockIn} onChange={(e) => setLockIn(e.target.value)} />
+              <span>months</span>
+            </div>
+            <span className="field-hint">Your preference, not a legal limit.</span>
+          </div>
+          <div className="field">
+            <label className="field-label" htmlFor="limit-refund">
+              Deposit back within
+            </label>
+            <div className="input-suffix">
+              <input id="limit-refund" type="number" inputMode="numeric" min={0} step={1} value={refundDays} onChange={(e) => setRefundDays(e.target.value)} />
+              <span>days</span>
+            </div>
+            <span className="field-hint">Your preference, not a legal limit.</span>
+          </div>
+          <div className="field">
+            <label className="field-label" htmlFor="limit-painting">
+              Most you will pay for exit painting
+            </label>
+            <div className="input-prefix">
+              <span>₹</span>
+              <input id="limit-painting" type="number" inputMode="numeric" min={0} step={500} value={painting} onChange={(e) => setPainting(e.target.value)} />
+            </div>
+            <span className="field-hint">Your preference, not a legal limit.</span>
+          </div>
+          <div className="field">
+            <span className="field-label">Landlord style</span>
+            <div className="segmented" role="radiogroup" aria-label="Landlord style">
+              <label>
+                <input type="radio" name="persona" value="strict_owner" checked={persona === "strict_owner"} onChange={() => setPersona("strict_owner")} />
+                Strict owner
+              </label>
+              <label>
+                <input type="radio" name="persona" value="reasonable_broker" checked={persona === "reasonable_broker"} onChange={() => setPersona("reasonable_broker")} />
+                Reasonable broker
+              </label>
+            </div>
+            <span className="field-hint">A scripted landlord for the sample agreement, so every run is reproducible.</span>
           </div>
         </div>
         <div className="form-actions">

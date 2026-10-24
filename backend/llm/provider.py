@@ -37,15 +37,39 @@ class ToolCallOrText(BaseModel):
     tool_calls: list[ToolCall] = Field(default_factory=list)
 
 
+_key_turn = 0  # which of several comma-separated keys is in use; moves on after a rate limit
+
+
+def _key(variable: str) -> str:
+    """One key from a comma-separated list in the environment variable, taking turns."""
+    keys = [k.strip() for k in os.getenv(variable, "").split(",") if k.strip()]
+    return keys[_key_turn % len(keys)] if keys else ""
+
+
+def _key_count() -> int:
+    provider = os.getenv("MODEL_PROVIDER", "groq").strip().casefold()
+    variable = "SARVAM_API_KEY" if provider == "sarvam" else "GROQ_API_KEY"
+    return len([k for k in os.getenv(variable, "").split(",") if k.strip()])
+
+
+def _next_key() -> bool:
+    """Switch to the next key after a rate limit; False if there is only one."""
+    global _key_turn
+    if _key_count() < 2:
+        return False
+    _key_turn += 1
+    return True
+
+
 def _provider_config() -> tuple[str, str, str, dict[str, str]]:
     provider = os.getenv("MODEL_PROVIDER", "groq").strip().casefold()
     if provider == "groq":
-        key = os.getenv("GROQ_API_KEY", "")
+        key = _key("GROQ_API_KEY")
         url = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1").rstrip("/")
         model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")  # llama-3.3-70b-versatile is retired on Groq
         headers = {"Authorization": f"Bearer {key}"}
     elif provider == "sarvam":
-        key = os.getenv("SARVAM_API_KEY", "")
+        key = _key("SARVAM_API_KEY")
         url = os.getenv("SARVAM_BASE_URL", "https://api.sarvam.ai/v1").rstrip("/")
         model = os.getenv("SARVAM_MODEL", "sarvam-105b")
         headers = {"Authorization": f"Bearer {key}", "api-subscription-key": key}
@@ -107,6 +131,7 @@ def chat(messages: list[dict[str, Any]], tools: list[dict[str, Any]]) -> ToolCal
 
     Retries once on a network error, and up to three times on rate limits (HTTP 429) or
     provider errors (5xx), waiting as long as the provider's Retry-After asks (at most 20 s).
+    With several comma-separated keys, a rate limit moves to the next key without waiting.
     """
     if not isinstance(messages, list) or not isinstance(tools, list):
         raise ValueError("messages and tools must be lists")
@@ -127,7 +152,10 @@ def chat(messages: list[dict[str, Any]], tools: list[dict[str, Any]]) -> ToolCal
             with httpx.Client(timeout=timeout) as client:
                 response = client.post(url, headers=headers, json=payload)
             if (response.status_code == 429 or response.status_code >= 500) and attempt < 3:
-                time.sleep(_retry_after(response))
+                if response.status_code == 429 and _next_key():
+                    _, url, model, headers = _provider_config()
+                else:
+                    time.sleep(_retry_after(response))
                 continue
             if response.status_code >= 400:
                 raise ProviderError(f"Model request failed with HTTP {response.status_code}")
@@ -142,3 +170,34 @@ def chat(messages: list[dict[str, Any]], tools: list[dict[str, Any]]) -> ToolCal
     if isinstance(last_error, ProviderError):
         raise last_error
     raise ProviderError("Model request failed after one retry") from last_error
+
+
+def transcribe(audio: bytes, filename: str, language: str | None = None) -> str:
+    """Speech to text with Groq Whisper. The audio is sent once and never stored; returns the transcript."""
+    if not audio or len(audio) > 5 * 1024 * 1024:
+        raise ValueError("Provide a recording of at most 5 MB")
+    key = _key("GROQ_API_KEY")
+    if not key:
+        raise ProviderError("No API key configured for groq")
+    url = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1").rstrip("/") + "/audio/transcriptions"
+    data = {"model": os.getenv("GROQ_STT_MODEL", "whisper-large-v3-turbo"), "response_format": "json", "temperature": "0"}
+    if language:
+        data["language"] = language
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            with httpx.Client(timeout=httpx.Timeout(30.0)) as client:
+                response = client.post(url, headers={"Authorization": f"Bearer {key}"}, data=data, files={"file": (filename, audio)})
+            if (response.status_code == 429 or response.status_code >= 500) and attempt < 2:
+                time.sleep(_retry_after(response))
+                continue
+            if response.status_code >= 400:
+                raise ProviderError(f"Transcription failed with HTTP {response.status_code}")
+            text = response.json().get("text")
+            if not isinstance(text, str):
+                raise ProviderError("Transcription response had no text")
+            return text.strip()
+        except (httpx.HTTPError, ValueError) as exc:
+            last_error = exc
+            break
+    raise ProviderError("Transcription failed") from last_error
