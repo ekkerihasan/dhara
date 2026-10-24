@@ -1,40 +1,209 @@
 # Dhara AI: Agentic Copilot for Fair Renting
 
-An agentic tenancy copilot for Karnataka: review rental terms, negotiate changes, preserve move-in evidence, and challenge unfair deposit deductions with tenant approval.
+**Which law governs your rental, what each unfair clause costs, and the counter-proposal you approve, before you sign**
 
-Built for ChronoForge 2026, NITK Surathkal. **Track:** Agentic AI. **Theme:** Cities of the Future.
+English and Kannada | Karnataka law pack | Web app
+
+> **ChronoForge 2026, NITK Surathkal** | Track: Agentic AI | Theme: Cities of the Future | Team StrawHats
+
+![Dhara review report](docs/screenshots/review-report.jpg)
+
+---
+
+## The Problem
+
+At the last census, six in ten Bengaluru households rented their home [[R1]](docs/REFERENCES.md#problem-statistics). Their deposits run to several months' rent, held under an 11-month agreement that nobody registers, because a lease over one year must be registered [[R10]](docs/REFERENCES.md#law). At move-out, deductions are argued over WhatsApp.
+
+The law tenants find online is often the wrong law. Posts say deposits are capped at two months; that cap is in the Model Tenancy Act, 2021, which Karnataka has not adopted [[R6]](docs/REFERENCES.md#law) [[R7]](docs/REFERENCES.md#law). The Karnataka Rent Act, amended in January 2026, still sets no deposit limit [[R8]](docs/REFERENCES.md#law), and it does not cover most modern flats at all [[R9]](docs/REFERENCES.md#law). So whatever the agreement says is the rule.
+
+| Metric | Figure |
+| --- | --- |
+| Bengaluru households that rent | **60.1%** of BBMP households (Census 2011) [[R1]](docs/REFERENCES.md#problem-statistics) |
+| Urban renting households in Karnataka | **24,47,718** (Census 2011) [[R2]](docs/REFERENCES.md#problem-statistics) |
+| Deposits held by Bengaluru landlords | **₹31,628 crore** (NoBroker study, Jul 2026) [[R3]](docs/REFERENCES.md#problem-statistics) |
+| A typical Bengaluru deposit | **6 to 9 months' rent**, ₹3 to 5 lakh for one flat [[R4]](docs/REFERENCES.md#problem-statistics) |
+| States that adopted the Model Tenancy Act's approach | **4**, not including Karnataka [[R6]](docs/REFERENCES.md#law) |
+
+## The Solution
+
+Dhara (धारा) is what Indian law calls a section, as in "Dhara 302". Our one rule: **every legal point Dhara makes has to name its section.** The tenant pastes or uploads the agreement and gives three facts (rent, local body, built year), and the agent works in five steps:
+
+1. **Plan:** our code redacts Aadhaar, PAN and phone numbers; the AI reads the clauses and plans what to check.
+2. **Ask:** if a fact decides which law applies, such as the building's age, it stops and asks instead of guessing. "I don't know" is a valid answer.
+3. **Act:** the AI records each unfair clause with the facts it reads from it; our tools decide which law applies and compute the rupees at risk.
+4. **Verify:** every legal claim must cite a section that exists, applies in Karnataka and covers this flat; anything else is blocked.
+5. **Draft and wait:** a counter-proposal in English and Kannada. Nothing goes out until the tenant approves, and approval records a follow-up; Dhara never sends anything itself.
+
+![Intake form](docs/screenshots/intake.jpg)
+
+### Core Innovation: the AI reads, code decides
+
+| Part | Who does it | Where |
+| --- | --- | --- |
+| Read the clauses, decide what to check, extract amounts and conditions | AI (tool calls) | [`backend/agent/tenant.py`](backend/agent/tenant.py) |
+| Does the Karnataka Rent Act apply to this flat? | Code | [`backend/tools/law.py`](backend/tools/law.py) |
+| Rupees at risk per clause | Code, fixed formulas | [`backend/tools/money.py`](backend/tools/money.py) |
+| Is a citation allowed? | Code | [`backend/agent/verifier.py`](backend/agent/verifier.py) |
+| Redaction, drafts, approval gate | Code | [`backend/tools/agreement.py`](backend/tools/agreement.py), [`backend/tools/messages.py`](backend/tools/messages.py) |
+| Scoring | Code, no model | [`env/scorer.py`](env/scorer.py) |
+
+Each tool result goes back to the AI before its next step, up to 12 tool calls. If the model is unreachable, a rule-based pass runs instead and the trace says so.
+
+### The Verifier
+
+| Verdict | When |
+| --- | --- |
+| **Cited** | The section is in [`law/karnataka.json`](law/karnataka.json), applies in Karnataka and covers this flat |
+| **Blocked** | The section is from a law Karnataka has not adopted (the two-month cap), from the Rent Act when the Act does not cover the flat, unknown, or missing from a legal claim |
+| **Unverified** | Not a legal claim, shown with that label (for example, Dhara's 10% fairness threshold for rent increases) |
+
+### Measured, not just prompted
+
+The same model reviews each test agreement twice: once with no tools and no verifier, once as the full agent. Scores are out of 3, from [`env/scorer.py`](env/scorer.py) [[R13]](docs/REFERENCES.md#evaluation):
+
+| Task | Plain model | Dhara agent |
+| --- | --- | --- |
+| `blr_flat`: Bengaluru flat, five unfair clauses | **1.86**, said the Rent Act applies | **3.00** |
+| `pg_room`: PG room, building age unknown | **2.00**, said the Rent Act applies | **3.00** |
+
+Both got the rupee amounts right. Without the rent-law test, the plain model assumed the Karnataka Rent Act protects the tenant. One live run each with `openai/gpt-oss-120b`; reproduce with `python -m env.run_eval`.
+
+![Evaluation page](docs/screenshots/evaluation.jpg)
+
+### Simple, scalable, secure
+
+| | How |
+| --- | --- |
+| **Simple** | Rules do the work wherever rules are enough: the Rent Act test, the money formulas, the citation check and the scorer are plain Python over one JSON file. The AI only reads the clauses and decides what to check. No database, no queue. |
+| **Scalable** | Law is data. Each state is one law pack with a source link per section; the agent, verifier and screens stay the same. |
+| **Secure** | Documents stay in memory, personal numbers are redacted before any model call, keys come only from the environment, and nothing is sent without the tenant's approval. |
+
+## Architecture
+
+```mermaid
+flowchart LR
+    T[Tenant browser] --> F[Next.js app]
+    F -->|JSON over HTTP| A[FastAPI<br/>backend/main.py]
+    A --> R[read_agreement<br/>PII redaction]
+    A --> G[Tenant agent loop<br/>backend/agent/tenant.py]
+    G <-->|tool calls| M[Groq<br/>gpt-oss-120b]
+    G --> J[check_jurisdiction]
+    G --> C[compute_money]
+    G --> V[verifier]
+    G --> D[draft_message<br/>EN / KN]
+    J --> L[(law/karnataka.json)]
+    V --> L
+    E[env/run_eval.py] --> G
+    E --> S[env/scorer.py]
+```
+
+### Deliberate Architectural Decisions
+
+| Decision | Choice | Why not the alternative |
+| --- | --- | --- |
+| **Law** | One JSON law pack with a source link per section | A database or retrieval index adds moving parts; a new state is a new file |
+| **Legal decisions** | Plain code for coverage, money and citations | A model can invent a cap or a deadline; code cannot |
+| **Model** | Groq `openai/gpt-oss-120b` behind one function, [`backend/llm/provider.py`](backend/llm/provider.py) | Pay per token; the provider can be swapped in one file |
+| **State** | In-memory runs keyed by id | No database or queue for a single-user review |
+| **Long runs** | The agent runs as a background task; the screen polls and shows the trace filling in | A review takes up to a minute with rate limits |
+| **Frontend** | Next.js, with a sample mode built from the real tools ([`env/make_frontend_stubs.py`](env/make_frontend_stubs.py)) | The screens work and stay honest before the backend runs |
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.10+ and Node.js 20+
+- A Groq API key
+
+### Configuration
+
+Copy `.env.example` to `.env` and set `GROQ_API_KEY`. Never commit real keys; `.env` is ignored by git.
+
+### Backend
+
+```bash
+python -m pip install -r backend/requirements.txt
+uvicorn backend.main:app --port 8000
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+NEXT_PUBLIC_USE_STUBS=false NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
+```
+
+Open http://localhost:3000, press **Use the sample agreement**, leave **Year built** blank and press **Review the agreement**. Without the backend, leave out `NEXT_PUBLIC_USE_STUBS=false`: the screens then show a run built from the real tools. More in [frontend/README.md](frontend/README.md).
+
+### Tests and evaluation
+
+```bash
+python -m pytest -q                                                  # tools, verifier, scorer, agent loop, API
+python -m env.scorer env/tasks/blr_flat.json env/tasks/sample_run.json   # 3/3
+python -m env.run_eval                                               # plain model vs agent, needs GROQ_API_KEY
+```
+
+## Project Structure
+
+```
+dhara/
+  ├── README.md
+  ├── docs/REFERENCES.md        # Sources for every number in this README
+  ├── law/karnataka.json        # 25 sourced sections: Karnataka Rent Act, Contract Act, TPA, Registration Act, Model Tenancy Act
+  ├── backend/
+  │   ├── main.py               # FastAPI: runs, answer, approve
+  │   ├── agent/tenant.py       # Agent loop: tool calls, question, fallback, trace
+  │   ├── agent/verifier.py     # Citation check
+  │   ├── llm/provider.py       # The one model entry point
+  │   └── tools/                # law, agreement (redaction), money, messages
+  ├── env/
+  │   ├── tasks/                # blr_flat, pg_room, moveout (synthetic)
+  │   ├── scorer.py             # Governing law, money within Rs 500, citations, wrong-law penalty
+  │   ├── run_eval.py           # Plain model vs agent
+  │   └── results/              # scores.md, scores.json
+  ├── frontend/                 # Next.js: intake, review report, move-out, evaluation
+  ├── tests/                    # pytest
+  └── housing/ server/ static/  # The earlier prototype, reused by import
+```
+
+## Security & Privacy
+
+- **No stored documents:** uploaded agreements are read in memory for the request and never written to disk.
+- **Redaction first:** Aadhaar, PAN and phone numbers are redacted before any model call ([`backend/tools/agreement.py`](backend/tools/agreement.py)).
+- **No sending:** approval records a follow-up date; Dhara has no delivery integration and never sends a message itself.
+- **Keys:** only from environment variables; `.env` is ignored, `.env.example` holds empty placeholders.
+- **No personal data in the repo:** team planning notes are kept out of version control.
+- **Not a lawyer:** every report carries a not-a-lawyer notice.
+
+## Impact
+
+| SDG | Contribution |
+| --- | --- |
+| SDG 11 · Sustainable Cities | Fairer rental agreements for the renting majority of a growing city [[R1]](docs/REFERENCES.md#problem-statistics) |
+| SDG 16 · Strong Institutions | Advice that cites the law that actually applies, with every step visible |
+| SDG 10 · Reduced Inequalities | Kannada drafts and plain-language findings for tenants without legal help |
+
+It scales because law is data: bringing Dhara to another state means sourcing its law pack. The agent, verifier and screens stay the same.
 
 ## Status
 
-Phase 0: the earlier prototype has been imported without its Git history, local environment, credentials, or caches.
-
-Checkpoint 1 (24 Oct, 16:00):
-
-- [x] Next.js frontend on stubbed data: intake form, review report (governing law, money at risk, counter-proposal with EN/KN and approve, citation check, decision trace), question card for `needs_input`, and a move-out preview. `npm run build` and `npm run lint` pass; the layout works at 390 px. See [frontend/README.md](frontend/README.md).
-- [x] Frontend/backend data shapes defined in `frontend/lib/types.ts`, with sample runs in `frontend/stubs/` checked against the law pack by `tests/test_frontend_stubs.py`.
-- [x] Law library (`law/karnataka.json`, 25 sourced sections) with `check_jurisdiction` and `lookup_section` (`backend/tools/law.py`).
-- [x] Citation verifier, three synthetic tasks and deterministic scorer (`backend/agent/verifier.py`, `env/`). The sample perfect run scores **3/3**; citing the model deposit cap incurs **−1** (2/3). These are scorer checks on synthetic outputs, not live model results.
-- [x] `read_agreement` with in-memory PDF extraction and PII redaction, `compute_money`, English/Kannada `draft_message`, and the `send_and_schedule` approval gate. Approved drafts are recorded in memory; external delivery is not configured.
-- [ ] Planning agent and live API (next).
-
-Validation: **135 passed** (`python -m pytest -q`); **51 passed** at import. A root package import guard was added so pytest can collect tests from this checkout; `housing/` and `server/` are unchanged. Validation currently uses the earlier project's Python 3.10.11 environment; the event backend targets Python 3.11.
-
-## Simple, scalable, secure
-
-- **Simple.** Rules do the work wherever rules are enough. The Rent Act test, money-at-risk formulas, citation check and scorer are plain Python over JSON, with no model involved; the model plans which tools to call and states claims for the verifier, while reading, pricing, citation checks, drafts and scoring stay deterministic. Runs live in memory, with no database or queue.
-- **Scalable.** Law is data. Each state is one JSON law pack (`law/karnataka.json` today) with a source link per section; the agent, verifier and screens stay the same for a new state.
-- **Secure.** Keys come only from environment variables (`.env` is ignored). Uploaded agreements are kept in memory for the request, and `read_agreement` redacts Aadhaar, PAN and phone numbers before any model call. Claims citing a section that is missing from the pack or does not apply in Karnataka are blocked. Team planning notes are kept out of the repository.
+- [x] **Checkpoint 1 (24 Oct, 16:00):** law library and jurisdiction tools, verifier, three tasks and scorer, agreement, money and message tools, and the screens on sample data.
+- [x] **Live end to end:** the agent loop, the API and the screens tested with the real model: question, answer, five findings with the scorer's amounts, English and Kannada drafts, a blocked claim, approval.
+- [x] **Plain model vs agent scores** on `blr_flat` and `pg_room`.
+- [ ] Move-out: compare claimed deductions with the move-in checklist and draft the challenge (the screen exists on sample data).
+- [ ] Stretch: a landlord agent that pushes back, Hindi drafts, a test of public chatbots.
 
 ## Before and after
 
 | Existed before ChronoForge | Built at ChronoForge |
 | --- | --- |
-| Offline rules-based Karnataka applicability screening and clause extraction | Next.js review report with decision trace, verifier verdicts and money at risk (stubbed data) |
-| English, Kannada and Hindi message templates | Approve-to-send draft panel with an English/Kannada toggle (stubbed data) |
-| Scripted counterparty negotiation | Question card that pauses the run for a missing jurisdiction fact |
-| Local PDF extraction and OCR | |
-| OpenEnv tasks, deterministic grading and tests | |
-| Offline housing review without a model; a separate legacy model inference script | |
+| Offline rules-based Karnataka applicability screening and clause extraction | Sourced law pack, `check_jurisdiction` and the citation verifier with wrong-law blocking |
+| English, Kannada and Hindi message templates | Model-driven agent loop with tool calls, a single missing-fact question and a rule-based fallback |
+| Scripted counterparty negotiation | Three scored tasks, the deterministic scorer and the plain-model vs agent runner |
+| Local PDF extraction and OCR | In-memory agreement reading with PII redaction, money formulas and the approval gate |
+| OpenEnv tasks, deterministic grading and tests | FastAPI endpoints for runs, answers and approvals |
+| Offline housing review without a model; a separate legacy model inference script | Next.js review report, decision trace, Kannada drafts, move-out preview and evaluation page |
 
 ## Built at ChronoForge
 
@@ -42,47 +211,42 @@ Validation: **135 passed** (`python -m pytest -q`); **51 passed** at import. A r
 - [x] Citation verifier and wrong-law blocking
 - [x] Three tenancy evaluation tasks and deterministic scorer
 - [x] Agreement redaction, money calculations and approval-gated messages
-- [ ] Model provider, planning agent and decision trace
-- [ ] FastAPI run, answer and approval endpoints
-- [ ] Next.js review and move-out screens with English and Kannada drafts (screens built on stubs; live API pending)
-- [ ] Baseline versus agent evaluation results
+- [x] Model provider, planning agent and decision trace
+- [x] FastAPI run, answer and approval endpoints
+- [x] Next.js review and move-out screens with English and Kannada drafts (move-out on sample data)
+- [x] Baseline versus agent evaluation results
 - [ ] Move-out deduction challenges and next formal step
-
-
-## Run the frontend
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-Open http://localhost:3000. Stubs are on by default (`NEXT_PUBLIC_USE_STUBS`), so `/review/blr_flat` and `/moveout/moveout` work without the backend.
 
 ## Run the imported prototype
 
 ```powershell
 python -m pip install -e '.[dev]'
 python -m pip install -r requirements-housing.txt
-python -m pytest -q
 python housing_ui.py --port 7861
 ```
 
-Open http://127.0.0.1:7861. The offline housing interface needs no model key. `.env.example` lists the planned event configuration; credentials belong only in an ignored local `.env` or environment variables.
+Open http://127.0.0.1:7861. The offline housing interface needs no model key.
 
 ## Credits
 
 - Earlier Dhara AI prototype: imported from the team's Dhara-Ai repository; its existing source notices are preserved.
 - Meta OpenEnv / openenv-core: environment interfaces and runtime, including FastAPI, Uvicorn, Pydantic, Gradio and websockets.
-- Python dependencies: OpenAI Python SDK, python-dotenv, pytest, pytest-cov, httpx, setuptools and wheel.
-- Local document tools: PyMuPDF, Pillow, RapidOCR, ONNX Runtime and NumPy. Event PDF extraction: [pypdf](https://pypdf.readthedocs.io/).
-- [India Code](https://www.indiacode.nic.in/) and [PRS Legislative Research](https://prsindia.org/billtrack/the-model-tenancy-act-2021): planned statute and legislative references.
+- Python dependencies: OpenAI Python SDK, python-dotenv, pytest, pytest-cov, httpx, setuptools and wheel. Event PDF extraction: [pypdf](https://pypdf.readthedocs.io/).
+- Local document tools in the prototype: PyMuPDF, Pillow, RapidOCR, ONNX Runtime and NumPy.
+- Law sources: [India Code](https://www.indiacode.nic.in/) and [PRS Legislative Research](https://prsindia.org/billtrack/the-model-tenancy-act-2021). Statistics: see [docs/REFERENCES.md](docs/REFERENCES.md).
+- Model: [Groq](https://groq.com/) serving `openai/gpt-oss-120b`. [Sarvam](https://www.sarvam.ai/) is supported as an alternative provider.
 - Frontend: [Next.js](https://nextjs.org/), React and [Tailwind CSS](https://tailwindcss.com/) (MIT); [Lucide](https://lucide.dev/) icons (ISC); Geist and Geist Mono (Vercel, OFL-1.1) and Noto Sans Kannada (Google, OFL-1.1) via `next/font`.
-- [Groq](https://groq.com/) and [Sarvam](https://www.sarvam.ai/): planned model providers; event integration and provider selection remain pending.
 
 The imported README refers to a BSD-style LICENSE file, but the source checkout does not include that file. Upstream licensing information needs verification before distribution.
 
+## Team
+
+**StrawHats** | ChronoForge 2026, NITK Surathkal
+
 ## Original prototype notes
+
+<details>
+<summary>Documentation preserved from the earlier project (historical prototype notes, not ChronoForge results)</summary>
 
 The following documentation is preserved from the earlier project. Its model scores, validation statements and feature descriptions are historical prototype notes, not ChronoForge results.
 
@@ -381,6 +545,8 @@ openenv validate    # passes all checks
 ## License
 
 BSD-style license. See LICENSE file.
+
+</details>
 
 ## Note on prior work
 
