@@ -66,16 +66,23 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
 
 
 def _law_index() -> str:
-    """Section ids and titles the model may cite, one per line."""
+    """Section ids the model may cite, each with the law pack's one-line paraphrase, one per line."""
     entries = json.loads(LAW_PATH.read_text(encoding="utf-8"))
-    return "\n".join(f"{e['id']}: {e['title']}" + ("" if e["applies_in_karnataka"] else " (NOT applicable in Karnataka)") for e in entries)
+    return "\n".join(f"{e['id']}: {e['title']}. {e.get('paraphrase', '')}" + ("" if e["applies_in_karnataka"] else " (NOT applicable in Karnataka)") for e in entries)
 
 
 SYSTEM_PROMPT = """You review a residential rental agreement in Karnataka for the tenant.
 1. Read every clause. For each clause that can cost the tenant money, call record_finding once, with the numbers you read from the clause text. Categories and their inputs: {money}
 2. Cite only section ids from this list, and never cite one marked NOT applicable:
 {law}
+   Usual sections: deposit_forfeiture and lock_in -> ICA-74; painting_or_cleaning_fixed -> TPA-108(m) and ICA-74; notice_shortfall -> TPA-106.
+   Record rent_escalation_excess for any yearly increase above 10 percent, always with section_ids [].
+   If the Rent Act result says the Act does not apply, do not cite any KRA section for a finding.
 3. Never state a rupee amount, a legal limit or a deadline yourself; the tools compute amounts.
+   Karnataka has no statutory cap on deposits or rent increases. The 10 percent escalation figure is Dhara's fairness threshold, not a law.
+   Every issue, ask and claim says no more than its section's paraphrase above, applied to the clause. Never call a clause illegal,
+   unlawful, void, "not permitted", "not permissible", "prohibited" or a violation. Example: "C2 forfeits the whole deposit; under
+   ICA-74 a landlord can recover only reasonable compensation, not the full stipulated amount."
 4. When every unfair clause is recorded, call finish with your legal claims, each with the section_id it relies on (or null if none).
 The Rent Act result for this flat is given to you; do not re-decide it."""
 
@@ -101,6 +108,7 @@ class AgentState:
     tool_calls: int = 0
     seen_calls: set[str] = field(default_factory=set)
     tool_results: dict[str, Any] = field(default_factory=dict)
+    rent_act_applies: bool | None = None
 
     def add_trace(self, trace_type: str, label: str, **data: Any) -> None:
         self.trace.append(TraceStep(type=trace_type, label=label, data=data))
@@ -126,16 +134,19 @@ def _call_key(name: str, arguments: dict[str, Any]) -> str:
     return json.dumps([name, arguments], sort_keys=True, ensure_ascii=False)
 
 
-def _dispatch(state: AgentState, name: str, arguments: dict[str, Any]) -> Any:
-    """Dispatch one model tool call and record it, failing closed on repeats."""
-    if state.tool_calls >= MAX_TOOL_CALLS:
+def _dispatch(state: AgentState, name: str, arguments: dict[str, Any], counted: bool = True) -> Any:
+    """Dispatch one tool call and record it, failing closed on repeats.
+
+    The 12-call budget limits the model-driven loop; the rule-based fallback passes counted=False.
+    """
+    if counted and state.tool_calls >= MAX_TOOL_CALLS:
         raise RuntimeError("Maximum of 12 tool calls reached")
     key = _call_key(name, arguments)
     if key in state.seen_calls:
         state.add_trace("tool_call", "Blocked repeated tool call", tool=name, inputs=_safe_model_value(arguments), error="Identical repeated tool call blocked")
         return state.tool_results.get(key)
     state.seen_calls.add(key)
-    state.tool_calls += 1
+    state.tool_calls += counted
     safe_arguments = _safe_model_value(arguments)
     LOGGER.info("agent tool_call name=%s inputs=%s", name, str(safe_arguments)[:200])
     try:
@@ -161,6 +172,14 @@ def _dispatch(state: AgentState, name: str, arguments: dict[str, Any]) -> Any:
     return result
 
 
+def _citable(state: AgentState, section_id: str | None) -> bool:
+    """A section may back a finding only if it is in the pack, applies in Karnataka and covers this flat."""
+    section = lookup_section(section_id) if section_id else None
+    if not section or not section["applies_in_karnataka"]:
+        return False
+    return not (state.rent_act_applies is False and section_id.startswith("KRA-"))
+
+
 def _record_finding(state: AgentState, arguments: dict[str, Any]) -> dict[str, Any]:
     """Price a model-proposed finding with compute_money and keep only applicable sections."""
     clause_ref = str(arguments["clause_ref"])
@@ -174,8 +193,7 @@ def _record_finding(state: AgentState, arguments: dict[str, Any]) -> dict[str, A
     amount = compute_money(category, arguments["inputs"])
     kept, dropped = [], []
     for section_id in arguments.get("section_ids", []):
-        section = lookup_section(section_id)
-        (kept if section and section["applies_in_karnataka"] else dropped).append(section_id)
+        (kept if _citable(state, section_id) and category != "rent_escalation_excess" else dropped).append(section_id)
     state.findings.append(Finding(clause_ref=clause_ref, category=category, issue=str(arguments["issue"]),
                                   ask=str(arguments.get("ask", "")), money_at_risk_inr=amount, section_ids=kept))
     return {"money_at_risk_inr": amount, "section_ids": kept, "dropped_section_ids": dropped}
@@ -228,7 +246,7 @@ def _deterministic_findings(state: AgentState) -> list[dict[str, Any]]:
                 category, inputs, sections = "notice_shortfall", {"monthly_rent": monthly_rent, "required_months": required, "given_months": given}, ["TPA-106"]
                 issue = "The stated notice is shorter than the agreement's required notice; check the contract and applicable default rules."
         if category:
-            result = _dispatch(state, "compute_money", {"finding_type": category, "inputs": inputs})
+            result = _dispatch(state, "compute_money", {"finding_type": category, "inputs": inputs}, counted=False)
             amount = int(result.get("money_at_risk_inr", 0))
             results.append({"clause_ref": clause["id"], "category": category, "issue": issue,
                             "money_at_risk_inr": amount, "section_ids": sections})
@@ -281,20 +299,25 @@ def _run_model_loop(state: AgentState, jurisdiction: dict[str, Any]) -> None:
 
 def _rule_based_findings(state: AgentState) -> None:
     """Fallback when the model is unreachable: the regex pass over the clauses."""
-    raw_findings = _deterministic_findings(state)
+    covered = {(f.clause_ref, f.category) for f in state.findings}
+    raw_findings = [raw for raw in _deterministic_findings(state) if (raw["clause_ref"], raw["category"]) not in covered]
     known: dict[str, bool] = {}  # look each section up once, so the trace has no repeated calls
     for raw in raw_findings:
         for section_id in raw["section_ids"]:
             if section_id not in known:
-                known[section_id] = _dispatch(state, "lookup_section", {"id": section_id}) is not None
+                known[section_id] = _dispatch(state, "lookup_section", {"id": section_id}, counted=False) is not None
         raw["section_ids"] = [section_id for section_id in raw["section_ids"] if known[section_id]]
-    state.findings = [Finding(**finding) for finding in raw_findings]
+    state.findings += [Finding(**finding) for finding in raw_findings]
 
 
 def _finish_analysis(state: AgentState) -> None:
     for finding in state.findings:
         state.claims.append({"text": finding.issue, "section_id": finding.section_ids[0] if finding.section_ids else None})
     state.verdicts = [verdict.model_dump() for verdict in verify_claims(state.claims)]
+    for verdict in state.verdicts:
+        section_id = verdict.get("section_id") or ""
+        if verdict["verdict"] == "cited" and state.rent_act_applies is False and section_id.startswith("KRA-") and not section_id.startswith("KRA-2("):
+            verdict["verdict"], verdict["reason"] = "blocked", "The Karnataka Rent Act does not apply to this flat, so this section cannot support the claim"
     for verdict in state.verdicts:
         state.add_trace("verifier", "Claim checked", claim=verdict)
     draft_input = [finding.model_dump() for finding in state.findings]
@@ -313,6 +336,7 @@ def start_agent(state: AgentState) -> AgentResponse:
     if _ask_for_missing(state, jurisdiction):
         return state.response()
     state.add_trace("tool_call", "Jurisdiction selected", output=jurisdiction)
+    state.rent_act_applies = jurisdiction.get("applies")
     try:
         state.findings, state.claims = [], []
         try:
