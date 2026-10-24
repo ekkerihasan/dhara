@@ -1,6 +1,6 @@
 {
   "id": "pg_room",
-  "agreement_text": "C1. A room in a paying guest lodging is offered for INR 8000 monthly with INR 16000 refundable deposit.\nC2. The full deposit is forfeited for any breach or early exit.\nC3. A cleaning charge of INR 3000 is deducted on departure.\nC4. No construction date or occupancy classification has been confirmed.",
+  "agreement_text": "C1. A room in a paying guest lodging is offered for INR 8000 monthly with INR 16000 refundable deposit.\nC2. The full deposit is forfeited for any breach or early exit.\nC3. A cleaning charge of INR 3000 is deducted on departure.\nC4. No construction date or occupancy classification has been confirmed.\nC5. The owner may enter the room at any time without prior notice.",
   "facts": {
     "rent_per_month": 8000,
     "built_year": null,
@@ -13,6 +13,126 @@
     "Cleaning costs are fixed; I will not show receipts.",
     "Every PG uses this agreement; sign it unchanged."
   ],
+  "landlord_moves": {
+    "C2": {
+      "strict_owner": [
+        {
+          "move_id": "pg-C2-strict-1",
+          "text": "Deposit is forfeited if you leave early. I return what's left in 90 days.",
+          "terms": {
+            "refund_within_days": 90,
+            "forfeit_on_any_breach": true
+          },
+          "acceptable": false
+        },
+        {
+          "move_id": "pg-C2-strict-2",
+          "text": "I can return it in 60 days, but the forfeiture stays.",
+          "terms": {
+            "refund_within_days": 60,
+            "forfeit_on_any_breach": true
+          },
+          "acceptable": false
+        }
+      ],
+      "reasonable_broker": [
+        {
+          "move_id": "pg-C2-broker-1",
+          "text": "No forfeiture. Refund within 45 days of leaving.",
+          "terms": {
+            "refund_within_days": 45,
+            "forfeit_on_any_breach": false
+          },
+          "acceptable": false
+        },
+        {
+          "move_id": "pg-C2-broker-2",
+          "text": "Refund within 30 days, deductions only with receipts.",
+          "terms": {
+            "refund_within_days": 30,
+            "forfeit_on_any_breach": false
+          },
+          "acceptable": true
+        }
+      ]
+    },
+    "C3": {
+      "strict_owner": [
+        {
+          "move_id": "pg-C3-strict-1",
+          "text": "Cleaning is Rs 3,000. Same for everyone.",
+          "terms": {
+            "painting_inr": 3000
+          },
+          "acceptable": true
+        },
+        {
+          "move_id": "pg-C3-strict-2",
+          "text": "Rs 3,000 cleaning, I won't change it.",
+          "terms": {
+            "painting_inr": 3000
+          },
+          "acceptable": true
+        }
+      ],
+      "reasonable_broker": [
+        {
+          "move_id": "pg-C3-broker-1",
+          "text": "Cleaning Rs 2,000 at departure.",
+          "terms": {
+            "painting_inr": 2000
+          },
+          "acceptable": true
+        },
+        {
+          "move_id": "pg-C3-broker-2",
+          "text": "Rs 1,500 cleaning, only if the room needs it.",
+          "terms": {
+            "painting_inr": 1500
+          },
+          "acceptable": true
+        }
+      ]
+    },
+    "C5": {
+      "strict_owner": [
+        {
+          "move_id": "pg-C5-strict-1",
+          "text": "It's my building. I'll enter the room whenever I need to.",
+          "terms": {
+            "notice_hours": 0
+          },
+          "acceptable": false
+        },
+        {
+          "move_id": "pg-C5-strict-2",
+          "text": "I'll tell you 12 hours before I come in.",
+          "terms": {
+            "notice_hours": 12
+          },
+          "acceptable": false
+        }
+      ],
+      "reasonable_broker": [
+        {
+          "move_id": "pg-C5-broker-1",
+          "text": "Owner will give 12 hours' notice before entering.",
+          "terms": {
+            "notice_hours": 12
+          },
+          "acceptable": false
+        },
+        {
+          "move_id": "pg-C5-broker-2",
+          "text": "24 hours' written notice before any visit.",
+          "terms": {
+            "notice_hours": 24
+          },
+          "acceptable": true
+        }
+      ]
+    }
+  },
   "expected": {
     "governing_law": "UNRESOLVED",
     "findings": [

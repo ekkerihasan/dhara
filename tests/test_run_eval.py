@@ -56,6 +56,11 @@ def test_evaluate_and_markdown() -> None:
     results = evaluate(model, tasks=("blr_flat",))
     assert {row["mode"] for row in results["rows"]} == {"baseline", "agent"}
     assert "| blr_flat | agent |" in markdown(results, "fake")
+    assert "Negotiation correct" in markdown(results, "fake")
+    agent = next(row for row in results["rows"] if row["mode"] == "agent")
+    assert agent["score"]["negotiation_correct"] == 1.0  # the fake model cannot decide offers: the rule fallback does
+    baseline = next(row for row in results["rows"] if row["mode"] == "baseline")
+    assert baseline["score"]["negotiation_correct"] == 0.0  # the baseline has no fallback
     assert governing_label(None) == "UNRESOLVED"
 
 

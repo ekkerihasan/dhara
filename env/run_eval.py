@@ -3,7 +3,9 @@
 Both get the same agreement, the same categories and the same law pack. The baseline has no tools
 and no verifier, so it must decide the governing law and every rupee amount itself, and all of its
 claims count. The agent is scored on what reaches the tenant: its findings and the claims the
-verifier let through. Writes env/results/scores.json and env/results/scores.md.
+verifier let through. On tasks with a scripted landlord both then negotiate two rounds against the
+strict owner with the same offers and model; the baseline has no limits enforcement, no verifier and
+no rule fallback. Writes env/results/scores.json and env/results/scores.md.
 
     python -m env.run_eval
 """
@@ -11,11 +13,13 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from datetime import date
 from pathlib import Path
 from typing import Any, Callable
 
 from backend.agent.moveout import MoveoutState, start_moveout
+from backend.agent.negotiation import negotiate
 from backend.agent.tenant import MONEY_INPUTS, AgentState, ProviderChat, _law_index, start_agent
 from backend.llm.provider import ProviderError, chat
 from backend.tools.agreement import read_agreement
@@ -78,7 +82,13 @@ def baseline_run(task: dict[str, Any], model: ProviderChat) -> dict[str, Any]:
         except (KeyError, TypeError, ValueError):
             continue  # a malformed finding earns nothing, as with any wrong answer
     claims = [{"text": str(c.get("text", "")), "section_id": c.get("section_id")} for c in reply.get("claims", []) if isinstance(c, dict)]
-    return {"governing_law": str(reply.get("governing_law", "")), "findings": findings, "claims": claims}
+    run = {"governing_law": str(reply.get("governing_law", "")), "findings": findings, "claims": claims}
+    if task.get("landlord_moves"):
+        applies = {"TPA_CONTRACT": False, "KARNATAKA_RENT_ACT": True}.get(run["governing_law"])
+        state = AgentState(task["id"], clauses, dict(task["facts"]), task.get("language", "en"), model)
+        run["negotiation"] = negotiate(state, task, findings, applies, enforce=False).model_dump()
+        run["negotiation_errors"] = negotiation_errors(state)
+    return run
 
 
 def moveout_run(task: dict[str, Any], model: ProviderChat) -> dict[str, Any]:
@@ -90,6 +100,11 @@ def moveout_run(task: dict[str, Any], model: ProviderChat) -> dict[str, Any]:
     findings = [{"clause_ref": d["clause_ref"], "category": d["category"], "money_at_risk_inr": d["amount_inr"],
                  "section_ids": d.get("section_ids", [])} for d in response["deductions"]]
     return {"governing_law": governing_label(state.rent_act_applies), "findings": findings, "claims": [], "status": response["status"]}
+
+
+def negotiation_errors(state: AgentState) -> list[str]:
+    """Why a round fell back to rules (rate limit, tool budget, malformed call), from the trace."""
+    return [str(s.data["error"]) for s in state.trace if s.type == "tenant_decision" and s.data.get("error")]
 
 
 def agent_run(task: dict[str, Any], model: ProviderChat) -> dict[str, Any]:
@@ -104,14 +119,19 @@ def agent_run(task: dict[str, Any], model: ProviderChat) -> dict[str, Any]:
     reached_tenant = [{"text": v["text"], "section_id": v["section_id"]} for v in response.verdicts if v["verdict"] != "blocked"]
     return {"governing_law": governing_label(state.rent_act_applies),
             "findings": [f.model_dump(include={"clause_ref", "category", "money_at_risk_inr", "section_ids"}) for f in response.findings],
-            "claims": reached_tenant, "tool_calls": state.tool_calls, "status": response.status}
+            "claims": reached_tenant, "tool_calls": state.tool_calls, "status": response.status,
+            "negotiation": response.negotiation.model_dump() if response.negotiation else None,
+            "negotiation_errors": negotiation_errors(state)}
 
 
-def evaluate(model: ProviderChat = chat, tasks: tuple[str, ...] = TASKS) -> dict[str, Any]:
+def evaluate(model: ProviderChat = chat, tasks: tuple[str, ...] = TASKS, pause_s: float = 0.0) -> dict[str, Any]:
+    """pause_s spaces the runs out, so a free-tier rate limit does not decide the score."""
     rows = []
     for name in tasks:
         task = json.loads((ROOT / "env" / "tasks" / f"{name}.json").read_text(encoding="utf-8"))
         for mode, runner in (("baseline", baseline_run), ("agent", agent_run)):
+            if rows and pause_s:
+                time.sleep(pause_s)
             try:
                 run = runner(task, model)
                 result = score(task, run)
@@ -119,28 +139,32 @@ def evaluate(model: ProviderChat = chat, tasks: tuple[str, ...] = TASKS) -> dict
             except (ProviderError, ValueError) as exc:
                 run, result, error = {}, {"total": 0.0}, str(exc)
             rows.append({"task": name, "mode": mode, "score": result, "error": error,
-                         "findings": len(run.get("findings", [])), "governing_law": run.get("governing_law")})
+                         "findings": len(run.get("findings", [])), "governing_law": run.get("governing_law"),
+                         "tool_calls": run.get("tool_calls"), "negotiation": run.get("negotiation"),
+                         "negotiation_errors": run.get("negotiation_errors", [])})
     return {"date": date.today().isoformat(), "rows": rows}
 
 
 def markdown(results: dict[str, Any], model_name: str) -> str:
     lines = [f"# Baseline vs agent ({results['date']}, {model_name})", "",
-             "Same model, same agreement, same law pack. The baseline has no tools and no verifier. One run each; scores are out of 3.", "",
-             "| Task | Mode | Governing law | Money within Rs 500 | Citations exist | Wrong-law penalty | Total |",
-             "| --- | --- | ---: | ---: | ---: | ---: | ---: |"]
+             "Same model, same agreement, same law pack. The baseline has no tools and no verifier. One run each; scores are out of 4 "
+             "on the two pre-signing tasks (two negotiation rounds against the strict owner) and out of 3 on moveout.", "",
+             "| Task | Mode | Governing law | Money within Rs 500 | Citations exist | Negotiation correct | Wrong-law penalty | Total |",
+             "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |"]
     for row in results["rows"]:
         s = row["score"]
         if row["error"]:
-            lines.append(f"| {row['task']} | {row['mode']} | error: {row['error'][:60]} | | | | 0 |")
+            lines.append(f"| {row['task']} | {row['mode']} | error: {row['error'][:60]} | | | | | 0 |")
             continue
+        negotiation = "n/a" if s.get("negotiation_correct") is None else f"{s['negotiation_correct']:.2f}"
         lines.append(f"| {row['task']} | {row['mode']} | {s['governing_law_correct']} | {s['money_within_500']:.2f} | "
-                     f"{s['citations_exist']:.2f} | {s['wrong_law_penalty']} | **{s['total']:.2f}** |")
+                     f"{s['citations_exist']:.2f} | {negotiation} | {s['wrong_law_penalty']} | **{s['total']:.2f}** |")
     return "\n".join(lines) + "\n"
 
 
 def main() -> None:
     import os
-    results = evaluate()
+    results = evaluate(pause_s=float(os.getenv("EVAL_PAUSE_S", "60")))
     model_name = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
     RESULTS.mkdir(parents=True, exist_ok=True)
     (RESULTS / "scores.json").write_text(json.dumps({**results, "model": model_name}, indent=2) + "\n", encoding="utf-8")

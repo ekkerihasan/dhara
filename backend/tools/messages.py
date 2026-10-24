@@ -74,6 +74,14 @@ ASKS: dict[str, dict[str, dict[str, str]]] = {
                       "kn": "ಈ ಕಡಿತವನ್ನು ಹಿಂತಿರುಗಿಸಿ: ಸಮಂಜಸ ಸವಕಳಿಗೆ ಬಾಡಿಗೆದಾರರು ಹೊಣೆಯಲ್ಲ (ಆಸ್ತಿ ವರ್ಗಾವಣೆ ಕಾಯ್ದೆ, 1882, ಸೆಕ್ಷನ್ 108(m)).",
                       "hi": "कृपया यह कटौती लौटाएँ: सामान्य टूट-फूट किरायेदार की बहाली की ज़िम्मेदारी से बाहर है (संपत्ति अंतरण अधिनियम, 1882, धारा 108(m))।"},
     },
+    "damage": {
+        "request": {"en": "please confirm that deductions for damage will be limited to the actual, evidenced cost of repair (Indian Contract Act, 1872, s.74).",
+                    "kn": "ಹಾನಿಗೆ ಕಡಿತವು ದುರಸ್ತಿಯ ನಿಜವಾದ, ಪುರಾವೆಸಹಿತ ವೆಚ್ಚಕ್ಕೆ ಮಾತ್ರ ಸೀಮಿತವಾಗಿರುತ್ತದೆ ಎಂದು ದೃಢೀಕರಿಸಿ (ಭಾರತೀಯ ಒಪ್ಪಂದ ಕಾಯ್ದೆ, 1872, ಸೆಕ್ಷನ್ 74).",
+                    "hi": "कृपया पुष्टि करें कि नुकसान की कटौती मरम्मत की वास्तविक, सबूत सहित लागत तक ही सीमित होगी (भारतीय संविदा अधिनियम, 1872, धारा 74)।"},
+        "challenge": {"en": "please share dated evidence and the repair bill for this item, and deduct only the actual cost (Indian Contract Act, 1872, s.74).",
+                      "kn": "ಈ ಅಂಶಕ್ಕೆ ದಿನಾಂಕಸಹಿತ ಪುರಾವೆ ಮತ್ತು ದುರಸ್ತಿ ಬಿಲ್ ಹಂಚಿಕೊಳ್ಳಿ, ಮತ್ತು ನಿಜವಾದ ವೆಚ್ಚವನ್ನು ಮಾತ್ರ ಕಡಿತಗೊಳಿಸಿ (ಭಾರತೀಯ ಒಪ್ಪಂದ ಕಾಯ್ದೆ, 1872, ಸೆಕ್ಷನ್ 74).",
+                      "hi": "कृपया इस मद के लिए दिनांकित सबूत और मरम्मत का बिल दें, और केवल वास्तविक लागत की कटौती करें (भारतीय संविदा अधिनियम, 1872, धारा 74)।"},
+    },
 }
 OPENINGS = {
     "request": {"en": "Hello, before I sign the agreement, I request the following changes:",
@@ -90,6 +98,50 @@ CLOSINGS = {
                   "kn": "ದಯವಿಟ್ಟು ಲಿಖಿತವಾಗಿ ಉತ್ತರಿಸಿ. ಪುರಾವೆಗಳೊಂದಿಗೆ ಯಾವುದೇ ಅಂಶವನ್ನು ಚರ್ಚಿಸಬಹುದು.",
                   "hi": "कृपया लिखित में उत्तर दें। सबूतों के साथ किसी भी बिंदु पर चर्चा की जा सकती है।"},
 }
+# Negotiated terms, by term key. Settled clauses state what was agreed; open clauses repeat the tenant's ask.
+TERMS: dict[str, dict[str, str]] = {
+    "lock_in_months": {"en": "a lock-in of {lock_in_months} months.",
+                       "kn": "{lock_in_months} ತಿಂಗಳ ಲಾಕ್-ಇನ್ ಅವಧಿ.",
+                       "hi": "{lock_in_months} महीने की लॉक-इन अवधि।"},
+    "refund_within_days": {"en": "the deposit refunded within {refund_within_days} days of handover, with deductions only for actual, itemised loss.",
+                           "kn": "ಮನೆ ಹಸ್ತಾಂತರಿಸಿದ {refund_within_days} ದಿನಗಳೊಳಗೆ ಠೇವಣಿ ಹಿಂತಿರುಗಿಸುವುದು; ನಿಜವಾದ ಮತ್ತು ವಿವರವಾದ ನಷ್ಟಕ್ಕೆ ಮಾತ್ರ ಕಡಿತ.",
+                           "hi": "घर सौंपने के {refund_within_days} दिनों के भीतर जमा राशि की वापसी; कटौती केवल वास्तविक, मदवार नुकसान के लिए।"},
+    "painting_inr": {"en": "an exit painting or cleaning charge of at most Rs {painting_inr}.",
+                     "kn": "ಖಾಲಿ ಮಾಡುವಾಗ ಬಣ್ಣ ಅಥವಾ ಸ್ವಚ್ಛತೆಯ ಶುಲ್ಕ ಗರಿಷ್ಠ ರೂ {painting_inr}.",
+                     "hi": "घर छोड़ते समय पेंटिंग या सफ़ाई का शुल्क अधिकतम Rs {painting_inr}।"},
+    "tenant_notice_months": {"en": "{tenant_notice_months} months' notice from the tenant and {landlord_notice_months} months' notice from the landlord.",
+                             "kn": "ಬಾಡಿಗೆದಾರರಿಂದ {tenant_notice_months} ತಿಂಗಳ ಮತ್ತು ಮಾಲೀಕರಿಂದ {landlord_notice_months} ತಿಂಗಳ ಸೂಚನೆ.",
+                             "hi": "किरायेदार की ओर से {tenant_notice_months} महीने और मकान मालिक की ओर से {landlord_notice_months} महीने का नोटिस।"},
+    "notice_hours": {"en": "the landlord enters only after at least {notice_hours} hours' written notice.",
+                     "kn": "ಕನಿಷ್ಠ {notice_hours} ಗಂಟೆಗಳ ಲಿಖಿತ ಸೂಚನೆಯ ನಂತರವೇ ಮಾಲೀಕರು ಪ್ರವೇಶಿಸುವುದು.",
+                     "hi": "मकान मालिक कम से कम {notice_hours} घंटे के लिखित नोटिस के बाद ही प्रवेश करेंगे।"},
+}
+AGREED = {
+    "opening": {"en": "Hello, thank you for agreeing to these terms. Please write them into the agreement before I sign:",
+                "kn": "ನಮಸ್ಕಾರ, ಈ ಷರತ್ತುಗಳಿಗೆ ಒಪ್ಪಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು. ನಾನು ಸಹಿ ಮಾಡುವ ಮೊದಲು ಇವನ್ನು ಒಪ್ಪಂದದಲ್ಲಿ ಸೇರಿಸಿ:",
+                "hi": "नमस्ते, इन शर्तों पर सहमति के लिए धन्यवाद। मेरे हस्ताक्षर से पहले कृपया इन्हें समझौते में लिखें:"},
+    "open": {"en": "Still open; I continue to request:", "kn": "ಇನ್ನೂ ಬಾಕಿ ಇರುವವು; ನಾನು ಮತ್ತೆ ಕೋರುತ್ತೇನೆ:",
+             "hi": "अभी तय नहीं हुआ; मेरा अनुरोध बना हुआ है:"},
+    "agreed": {"en": "agreed", "kn": "ಒಪ್ಪಲಾಗಿದೆ", "hi": "सहमति"},
+}
+# Flow 2: a lump-sum deduction gets a request for the itemised list before any item is disputed.
+ITEMISE = {
+    "en": ("Regarding my security deposit of Rs {deposit}: Rs {withheld} has been withheld as one amount (\"{claim}\").\n"
+           "Please send a per-item breakdown of this amount, with bills or quotes for each item, within 7 days.\n"
+           "Under the Indian Contract Act, 1872, s.74, only reasonable compensation for actual loss can be recovered.{clause}\n"
+           "On receipt I will respond item by item."),
+    "kn": ("ನನ್ನ ರೂ {deposit} ಭದ್ರತಾ ಠೇವಣಿಯಲ್ಲಿ ರೂ {withheld} ಅನ್ನು ಒಂದೇ ಮೊತ್ತವಾಗಿ (\"{claim}\") ತಡೆಹಿಡಿಯಲಾಗಿದೆ.\n"
+           "ದಯವಿಟ್ಟು ಈ ಮೊತ್ತದ ಪ್ರತಿ ಅಂಶದ ವಿವರವನ್ನು, ಪ್ರತಿಯೊಂದಕ್ಕೂ ಬಿಲ್ ಅಥವಾ ಕೊಟೇಶನ್‌ನೊಂದಿಗೆ, 7 ದಿನಗಳೊಳಗೆ ಕಳುಹಿಸಿ.\n"
+           "ಭಾರತೀಯ ಒಪ್ಪಂದ ಕಾಯ್ದೆ, 1872, ಸೆಕ್ಷನ್ 74ರ ಪ್ರಕಾರ ನಿಜವಾದ ನಷ್ಟಕ್ಕೆ ಸಮಂಜಸ ಪರಿಹಾರವನ್ನು ಮಾತ್ರ ವಸೂಲಿ ಮಾಡಬಹುದು.{clause}\n"
+           "ವಿವರ ಬಂದ ನಂತರ ಪ್ರತಿ ಅಂಶಕ್ಕೂ ಉತ್ತರಿಸುತ್ತೇನೆ."),
+    "hi": ("मेरी Rs {deposit} की सुरक्षा जमा राशि में से Rs {withheld} एक ही रकम के रूप में (\"{claim}\") रोके गए हैं।\n"
+           "कृपया 7 दिनों के भीतर इस रकम का मदवार विवरण, हर मद के बिल या कोटेशन के साथ, भेजें।\n"
+           "भारतीय संविदा अधिनियम, 1872, धारा 74 के अनुसार केवल वास्तविक नुकसान का उचित मुआवज़ा ही वसूला जा सकता है।{clause}\n"
+           "विवरण मिलने पर हर मद का अलग-अलग उत्तर दिया जाएगा।"),
+}
+ITEMISE_CLAUSE = {"en": " Clause {ref} of our agreement also provides for deductions, which should be applied item by item.",
+                  "kn": " ನಮ್ಮ ಒಪ್ಪಂದದ ಷರತ್ತು {ref} ಕೂಡ ಕಡಿತಗಳ ಬಗ್ಗೆ ಹೇಳುತ್ತದೆ; ಅದನ್ನು ಪ್ರತಿ ಅಂಶಕ್ಕೆ ಅನ್ವಯಿಸಬೇಕು.",
+                  "hi": " हमारे समझौते की शर्त {ref} भी कटौतियों के बारे में है, जिसे हर मद पर अलग से लागू किया जाना चाहिए।"}
 ASKS_NOTE = ("Fixed, reviewed sentences per clause type in English, Kannada and Hindi; the model's own wording is not translated. "
              "Native-language review is recommended.")
 
@@ -104,12 +156,62 @@ def _ask_letter(findings: list[dict[str, Any]], tone: str, language: str) -> str
     return "\n".join(parts)
 
 
+def inr(amount: int) -> str:
+    """Indian digit grouping: 80396 -> 80,396; 150000 -> 1,50,000."""
+    digits = str(int(amount))
+    if len(digits) <= 3:
+        return digits
+    head, tail = digits[:-3], digits[-3:]
+    groups = []
+    while len(head) > 2:
+        groups.insert(0, head[-2:])
+        head = head[:-2]
+    return ",".join([head, *groups, tail]) if head else ",".join([*groups, tail])
+
+
+def _terms_sentence(terms: dict[str, Any], language: str) -> str:
+    key = next((k for k in TERMS if k in terms), None)
+    if key is None:
+        return ""
+    values = {k: (inr(v) if k == "painting_inr" else v) for k, v in terms.items()}
+    return TERMS[key][language].format_map(values)
+
+
+def _agreed_letter(items: list[dict[str, Any]], language: str) -> str:
+    """Settled clauses with their agreed terms, then open clauses with the tenant's standing ask."""
+    lines = [AGREED["opening"][language]]
+    lines += [f"- {i['clause_ref']} ({AGREED['agreed'][language]}): {_terms_sentence(i['terms'], language)}" for i in items if i.get("settled")]
+    open_items = [i for i in items if not i.get("settled")]
+    if open_items:
+        lines.append(AGREED["open"][language])
+        for i in open_items:
+            ask = ASKS[i["category"]]["request"][language] if i.get("category") in ASKS else _terms_sentence(i["terms"], language)
+            lines.append(f"- {i['clause_ref']}: {ask}")
+    lines.append(CLOSINGS["request"][language])
+    return "\n".join(lines)
+
+
+def itemisation_letter(deposit_inr: int | None, withheld_inr: int, claim: str, deduction_clause: str | None, language: str) -> dict[str, str]:
+    """Flow 2, lump-sum deductions: ask for the itemised list before disputing anything."""
+    if language not in ITEMISE:
+        raise ValueError("Choose en/kn/hi")
+    clause = ITEMISE_CLAUSE[language].format(ref=deduction_clause) if deduction_clause else ""
+    deposit = inr(deposit_inr) if deposit_inr is not None else "?"
+    text = ITEMISE[language].format(deposit=deposit, withheld=inr(withheld_inr), claim=claim, clause=clause)
+    LOGGER.info("itemisation_letter language=%s", language)
+    return {"text": text, "language": language, "tone": "challenge", "translation_note": ASKS_NOTE}
+
+
 def draft_message(findings: list[dict[str, Any]], tone: str = "request", language: str = "en") -> dict[str, str]:
     """Use prototype templates; arbitrary source prose is never called translated."""
     if tone not in {"request", "challenge", "notice"} or language not in {"en", "kn", "hi"}:
         raise ValueError("Choose request/challenge/notice and en/kn/hi")
     if not isinstance(findings, list) or not all(isinstance(item, dict) for item in findings):
         raise ValueError("findings must be a list of objects")
+    # Negotiated outcome: each item carries the agreed (or still requested) terms.
+    if findings and all("terms" in finding for finding in findings):
+        LOGGER.info("draft_message agreed terms language=%s clauses=%s", language, len(findings))
+        return {"text": _agreed_letter(findings, language), "language": language, "tone": tone, "translation_note": ASKS_NOTE}
     # Agent findings carry a known category: use the clause-specific sentences.
     if findings and all(finding.get("category") in ASKS for finding in findings):
         LOGGER.info("draft_message tone=%s language=%s findings=%s", tone, language, len(findings))

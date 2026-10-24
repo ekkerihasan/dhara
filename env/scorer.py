@@ -1,4 +1,4 @@
-"""Score structured runs without a model. Perfect score is 3; penalties unbounded."""
+"""Score structured runs without a model. Perfect score is 3, or 4 on tasks with a scripted landlord; penalties unbounded."""
 from __future__ import annotations
 
 import json
@@ -8,6 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt
 
+from backend.agent.landlord import is_acceptable
 from backend.tools.law import lookup_section
 
 
@@ -24,6 +25,25 @@ class Run(BaseModel):
     governing_law: str
     findings: list[Finding] = Field(default_factory=list)
     claims: list[dict[str, Any]] = Field(default_factory=list)
+    negotiation: dict[str, Any] | None = None
+
+
+def negotiation_correct(task: dict[str, Any], negotiation: dict[str, Any] | None) -> float | None:
+    """Over every landlord offer in every round: did the tenant accept exactly the acceptable ones?
+
+A counter counts as not accepting. An offer left without a decision counts as wrong.
+None when the task has no scripted landlord.
+"""
+    if not task.get("landlord_moves"):
+        return None
+    results: list[bool] = []
+    for played in (negotiation or {}).get("rounds", []):
+        decisions = {d["clause_id"]: d["decision"] for d in played.get("decisions", [])}
+        for offer in played.get("offers", []):
+            acceptable = is_acceptable(offer["move_id"], task)
+            decision = decisions.get(offer["clause_id"])
+            results.append(acceptable is not None and decision is not None and (decision == "accept") == acceptable)
+    return sum(results) / len(results) if results else 0.0
 
 
 def score(task: dict[str, Any], run: dict[str, Any] | Run) -> dict[str, int | float]:
@@ -68,9 +88,10 @@ law is penalised for each emitted reference, including references in claims.
     citation_fraction = existing / len(citations) if citations else 0.0
     forbidden = set(expected["forbidden_sections"])
     penalty = -sum(ref in forbidden for ref in citations)
+    negotiation = negotiation_correct(task, parsed.negotiation)
     return {"governing_law_correct": governing, "money_within_500": money,
-            "citations_exist": citation_fraction, "wrong_law_penalty": penalty,
-            "total": governing + money + citation_fraction + penalty}
+            "citations_exist": citation_fraction, "negotiation_correct": negotiation, "wrong_law_penalty": penalty,
+            "total": governing + money + citation_fraction + (negotiation or 0.0) + penalty}
 
 
 def main() -> None:
@@ -80,7 +101,7 @@ def main() -> None:
     result = score(task, run)
     print("| Check | Score |\n| --- | ---: |")
     for name, value in result.items():
-        print(f"| {name} | {value:g} |")
+        print(f"| {name} | {'n/a' if value is None else format(value, 'g')} |")
 
 
 if __name__ == "__main__":

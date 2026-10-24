@@ -17,7 +17,7 @@ from typing import Any
 from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.agent.moveout import MoveoutState, approve_moveout, start_moveout
+from backend.agent.moveout import MoveoutState, approve_moveout, request_itemisation, start_moveout
 from backend.agent.tenant import AgentState, approve_agent, start_agent
 from backend.llm.provider import ProviderError, chat, transcribe
 from backend.models import AnswerRequest, ApprovalRequest, MoveoutRequest, RunRequest, RunResponse
@@ -68,7 +68,8 @@ def _advance(state: AgentState) -> None:
 @app.post("/api/runs", response_model=RunResponse)
 def create_run(request: RunRequest, background: BackgroundTasks) -> RunResponse:
     agreement = _agreement(request)
-    state = AgentState(str(uuid.uuid4()), agreement["clauses"], request.facts.model_dump(), request.language, provider_chat)
+    state = AgentState(str(uuid.uuid4()), agreement["clauses"], request.facts.model_dump(), request.language, provider_chat,
+                       limits=request.limits, persona=request.persona)
     state.add_trace("tool_call", "read_agreement", tool="read_agreement",
                     inputs={"source": "pdf" if request.pdf_base64 else "text"},
                     output={"clauses": len(agreement["clauses"]), "redactions": agreement["redactions"]})
@@ -101,7 +102,7 @@ def approve(run_id: str, request: ApprovalRequest) -> RunResponse:
     if not request.approved:
         raise HTTPException(400, "Approval must be explicit: send approved true")
     try:
-        return approve_agent(state)
+        return approve_agent(state, request.agreed_terms)
     except ValueError as exc:
         raise HTTPException(409, str(exc)) from exc
 
@@ -117,14 +118,19 @@ def _moveout(review_id: str) -> MoveoutState:
 
 @app.post("/api/moveout")
 def create_moveout(request: MoveoutRequest, background: BackgroundTasks) -> dict[str, Any]:
+    if not request.deductions and not (request.claimed_text or "").strip():
+        raise HTTPException(400, "Provide the claimed deductions or the landlord's message")
     try:
         clauses = read_agreement(request.agreement_text)["clauses"]
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     deductions = [{"id": f"D{i}", **d.model_dump()} for i, d in enumerate(request.deductions, start=1)]
     state = MoveoutState(str(uuid.uuid4()), clauses, [e.model_dump() for e in request.checklist], deductions,
-                         request.facts.model_dump(), request.language, provider_chat)
+                         request.facts.model_dump(), request.language, provider_chat,
+                         claimed_text=request.claimed_text, deposit_inr=request.deposit_inr)
     MOVEOUTS[state.id] = state
+    if request_itemisation(state):  # deterministic, no model: answered in this response
+        return state.response()
     background.add_task(start_moveout, state)
     return state.response()
 

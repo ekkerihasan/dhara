@@ -16,7 +16,9 @@ from typing import Any, Callable
 
 from backend.agent.verifier import verify_claims
 from backend.llm.provider import ProviderError, ToolCallOrText
-from backend.models import Draft, Finding, RunResponse, TraceStep
+from backend.agent import landlord
+from backend.agent.negotiation import letter_items, run_negotiation
+from backend.models import Draft, Finding, Negotiation, RunResponse, TenantLimits, TraceStep
 from backend.tools.agreement import redact_pii
 from backend.tools.law import LAW_PATH, check_jurisdiction, lookup_section
 from backend.tools.messages import draft_message, send_and_schedule
@@ -110,6 +112,9 @@ class AgentState:
     tool_results: dict[str, Any] = field(default_factory=dict)
     rent_act_applies: bool | None = None
     unknown_facts: set[str] = field(default_factory=set)  # the tenant answered "I don't know"
+    limits: TenantLimits = field(default_factory=TenantLimits)
+    persona: str = "strict_owner"
+    negotiation: Negotiation | None = None
 
     def add_trace(self, trace_type: str, label: str, **data: Any) -> None:
         self.trace.append(TraceStep(type=trace_type, label=label, data=data))
@@ -118,7 +123,7 @@ class AgentState:
         return RunResponse(id=self.id, status=self.status, trace=self.trace, findings=self.findings,
                            drafts=self.drafts, question=self.question, claims=self.claims,
                            verdicts=self.verdicts, approval=self.approval, error=self.error,
-                           not_a_lawyer=True, notice=NOT_A_LAWYER_NOTICE)
+                           not_a_lawyer=True, notice=NOT_A_LAWYER_NOTICE, negotiation=self.negotiation)
 
 
 def _safe_model_value(value: Any) -> Any:
@@ -356,7 +361,14 @@ def start_agent(state: AgentState) -> AgentResponse:
         except ProviderError as exc:
             state.add_trace("tool_call", "Model unavailable: rule-based fallback", error=str(exc))
             _rule_based_findings(state)
+        # Demo agreements only: the scripted landlord knows their clauses. Marked running before the
+        # review turns ready, so approval waits for the negotiation.
+        task = landlord.task_for_clauses(state.clauses) if state.findings else None
+        if task is not None:
+            state.negotiation = Negotiation(persona=state.persona, limits=state.limits)
         _finish_analysis(state)
+        if task is not None:
+            run_negotiation(state, task)
     except Exception as exc:
         LOGGER.exception("tenant agent failed")
         state.status = "failed"
@@ -365,9 +377,28 @@ def start_agent(state: AgentState) -> AgentResponse:
     return state.response()
 
 
-def approve_agent(state: AgentState) -> RunResponse:
+def _agreed_drafts(state: AgentState, agreed_terms: dict[str, Any] | None) -> None:
+    """Replace the drafts with the letter for the negotiated outcome, in the tenant's language first."""
+    negotiation = state.negotiation
+    if negotiation.status == "running":
+        raise ValueError("The negotiation is still running")
+    if agreed_terms is not None and agreed_terms != negotiation.agreed_terms:
+        raise ValueError("The agreed terms have changed; review them and approve again")
+    items = letter_items(negotiation, [finding.model_dump() for finding in state.findings])
+    drafts = []
+    for language in dict.fromkeys([state.language, "en", "kn", "hi"]):
+        draft = _dispatch(state, "draft_message", {"findings": items, "tone": "request", "language": language}, counted=False)
+        if "error" not in draft:
+            drafts.append(Draft(**draft))
+    if drafts:
+        state.drafts = drafts
+
+
+def approve_agent(state: AgentState, agreed_terms: dict[str, Any] | None = None) -> RunResponse:
     if state.status != "ready" or not state.drafts:
         raise ValueError("A ready draft is required before approval")
+    if state.negotiation is not None:
+        _agreed_drafts(state, agreed_terms)
     record = send_and_schedule(state.drafts[0].text, True)
     state.approval = record
     state.status = "approved"

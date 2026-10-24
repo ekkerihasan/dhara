@@ -82,3 +82,43 @@ def test_moveout_api_flow(monkeypatch) -> None:
     approved = client.post(f"/api/moveout/{review_id}/approve", json={"approved": True}).json()
     assert approved["status"] == "approved" and approved["approval"]["delivery_status"] == "not_sent"
     assert client.get("/api/moveout/nope").status_code == 404
+
+
+def test_lump_sum_gets_an_itemisation_request_first(monkeypatch) -> None:
+    def never(messages, tools):
+        raise AssertionError("no model call before the itemised list arrives")
+
+    monkeypatch.setattr(main, "provider_chat", never)
+    client = TestClient(main.app)
+    body = {"agreement_text": TASK["agreement_text"], "checklist": CHECKLIST, "facts": TASK["facts"],
+            "claimed_text": "painting and repairs 80396", "deposit_inr": 100000}
+    response = client.post("/api/moveout", json=body).json()
+
+    assert response["status"] == "needs_itemisation"
+    assert set(response["letter"]) == {"en", "kn", "hi"}
+    english = response["letter"]["en"]
+    assert "Rs 1,00,000" in english and "Rs 80,396" in english
+    assert "within 7 days" in english and "s.74" in english and "Clause C3" in english
+    assert "item by item" in english
+    step = next(s for s in response["trace"] if s["type"] == "needs_itemisation")
+    assert step["data"]["withheld_inr"] == 80396 and step["data"]["reason"] == "the deductions are a single line"
+    assert client.get(f"/api/moveout/{response['id']}").json()["status"] == "needs_itemisation"
+
+
+def test_itemised_message_runs_the_normal_verdict_flow() -> None:
+    review = state(scripted_model([("D1", "disputed", ["E1"], ["TPA-108(m)"]), ("D2", "allowed", [], [])]))
+    review.deductions, review.claimed_text = [], "Painting: Rs 15,000\nCleaning 5000\nTotal 20000"
+    result = start_moveout(review)
+
+    assert result["status"] == "ready"
+    assert [(d["label"], d["amount_inr"], d["clause_ref"], d["category"]) for d in result["deductions"]] == [
+        ("Painting", 15000, "C3", "painting_or_cleaning_fixed"), ("Cleaning", 5000, "C2", "painting_or_cleaning_fixed")]
+    assert result["disputed_inr"] == 15000
+
+
+def test_itemisation_gap_rules() -> None:
+    from backend.agent.moveout import itemisation_gap
+    assert itemisation_gap("painting and repairs 80396") == "the deductions are a single line"
+    assert itemisation_gap("Total: Rs 80,396") == "a total is given without items"
+    assert itemisation_gap("painting 15000\nrepairs") == "a line has no amount"
+    assert itemisation_gap("painting 15000\nrepairs 2000") is None
