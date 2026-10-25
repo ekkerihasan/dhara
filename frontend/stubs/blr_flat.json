@@ -4,7 +4,7 @@
   "title": "2BHK flat, Bengaluru (BBMP area), 11-month agreement",
   "status": "awaiting_approval",
   "created_at": "2026-10-24T11:42:05+05:30",
-  "model": "stub built from backend tools (agent loop pending)",
+  "model": "sample, computed by Dhara's tools",
   "agreement_text": "C1. Monthly rent is INR 25000 and the refundable security deposit is INR 150000.\nC2. The entire deposit is forfeited on any breach or early exit.\nC3. Six lock-in months remain, payable at the monthly rent on early exit.\nC4. A fixed painting charge of INR 15000 is deducted on exit.\nC5. Annual rent escalation is 15 percent.\nC6. Two months' notice is required; one month has been given.",
   "facts": {
     "rent_per_month": 25000,

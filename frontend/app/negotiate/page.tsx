@@ -1,9 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DocFooter } from "@/components/DocFooter";
+import { Toc } from "@/components/Toc";
+import { Topbar } from "@/components/Topbar";
 import { negotiationRequest, type Negotiation } from "@/lib/negotiation";
+import recordedSample from "@/stubs/negotiate_sample.json";
+
+// A real round recorded on 25 Oct, shown only if the live model is unavailable, and labelled as such.
+const RECORDED = recordedSample as unknown as Negotiation;
 
 export default function NegotiatePage() {
   const [run, setRun] = useState<Negotiation | null>(null);
@@ -12,6 +17,7 @@ export default function NegotiatePage() {
   const [approved, setApproved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recorded, setRecorded] = useState(false);
 
   useEffect(() => {
     if (!run || run.status !== "running") return;
@@ -45,11 +51,8 @@ export default function NegotiatePage() {
   const finished = run?.status === "accepted" || run?.status === "exhausted";
 
   return <>
-    <header className="topbar"><div className="topbar-inner">
-      <Link className="brand" href="/">Dhara AI</Link>
-      <Link className="nav-link" href="/">Back to new review</Link>
-    </div></header>
-    <main className="doc"><article className="doc-main" style={{ maxWidth: 900, margin: "0 auto" }}>
+    <Topbar current="new" />
+    <main className="doc"><Toc items={[{ id: "practice", title: "Practice a negotiation" }]} /><article className="doc-main" id="practice">
       <p className="kicker">Negotiation practice</p>
       <h1 className="doc-title">Try your proposal with a simulated landlord</h1>
       <p className="doc-subtitle">Practice with the PG example: ₹8,000 monthly rent, ₹16,000 refundable deposit, blanket deposit forfeiture, and a ₹3,000 cleaning charge. The landlord responds to your proposal and can negotiate for up to three rounds.</p>
@@ -63,9 +66,13 @@ export default function NegotiatePage() {
           </p>)}</div>
         </div>
       </section>)}
+      {recorded && <div className="callout callout-warning"><div><p><strong>Recorded round.</strong> The live model is unavailable, so this shows a real practice round recorded on 25 Oct 2026 with the same proposal.</p></div></div>}
       {run && <p role="status">{waiting ? "The simulated landlord is considering your proposal…" : run.status === "accepted" ? "The simulated landlord accepted this proposal. No real agreement was changed." : run.status === "exhausted" ? "Three practice rounds completed. Ask a qualified person to review unresolved terms." : `${run.rounds_remaining} practice rounds remaining.`}</p>}
       {run?.error && <p className="form-error" role="alert">{run.error}</p>}
       {error && <p className="form-error" role="alert">{error}</p>}
+      {(error || run?.status === "failed") && !recorded && <div className="form-actions">
+        <button className="btn" type="button" onClick={() => { setRun(RECORDED); setRecorded(true); setError(null); }}>Show a recorded practice round</button>
+      </div>}
       {!finished && <form className="section" onSubmit={submit}>
         <div className="field"><label className="field-label" htmlFor="practice-language">Reply language</label>
           <select id="practice-language" value={language} onChange={event => setLanguage(event.target.value)} disabled={Boolean(run) || busy}>
@@ -81,7 +88,7 @@ export default function NegotiatePage() {
         </label>
         <div className="form-actions"><button className="btn primary" type="submit" disabled={waiting || !approved || !message.trim()}>{waiting ? "Considering…" : "Submit approved proposal"}</button></div>
       </form>}
-      {finished && <button className="btn" onClick={() => { setRun(null); setMessage(""); setApproved(false); setError(null); }}>Start a new practice</button>}
+      {finished && <button className="btn" onClick={() => { setRun(null); setRecorded(false); setMessage(""); setApproved(false); setError(null); }}>Start a new practice</button>}
       <DocFooter />
     </article></main>
   </>;

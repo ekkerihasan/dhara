@@ -186,7 +186,7 @@ def build_blr_flat() -> dict[str, Any]:
         "id": "blr_flat", "task": "blr_flat",
         "title": "2BHK flat, Bengaluru (BBMP area), 11-month agreement",
         "status": "awaiting_approval", "created_at": START.isoformat(),
-        "model": "stub built from backend tools (agent loop pending)",
+        "model": "sample, computed by Dhara's tools",
         "agreement_text": task["agreement_text"],
         "facts": {"rent_per_month": facts["rent_per_month"], "deposit_inr": BLR_FINDINGS["C2"]["inputs"]["deposit"],
                   "built_year": facts["built_year"], "substantial_renovation_year": facts["substantial_renovation_year"],

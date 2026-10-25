@@ -131,7 +131,7 @@ export function ReviewDocument({ id }: { id: string }) {
               <p>
                 <strong>Sample mode.</strong> This report was computed by our tools for the sample flat. {run.sample_note}
               </p>
-              <p>The live agent, coming next, recomputes the report from your own answers.</p>
+              <p>To compute the report from your own answers, start a new review: the live agent runs it end to end.</p>
             </div>
           </div>
         )}
@@ -218,7 +218,7 @@ export function ReviewDocument({ id }: { id: string }) {
               <section className="section" id="negotiation">
                 <h2>Negotiation</h2>
                 <p>
-                  Dhara negotiated with a scripted landlord for up to two rounds, within your limits and the law. Code, not the model, holds your
+                  Dhara negotiated with a simulated landlord for up to two rounds, within your limits and the law. Code, not the model, holds your
                   limits: an accept past a limit is turned into a reject. You approve the outcome once, below.
                 </p>
                 <Negotiation negotiation={negotiation} findings={run.findings} sections={run.sections} />

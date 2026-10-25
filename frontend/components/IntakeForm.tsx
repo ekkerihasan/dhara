@@ -273,7 +273,7 @@ export function IntakeForm() {
                 Reasonable broker
               </label>
             </div>
-            <span className="field-hint">A scripted landlord for the sample agreement, so every run is reproducible.</span>
+
           </div>
         </div>
         <div className="form-actions">

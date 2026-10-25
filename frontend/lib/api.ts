@@ -103,7 +103,7 @@ function addDays(iso: string, days: number): string {
 /** The stub is precomputed for one sample flat. Name every fact the tenant entered that differs from it. */
 function sampleNote(entered: Facts | null, sample: Facts, unknown: string[] = []): string | null {
   if (!entered) return null;
-  if (unknown.includes("built_year")) return `You answered "I don't know" for the built year; the sample was computed for a building from ${sample.built_year}, and the live agent would mark the Rent Act result unresolved.`;
+  if (unknown.includes("built_year")) return `You answered "I don't know" for the built year; the sample was computed for a building from ${sample.built_year}, and a live review marks the Rent Act result unresolved.`;
   const show = {
     rent_per_month: (v: number | null) => (v === null ? "blank" : `${inr(v)}/month`),
     deposit_inr: (v: number | null) => (v === null ? "blank" : inr(v)),

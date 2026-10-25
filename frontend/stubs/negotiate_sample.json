@@ -1,0 +1,35 @@
+{
+  "id": "recorded-sample",
+  "status": "accepted",
+  "simulated": true,
+  "delivery_status": "not_sent",
+  "rounds_remaining": 2,
+  "turns": [
+    {
+      "round": 1,
+      "tenant_message": "Please replace blanket deposit forfeiture with documented reasonable loss, and provide evidence for cleaning deductions.",
+      "decision": "accept",
+      "reply": "We will amend Clause C2 to state that the deposit will be retained only to the extent of documented reasonable loss, consistent with the principle that a stipulated penalty must not exceed actual compensation. We will provide an itemized cleaning invoice for the INR 3000 charge before your departure, and will adjust the deduction if the actual cleaning cost is lower.",
+      "statements": [
+        {
+          "text": "We will amend Clause C2 to state that the deposit will be retained only to the extent of documented reasonable loss, consistent with the principle that a stipulated penalty must not exceed actual compensation.",
+          "section_id": "ICA-74",
+          "verdict": "cited",
+          "reason": "Section exists; claim meaning and property coverage still require review"
+        },
+        {
+          "text": "We will provide an itemized cleaning invoice for the INR 3000 charge before your departure, and will adjust the deduction if the actual cleaning cost is lower.",
+          "section_id": null,
+          "verdict": "unverified",
+          "reason": "Non-legal statement; no legal source verified"
+        }
+      ],
+      "source": "model",
+      "simulated": true
+    }
+  ],
+  "trace": [],
+  "not_a_lawyer": true,
+  "notice": "Simulated landlord for negotiation practice. No message is sent. Dhara AI is not a lawyer.",
+  "error": null
+}
